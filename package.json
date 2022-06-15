@@ -1,0 +1,39 @@
+{
+  "name": "@consensus-labs/ngx-forms",
+  "version": "1.0.0",
+  "description": "Types forms and then some",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "Consensus Labs",
+  "license": "MIT",
+  "files": [
+    "dist/**"
+  ],
+
+  "publishConfig": {
+    "@consensus-labs:registry": "https://gitlab.com/api/v4/projects/37055767/packages/npm/"
+  },
+  "devDependencies": {
+    "@consensus-labs/ts-tools": "^1.0.1",
+    "@types/jest": "^28.1.1",
+    "fuse.js": "^6.6.0",
+    "jest": "^28.1.1",
+    "rollup": "^2.75.6",
+    "rollup-plugin-dts": "^4.2.2",
+    "rxjs": "^7.4.0",
+    "@angular/forms": "^14.0.1",
+    "ts-jest": "^28.0.4",
+    "typescript": "^4.7.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest --config jestconfig.json",
+    "prepublishOnly": "tsc && rollup -c"
+  },
+  "peerDependencies": {
+    "@consensus-labs/ts-tools": "^1.0.0",
+    "fuse.js": "^6.6.0",
+    "rxjs": "^7.4.0",
+    "@angular/forms": "^14.0.1"
+  }
+}
