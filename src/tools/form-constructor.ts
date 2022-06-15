@@ -1,13 +1,14 @@
 import {Validators} from "@angular/forms";
 import {FormNode, InputTypes} from "../models/form-node";
 import {Observable} from "rxjs";
-import {getSelectorFn, MapFunc, Selection} from "@consensus-labs/ts-tools";
+import {MapFunc} from "@consensus-labs/ts-tools";
 import {FormSelectNode, MultiSelectNode, SingleSelectNode} from "../models/form-select-node";
 import {FormLayer, FormLayerConstructors} from "../models/form-layer";
-import {FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "./form-types";
-import {FormRoot, FormRootConstructors} from "../models/form-root";
+import {FormGroupTemplate, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "./form-types";
+import {FormRoot, FormRootConstructors, ModelFormRoot} from "../models/form-root";
 import {NodeValidators} from "./validation";
 import {FormList, FormListConstructors} from "../models/form-list";
+import {formTemplateToControls} from "./templates";
 
 export class Form {
   //<editor-fold desc="Non Nullable">
@@ -85,7 +86,7 @@ export class Form {
 
   //</editor-fold>
 
-  static select<TItem>(items: TItem[]|Observable<TItem[]>) {
+  static select<TItem>(items: TItem[] | Observable<TItem[]>) {
     return new SelectConfig<TItem>(items);
   }
 
@@ -99,6 +100,10 @@ export class Form {
 
   static list<TControls extends Record<string, SmartFormUnion>>(controls: TControls, startLength?: number): FormList<TControls, FormGroupValue<TControls>, FormGroupValueRaw<TControls>> {
     return FormListConstructors.Controls(controls, startLength);
+  }
+
+  static template<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormRoot<TValue> {
+    return FormRootConstructors.Model<TValue>(formTemplateToControls(template));
   }
 
   //</editor-fold>
@@ -230,27 +235,31 @@ export class Form {
 
 //<editor-fold desc="Selection Node Builder">
 class SelectConfig<TItem> {
-  constructor(private items: TItem[]|Observable<TItem[]>) {
+  constructor(private items: TItem[] | Observable<TItem[]>) {
   }
 
   single(): SingleSelectConfig<TItem, TItem>
-  single<TData>(selection: Selection<TItem, TData>): SingleSelectConfig<TData, TItem>
-  single<TData>(selection?: Selection<TItem, TData>): SingleSelectConfig<TData|TItem, TItem> {
-    return new SingleSelectConfig<TData|TItem, TItem>(this.items, selection ? getSelectorFn(selection) : x => x);
+  single<TData>(selection: MapFunc<TItem, TData>): SingleSelectConfig<TData, TItem>
+  single<TData>(selection?: MapFunc<TItem, TData>): SingleSelectConfig<TData | TItem, TItem> {
+    return new SingleSelectConfig<TData | TItem, TItem>(this.items, selection ? selection : x => x);
   }
 
   multiple(): MultiSelectConfig<TItem, TItem>
-  multiple<TData>(selection: Selection<TItem, TData>): MultiSelectConfig<TData, TItem>
-  multiple<TData>(selection?: Selection<TItem, TData>): MultiSelectConfig<TData|TItem, TItem> {
-    return new MultiSelectConfig<TData|TItem, TItem>(this.items, selection ? getSelectorFn(selection) : x => x);
+  multiple<TData>(selection: MapFunc<TItem, TData>): MultiSelectConfig<TData, TItem>
+  multiple<TData>(selection?: MapFunc<TItem, TData>): MultiSelectConfig<TData | TItem, TItem> {
+    return new MultiSelectConfig<TData | TItem, TItem>(this.items, selection ? selection : x => x);
   }
 }
 
+type ServerNullTypes<T> = NonNullable<T> extends string ? 'text' | 'guid' :
+  NonNullable<T> extends Date ? 'date' :
+    never;
+
 class SingleSelectConfig<TValue, TItem> {
-  constructor(private items: TItem[]|Observable<TItem[]>, private map: MapFunc<TItem, TValue>) {
+  constructor(private items: TItem[] | Observable<TItem[]>, private map: MapFunc<TItem, TValue>) {
   }
 
-  nullable(initialValue?: TValue): SingleSelectNode<TValue|undefined, TItem> {
+  nullable(initialValue?: TValue): SingleSelectNode<TValue | undefined, TItem> {
     return new FormSelectNode(InputTypes.Select, undefined, this.items, this.map, initialValue, true);
   }
 
@@ -258,17 +267,23 @@ class SingleSelectConfig<TValue, TItem> {
     return new FormSelectNode(InputTypes.Select, defaultValue, this.items, this.map, initialValue);
   }
 
-  serverNull(serverNullValue: TValue, initialValue?: TValue): SingleSelectNode<TValue|undefined, TItem> {
+  serverNull(type: ServerNullTypes<TValue>, initialValue?: TValue): SingleSelectNode<TValue | undefined, TItem> {
+    const serverNullValue = (
+      type == 'date' ? new Date(1970, 0, 1) :
+        type === 'text' ? '\0' :
+          '00000000-0000-0000-0000-000000000000'
+    ) as unknown as  TValue;
     return this.nullable(initialValue).withRawDefault(serverNullValue);
   }
 }
 
 class MultiSelectConfig<TValue, TItem> {
-  constructor(private items: TItem[]|Observable<TItem[]>, private map: MapFunc<TItem, TValue>) {
+  constructor(private items: TItem[] | Observable<TItem[]>, private map: MapFunc<TItem, TValue>) {
   }
 
   notNull(initialValue?: TValue[], defaultValue = initialValue): MultiSelectNode<TValue, TItem> {
     return new FormSelectNode(InputTypes.SelectMany, defaultValue ?? [], this.items, this.map, initialValue);
   }
 }
+
 //</editor-fold>
