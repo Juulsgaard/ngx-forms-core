@@ -1,6 +1,6 @@
-# Store Service
+# Angular Forms
 
-A state management system for Javascript
+Typed forms and then some
 
 ## Getting started
 

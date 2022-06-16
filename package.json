@@ -1,7 +1,7 @@
 {
   "name": "@consensus-labs/ngx-forms",
-  "version": "1.0.5",
-  "description": "Types forms and then some",
+  "version": "1.0.7",
+  "description": "Typed forms and then some",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "Consensus Labs",

@@ -99,6 +99,7 @@ export class FormLayerConstructors {
   }
 }
 
+export type AnyControlFormLayer<TControl extends Record<string, SmartFormUnion>> = FormLayer<TControl, any, any>;
 export type ModelFormLayer<TModel extends Record<string, any>> = FormLayer<FormGroupControls<TModel>, DeepPartial<TModel>, TModel>;
 export type ControlFormLayer<TControl extends Record<string, SmartFormUnion>> = FormLayer<TControl, FormGroupValue<TControl>, FormGroupValueRaw<TControl>>;
 

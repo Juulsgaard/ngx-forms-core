@@ -114,3 +114,4 @@ export class FormRootConstructors {
 
 export type ModelFormRoot<TModel extends Record<string, any>> = FormRoot<FormGroupControls<TModel>, DeepPartial<TModel>, TModel>;
 export type ControlFormRoot<TControls extends Record<string, SmartFormUnion>> = FormRoot<TControls, FormGroupValue<TControls>, FormGroupValueRaw<TControls>>;
+export type AnyControlFormRoot<TControls extends Record<string, SmartFormUnion>> = FormRoot<TControls, any, any>;
