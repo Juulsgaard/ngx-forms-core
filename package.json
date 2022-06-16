@@ -1,6 +1,6 @@
 {
   "name": "@consensus-labs/ngx-forms",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "description": "Typed forms and then some",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -31,7 +31,7 @@
     "prepublishOnly": "tsc && rollup -c"
   },
   "peerDependencies": {
-    "@consensus-labs/ts-tools": "^1.0.0",
+    "@consensus-labs/ts-tools": "^1.0.1",
     "fuse.js": "^6.6.0",
     "rxjs": "^7.4.0",
     "@angular/forms": "^14.0.1"

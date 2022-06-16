@@ -1,11 +1,11 @@
 import {Validators} from "@angular/forms";
 import {FormNode, InputTypes} from "../models/form-node";
 import {Observable} from "rxjs";
-import {MapFunc} from "@consensus-labs/ts-tools";
+import {DeepPartial, MapFunc} from "@consensus-labs/ts-tools";
 import {FormSelectNode, MultiSelectNode, SingleSelectNode} from "../models/form-select-node";
 import {FormLayer, FormLayerConstructors} from "../models/form-layer";
-import {FormGroupTemplate, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "./form-types";
-import {FormRoot, FormRootConstructors, ModelFormRoot} from "../models/form-root";
+import {FormGroupControls, FormGroupTemplate, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "./form-types";
+import {ControlFormRoot, FormRoot, FormRootConstructors, ModelFormRoot} from "../models/form-root";
 import {NodeValidators} from "./validation";
 import {FormList, FormListConstructors} from "../models/form-list";
 import {formTemplateToControls} from "./templates";
@@ -105,6 +105,11 @@ export class Form {
   static template<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormRoot<TValue> {
     return FormRootConstructors.Model<TValue>(formTemplateToControls(template));
   }
+
+  static guide<TGuide extends Record<string, any>>(): FormGuideFactory<TGuide> {
+    return new FormGuideFactory<TGuide>();
+  }
+
 
   //</editor-fold>
 
@@ -287,3 +292,10 @@ class MultiSelectConfig<TValue, TItem> {
 }
 
 //</editor-fold>
+
+class FormGuideFactory<TGuide> {
+  withForm<TControls extends FormGroupControls<DeepPartial<TGuide>>>(controls: TControls): ControlFormRoot<TControls> {
+    return new FormRoot(controls);
+  }
+
+}
