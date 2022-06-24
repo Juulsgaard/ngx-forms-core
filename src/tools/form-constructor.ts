@@ -3,7 +3,7 @@ import {FormNode, InputTypes} from "../models/form-node";
 import {Observable} from "rxjs";
 import {DeepPartial, MapFunc} from "@consensus-labs/ts-tools";
 import {FormSelectNode, MultiSelectNode, SingleSelectNode} from "../models/form-select-node";
-import {FormLayer, FormLayerConstructors} from "../models/form-layer";
+import {FormLayer, FormLayerConstructors, ModelFormLayer} from "../models/form-layer";
 import {FormGroupControls, FormGroupTemplate, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "./form-types";
 import {ControlFormRoot, FormRoot, FormRootConstructors, ModelFormRoot} from "../models/form-root";
 import {NodeValidators} from "./validation";
@@ -108,6 +108,10 @@ export class Form {
 
   static template<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormRoot<TValue> {
     return FormRootConstructors.Model<TValue>(formTemplateToControls(template));
+  }
+
+  static groupTemplate<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormLayer<TValue> {
+    return FormLayerConstructors.Model<TValue>(formTemplateToControls(template));
   }
 
   static guide<TGuide extends Record<string, any>>(): FormGuideFactory<TGuide> {

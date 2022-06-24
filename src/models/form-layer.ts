@@ -1,5 +1,5 @@
 import {FormControlStatus, FormGroup} from "@angular/forms";
-import {asyncScheduler, BehaviorSubject, combineLatest, Observable} from "rxjs";
+import {asyncScheduler, BehaviorSubject, combineLatest, Observable, skip} from "rxjs";
 import {map, throttleTime} from "rxjs/operators";
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
 import {DeepPartial, mapObj} from "@consensus-labs/ts-tools";
@@ -17,14 +17,27 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue,
   public readonly value$: Observable<TValue>;
   public readonly throttledValue$: Observable<TValue>;
 
-  public rawValue$: Observable<TRaw>;
+  private readonly _controls$: BehaviorSubject<TControls>;
+  public readonly controls$: Observable<TControls>;
 
-  public readonly inputList: FormNode<any>[];
+  private readonly _inputList$: BehaviorSubject<FormNode<any>[]>;
+  public readonly inputList$: Observable<FormNode<any>[]>;
+  get inputList(): FormNode<any>[] {return this._inputList$.value}
+
+  public rawValue$: Observable<TRaw>;
 
   constructor(controls: TControls) {
     super(controls);
 
-    this.inputList = Object.values(this.controls).filter(x => x instanceof FormNode) as FormNode<any>[];
+    this._controls$ = new BehaviorSubject(this.controls);
+    this.controls$ = this._controls$.asObservable();
+
+    this._inputList$ = new BehaviorSubject(Object.values(this.controls).filter(x => x instanceof FormNode) as FormNode<any>[]);
+    this.controls$.pipe(
+      skip(1),
+      map(controls => Object.values(controls).filter(x => x instanceof FormNode) as FormNode<any>[])
+    ).subscribe(this._inputList$);
+    this.inputList$ = this._inputList$.asObservable();
 
     this._status$ = new BehaviorSubject(this.status);
     this.statusChanges.subscribe(this._status$);
@@ -59,6 +72,19 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue,
       cache()
     );
     //</editor-fold>
+  }
+
+  registerControl<K extends Extract<keyof TControls, string>>(name: K, control: TControls[K]): TControls[K] {
+    const activeControl = super.registerControl(name, control);
+    if (activeControl === control) {
+      this._controls$.next(this.controls);
+    }
+    return activeControl;
+  }
+
+  removeControl<K extends Extract<keyof TControls, string>>(name: K) {
+    super.removeControl(name);
+    this._controls$.next(this.controls);
   }
 
   //<editor-fold desc="Value overrides">
