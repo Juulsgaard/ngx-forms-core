@@ -1,10 +1,10 @@
 import {Observable, of} from "rxjs";
-import {KeysOfType, MapFunc} from "@consensus-labs/ts-tools";
+import {MapFunc, Selection} from "@consensus-labs/ts-tools";
 import {FormNode, InputTypes} from "./form-node";
 
 interface FormSelectNodeOptions<TValue, TItem> {
-  bindLabel?: string | ((item: TItem) => string);
-  bindOption?: string | ((item: TItem) => string);
+  bindLabel?: Selection<TItem, string>;
+  bindOption?: Selection<TItem, string>;
   multiple: boolean;
   groupProp?: string | ((x: TItem) => string);
   selectGroups: boolean;
@@ -13,13 +13,15 @@ interface FormSelectNodeOptions<TValue, TItem> {
   hideWhenEmpty: boolean;
 }
 
+type CustomSelection<TItem> = TItem extends Record<string, any> ? Selection<TItem, string> : MapFunc<TItem, string>;
+
 export class FormSelectNode<TValue, TUnit, TItem> extends FormNode<TValue> implements FormSelectNodeOptions<TValue, TItem> {
 
   public items$: Observable<TItem[]>;
   public bindValue: MapFunc<TItem, TUnit>;
 
-  public bindLabel?: string | ((item: TItem) => string);
-  public bindOption?: string | ((item: TItem) => string);
+  public bindLabel?: Selection<TItem, string>;
+  public bindOption?: Selection<TItem, string>;
   public multiple = false;
   public groupProp?: string | ((x: TItem) => string);
   public selectGroups = false;
@@ -43,8 +45,8 @@ export class FormSelectNode<TValue, TUnit, TItem> extends FormNode<TValue> imple
   //<editor-fold desc="Configuration">
 
   withBinds(
-    label?: KeysOfType<TItem, string> & string | ((item: TItem) => string),
-    optionBinding?: KeysOfType<TItem, string> & string | ((item: TItem) => string)
+    label?: CustomSelection<TItem>,
+    optionBinding?: CustomSelection<TItem>
   ): this {
     this.bindLabel = label;
     this.bindOption = optionBinding;
