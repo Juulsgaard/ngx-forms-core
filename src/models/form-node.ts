@@ -11,6 +11,7 @@ export enum FormNodeEvent {
 }
 
 export enum InputTypes {
+  Generic = 'generic',
   Text = 'text',
   Url = 'url',
   Number = 'number',

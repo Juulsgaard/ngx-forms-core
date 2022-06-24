@@ -13,6 +13,10 @@ import {formTemplateToControls} from "./templates";
 export class Form {
   //<editor-fold desc="Non Nullable">
 
+  static generic(initialValue: any, defaultValue?: any) {
+    return new FormNode<any>(InputTypes.Generic, defaultValue ?? initialValue, initialValue);
+  }
+
   //<editor-fold desc="String Inputs">
   static id() {
     return new FormNode<string>(InputTypes.Text, '').withLabel('Id').lock();
@@ -115,6 +119,10 @@ export class Form {
 
   //<editor-fold desc="Nullable">
   static nullable = {
+
+    generic(initialValue: any) {
+      return new FormNode<any | undefined>(InputTypes.Generic, undefined, initialValue, true);
+    },
 
     //<editor-fold desc="Text Inputs">
     id() {
@@ -277,7 +285,7 @@ class SingleSelectConfig<TValue, TItem> {
       type == 'date' ? new Date(1970, 0, 1) :
         type === 'text' ? '\0' :
           '00000000-0000-0000-0000-000000000000'
-    ) as unknown as  TValue;
+    ) as unknown as TValue;
     return this.nullable(initialValue).withRawDefault(serverNullValue);
   }
 }
