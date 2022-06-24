@@ -87,6 +87,14 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue,
     this._controls$.next(this.controls);
   }
 
+  addControl<K extends Extract<keyof TControls, string>>(name: K, control: Required<TControls>[K]) {
+    super.addControl(name, control);
+  }
+
+  setControl<K extends Extract<keyof TControls, string>>(name: K, control: TControls[K]) {
+    super.setControl(name, control);
+  }
+
   //<editor-fold desc="Value overrides">
   public readonly value!: TValue;
   public readonly valueChanges!: Observable<TValue>;
