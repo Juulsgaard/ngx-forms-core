@@ -113,7 +113,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue,
   }
 
   reset(value?: TValue) {
-    super.reset(value);
+    super.reset(value ?? {});
   }
 
   //</editor-fold>
