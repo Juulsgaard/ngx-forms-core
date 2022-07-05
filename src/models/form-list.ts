@@ -94,7 +94,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue, 
     size = Math.max(0, size);
     if (this.controls.length === size) return;
     if (size === 0) {
-      super.clear();
+      this.clear();
       return;
     }
 
@@ -102,11 +102,15 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue, 
       while (size < this.controls.length) {
         super.removeAt(this.controls.length - 1);
       }
+      this.updateControls();
       return;
     }
 
-    while (size > this.controls.length) {
-      super.push(this.templateLayer.clone());
+    if (size > this.controls.length) {
+      while (size > this.controls.length) {
+        super.push(this.templateLayer.clone());
+      }
+      this.updateControls();
     }
   }
   //</editor-fold>
