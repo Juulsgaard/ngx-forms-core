@@ -26,6 +26,10 @@ export class Form {
     return new FormNode<string>(InputTypes.Text, defaultValue ?? initialValue ?? '', initialValue);
   }
 
+  static guid(initialValue?: string, defaultValue?: string) {
+    return new FormNode<string>(InputTypes.Text, defaultValue ?? initialValue ?? '00000000-0000-0000-0000-000000000000', initialValue);
+  }
+
   static url(initialValue?: string, defaultValue?: string) {
     return new FormNode<string>(InputTypes.Url, defaultValue ?? initialValue ?? '', initialValue).withValidators(NodeValidators.url);
   }
@@ -133,6 +137,9 @@ export class Form {
       return new FormNode<string | undefined>(InputTypes.Text, undefined, undefined, true).withLabel('Id').lock();
     },
     text(initialValue?: string) {
+      return new FormNode<string | undefined>(InputTypes.Text, undefined, initialValue, true);
+    },
+    guid(initialValue?: string) {
       return new FormNode<string | undefined>(InputTypes.Text, undefined, initialValue, true);
     },
     url(initialValue?: string) {
