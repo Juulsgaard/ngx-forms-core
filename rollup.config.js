@@ -4,7 +4,9 @@ export default [
 	{
 		input: 'out/index.js',
 		output: {
-			file: 'dist/index.js'
+			dir: 'dist',
+			format: "esm",
+			preserveModules: true,
 		}
 	},
 	{
