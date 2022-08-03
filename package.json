@@ -1,6 +1,6 @@
 {
   "name": "@consensus-labs/ngx-forms-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Typed forms and then some",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,7 @@
     "@consensus-labs:registry": "https://gitlab.com/api/v4/projects/37055767/packages/npm/"
   },
   "devDependencies": {
-    "@consensus-labs/ts-tools": "^1.0.1",
+    "@consensus-labs/ts-tools": "1.1.0",
     "@types/jest": "^28.1.1",
     "fuse.js": "^6.6.0",
     "jest": "^28.1.1",
@@ -33,7 +33,7 @@
     "prepublishOnly": "tsc && rollup -c"
   },
   "peerDependencies": {
-    "@consensus-labs/ts-tools": "^1.0.1",
+    "@consensus-labs/ts-tools": "^1.1.0",
     "fuse.js": "^6.6.0",
     "rxjs": "^7.4.0",
     "@angular/forms": "^14.0.3"
