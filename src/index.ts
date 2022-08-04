@@ -6,6 +6,8 @@ export * from "./tools/form-types";
 export * from "./tools/type-predicates";
 export {formTemplateToControls} from "./tools/templates";
 export {parseFormErrors} from "./tools/errors";
+export {formUpdated} from "./tools/form-population";
+export {hasRequiredField} from "./tools/validator-parsing";
 
 export {FormRootConstructors as FormRoot, ControlFormRoot, ModelFormRoot, AnyControlFormRoot} from "./models/form-root";
 export {FormLayerConstructors as FormLayer, ModelFormLayer, ControlFormLayer, AnyControlFormLayer} from "./models/form-layer";
