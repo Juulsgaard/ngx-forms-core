@@ -11,16 +11,13 @@
   "files": [
     "dist/**"
   ],
-  "publishConfig": {
-    "@consensus-labs:registry": "https://gitlab.com/api/v4/projects/37055767/packages/npm/"
-  },
   "devDependencies": {
-    "@angular/forms": "14.1.0",
     "@angular/common": "14.1.0",
     "@angular/core": "14.1.0",
+    "@angular/forms": "14.1.0",
     "@angular/platform-browser": "14.1.0",
-    "@consensus-labs/ts-tools": "1.1.0",
     "@consensus-labs/rxjs-tools": "1.0.2",
+    "@consensus-labs/ts-tools": "1.1.0",
     "@types/jest": "^28.1.1",
     "fuse.js": "6.6.0",
     "jest": "^28.1.1",
@@ -33,12 +30,13 @@
   "scripts": {
     "build": "tsc",
     "test": "jest --config jestconfig.json",
-    "prepublishOnly": "tsc && rollup -c"
+    "prepack": "tsc && rollup -c"
   },
   "peerDependencies": {
     "@angular/forms": "^14.1.0",
     "@consensus-labs/rxjs-tools": "^1.0.2",
     "fuse.js": "^6.6.0",
     "rxjs": "^7.4.0"
-  }
+  },
+  "packageManager": "yarn@3.2.2"
 }
