@@ -14,4 +14,5 @@ export {FormLayerConstructors as FormLayer, ModelFormLayer, ControlFormLayer, An
 export {FormListConstructors as FormList, ControlFormList, ModelFormList, AnyControlFormList} from "./models/form-list";
 export {FormNode, InputTypes, FormNodeEvent} from "./models/form-node";
 export {SingleSelectNode, MultiSelectNode} from "./models/form-select-node";
+export {FormDialog} from "./models/form-dialog";
 

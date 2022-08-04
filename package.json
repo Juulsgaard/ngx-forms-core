@@ -1,6 +1,6 @@
 {
   "name": "@consensus-labs/ngx-forms-core",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Typed forms and then some",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,19 +11,22 @@
   "files": [
     "dist/**"
   ],
-
   "publishConfig": {
     "@consensus-labs:registry": "https://gitlab.com/api/v4/projects/37055767/packages/npm/"
   },
   "devDependencies": {
+    "@angular/forms": "14.1.0",
+    "@angular/common": "14.1.0",
+    "@angular/core": "14.1.0",
+    "@angular/platform-browser": "14.1.0",
     "@consensus-labs/ts-tools": "1.1.0",
+    "@consensus-labs/rxjs-tools": "1.0.2",
     "@types/jest": "^28.1.1",
-    "fuse.js": "^6.6.0",
+    "fuse.js": "6.6.0",
     "jest": "^28.1.1",
     "rollup": "^2.75.6",
     "rollup-plugin-dts": "^4.2.2",
-    "rxjs": "^7.4.0",
-    "@angular/forms": "^14.0.3",
+    "rxjs": "7.4.0",
     "ts-jest": "^28.0.4",
     "typescript": "^4.7.3"
   },
@@ -33,9 +36,9 @@
     "prepublishOnly": "tsc && rollup -c"
   },
   "peerDependencies": {
-    "@consensus-labs/ts-tools": "^1.1.0",
+    "@angular/forms": "^14.1.0",
+    "@consensus-labs/rxjs-tools": "^1.0.2",
     "fuse.js": "^6.6.0",
-    "rxjs": "^7.4.0",
-    "@angular/forms": "^14.0.3"
+    "rxjs": "^7.4.0"
   }
 }
