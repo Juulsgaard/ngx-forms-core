@@ -1,6 +1,6 @@
 {
   "name": "@consensus-labs/ngx-forms-core",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Typed forms and then some",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,8 +17,8 @@
   "scripts": {
     "build": "tsc && rollup -c",
     "test": "jest --config jestconfig.json",
-    "prepack": "tsc && rollup -c",
-    "publish": "pnpm publish"
+    "prepublishOnly": "tsc && rollup -c",
+    "link": "npm run prepublishOnly && yalc push"
   },
   "peerDependencies": {
     "@angular/forms": "^14.1.0",
