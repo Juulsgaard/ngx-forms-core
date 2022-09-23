@@ -3,12 +3,12 @@ import {FormLayer} from "./form-layer";
 import {asyncScheduler, BehaviorSubject, combineLatest, Observable, switchMap} from "rxjs";
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {AbstractControl, FormArray, FormControlStatus} from "@angular/forms";
-import {DeepPartial, hasId} from "@consensus-labs/ts-tools";
+import {DeepPartial, hasId, SimpleObject} from "@consensus-labs/ts-tools";
 import {cache} from "../tools/rxjs";
 import {MoveModel} from "../tools/models";
 
 
-export class FormList<TControls extends Record<string, SmartFormUnion>, TValue, TRaw> extends FormArray {
+export class FormList<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormArray {
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
   public readonly disabled$: Observable<boolean>;

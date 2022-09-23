@@ -13,7 +13,7 @@ type FormListControls<A> = A extends Record<string, any> ? ModelFormList<A> : Fo
 export type FormControls<T> =
   NonNullable<T> extends Date | File | string ? FormNode<T> | FormNode<NonNullable<T>> :
     NonNullable<T> extends (infer A)[] ? FormListControls<A> :
-      NonNullable<T> extends Record<string, any> ? ModelFormLayer<T> :
+      NonNullable<T> extends Record<string, any> ? ModelFormLayer<NonNullable<T>> :
         FormNode<T> | FormNode<NonNullable<T>>;
 
 export type FormGroupControls<T extends Record<string, any>> = { [K in keyof T]: FormControls<T[K]> };
@@ -25,7 +25,7 @@ type FormListTemplate<A> = A extends Record<string, any> ? [FormGroupTemplate<A>
 export type FormTemplate<T> =
   NonNullable<T> extends Date | File | string ? FormNode<T> | FormNode<NonNullable<T>> :
     NonNullable<T> extends (infer A)[] ? FormListTemplate<A> :
-      NonNullable<T> extends Record<string, any> ? FormGroupTemplate<T> :
+      NonNullable<T> extends Record<string, any> ? FormGroupTemplate<NonNullable<T>> :
         FormNode<T> | FormNode<NonNullable<T>>;
 
 export type FormGroupTemplate<T extends Record<string, any>> = { [K in keyof T]: FormTemplate<T[K]> };

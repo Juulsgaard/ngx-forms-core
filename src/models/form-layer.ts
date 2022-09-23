@@ -2,12 +2,12 @@ import {FormControlStatus, FormGroup} from "@angular/forms";
 import {asyncScheduler, BehaviorSubject, combineLatest, Observable, skip} from "rxjs";
 import {map, throttleTime} from "rxjs/operators";
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
-import {DeepPartial, mapObj} from "@consensus-labs/ts-tools";
+import {DeepPartial, mapObj, SimpleObject} from "@consensus-labs/ts-tools";
 import {FormNode} from "./form-node";
 import {cache} from "../tools/rxjs";
 
 
-export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue, TRaw> extends FormGroup {
+export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormGroup {
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
   public readonly disabled$: Observable<boolean>;

@@ -26,7 +26,7 @@ function templateToControl<TValue>(template: FormTemplate<TValue>): FormControls
   }
 
   if (isObject(template)) {
-    return FormLayerConstructors.Model<TValue>(formTemplateToControls(template as FormGroupTemplate<TValue>)) as FormControls<TValue>;
+    return FormLayerConstructors.Model(formTemplateToControls(template as FormGroupTemplate<any>)) as FormControls<TValue>;
   }
 
   return template as FormControls<TValue>;

@@ -111,7 +111,7 @@ interface Settings<TControls extends Record<string, SmartFormUnion>> {
   submitOnEnter?: boolean;
 }
 
-class FormDialogFactory<TGuide> {
+class FormDialogFactory<TGuide extends Record<string, any>> {
   constructor(private type: 'create'|'update') {
 
   }

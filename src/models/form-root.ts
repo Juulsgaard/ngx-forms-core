@@ -2,7 +2,7 @@ import {auditTime, BehaviorSubject, combineLatest, Observable, of, switchMap} fr
 import {distinctUntilChanged, map, tap} from 'rxjs/operators';
 import {FormLayer} from "./form-layer";
 import {FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
-import {deepEquals, DeepPartial} from "@consensus-labs/ts-tools";
+import {deepEquals, DeepPartial, SimpleObject} from "@consensus-labs/ts-tools";
 import {cache} from "../tools/rxjs";
 
 export interface FormRootOptions<TValue> {
@@ -10,7 +10,7 @@ export interface FormRootOptions<TValue> {
   generateWarning?: (val: TValue) => string | undefined;
 }
 
-export class FormRoot<TControls extends Record<string, SmartFormUnion>, TValue, TRaw> extends FormLayer<TControls, TValue, TRaw> {
+export class FormRoot<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormLayer<TControls, TValue, TRaw> {
 
   public readonly valid$: Observable<boolean>;
 

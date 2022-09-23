@@ -312,7 +312,7 @@ class MultiSelectConfig<TValue, TItem> {
 
 //</editor-fold>
 
-class FormGuideFactory<TGuide> {
+class FormGuideFactory<TGuide extends Record<string, any>> {
   withForm<TControls extends FormGroupControls<DeepPartial<TGuide>>>(controls: TControls): ControlFormRoot<TControls> {
     return new FormRoot(controls);
   }
