@@ -1,6 +1,6 @@
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
 import {FormLayer} from "./form-layer";
-import {asyncScheduler, BehaviorSubject, combineLatest, Observable, switchMap} from "rxjs";
+import {asyncScheduler, BehaviorSubject, combineLatest, Observable, of, switchMap} from "rxjs";
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {AbstractControl, FormArray, FormControlStatus} from "@angular/forms";
 import {DeepPartial, hasId, SimpleObject} from "@consensus-labs/ts-tools";
@@ -67,6 +67,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     this.errors$ = this.controls$.pipe(
       distinctUntilChanged(),
       switchMap(controls => {
+        if (!controls.length) return of([]);
         const errorLists = controls.map(
           (x, i) => x.errors$.pipe(
             map(errors => errors.map(
