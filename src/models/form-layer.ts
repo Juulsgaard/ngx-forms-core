@@ -1,6 +1,6 @@
 import {FormControlStatus, FormGroup} from "@angular/forms";
-import {asyncScheduler, BehaviorSubject, combineLatest, Observable, skip} from "rxjs";
-import {map, throttleTime} from "rxjs/operators";
+import {asyncScheduler, BehaviorSubject, combineLatest, mergeWith, Observable, skip, Subject} from "rxjs";
+import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
 import {DeepPartial, mapObj, SimpleObject} from "@consensus-labs/ts-tools";
 import {FormNode} from "./form-node";
@@ -15,6 +15,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
 
   private readonly _value$: BehaviorSubject<TValue>;
   public readonly value$: Observable<TValue>;
+  protected readonly _throttledValue$ = new Subject<TValue>();
   public readonly throttledValue$: Observable<TValue>;
 
   private readonly _controls$: BehaviorSubject<TControls>;
@@ -51,6 +52,8 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
 
     this.throttledValue$ = this.value$.pipe(
       throttleTime(200, asyncScheduler, {trailing: true}),
+      mergeWith(this._throttledValue$),
+      distinctUntilChanged(),
       cache()
     );
 
@@ -114,6 +117,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
 
   reset(value?: TValue) {
     super.reset(value ?? {});
+    this._throttledValue$.next(this.value);
   }
 
   //</editor-fold>
