@@ -9,6 +9,7 @@ import {ControlFormRoot, FormRoot, FormRootConstructors, ModelFormRoot} from "..
 import {NodeValidators} from "./validation";
 import {FormList, FormListConstructors} from "../models/form-list";
 import {formTemplateToControls} from "./templates";
+import {FormConstants} from "./constants";
 
 export class Form {
   //<editor-fold desc="Non Nullable">
@@ -27,7 +28,7 @@ export class Form {
   }
 
   static guid(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Text, defaultValue ?? initialValue ?? '00000000-0000-0000-0000-000000000000', initialValue);
+    return new FormNode<string>(InputTypes.Text, defaultValue ?? initialValue ?? FormConstants.NULL_GUID, initialValue);
   }
 
   static url(initialValue?: string, defaultValue?: string) {
@@ -198,60 +199,60 @@ export class Form {
   static serverNull = {
     //<editor-fold desc="Text Inputs">
     text(initialValue?: string) {
-      return Form.nullable.text(initialValue).withRawDefault('\0');
+      return Form.nullable.text(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
 
     guid(initialValue?: string) {
-      return Form.nullable.text(initialValue).withRawDefault('00000000-0000-0000-0000-000000000000');
+      return Form.nullable.text(initialValue).withRawDefault(FormConstants.NULL_GUID);
     },
 
     url(initialValue?: string) {
-      return Form.nullable.url(initialValue).withRawDefault('\0');
+      return Form.nullable.url(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
 
     password(initialValue?: string) {
-      return Form.nullable.password(initialValue).withRawDefault('\0');
+      return Form.nullable.password(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
 
     color(initialValue?: string) {
-      return Form.nullable.color(initialValue).withRawDefault('\0');
+      return Form.nullable.color(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
 
     hexColor(initialValue?: string) {
-      return Form.nullable.hexColor(initialValue).withRawDefault('\0');
+      return Form.nullable.hexColor(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
 
     email(initialValue?: string) {
-      return Form.nullable.email(initialValue).withRawDefault('\0');
+      return Form.nullable.email(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
 
     phone(initialValue?: string) {
-      return Form.nullable.phone(initialValue).withRawDefault('\0');
+      return Form.nullable.phone(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
 
     longText(initialValue?: string) {
-      return Form.nullable.longText(initialValue).withRawDefault('\0');
+      return Form.nullable.longText(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
 
     html(initialValue?: string) {
-      return Form.nullable.html(initialValue).withRawDefault('\0');
+      return Form.nullable.html(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
 
     search(initialValue?: string) {
-      return Form.nullable.search(initialValue).withRawDefault('\0');
+      return Form.nullable.search(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
     //</editor-fold>
 
     date(initialValue?: Date) {
-      return Form.nullable.date(initialValue).withRawDefault(new Date(1970, 0, 1));
+      return Form.nullable.date(initialValue).withRawDefault(FormConstants.NULL_DATE);
     },
 
     datetime(initialValue?: Date) {
-      return Form.nullable.datetime(initialValue).withRawDefault(new Date(1970, 0, 1));
+      return Form.nullable.datetime(initialValue).withRawDefault(FormConstants.NULL_DATE);
     },
 
     time(initialValue?: Date) {
-      return Form.nullable.time(initialValue).withRawDefault(new Date(1970, 0, 1));
+      return Form.nullable.time(initialValue).withRawDefault(FormConstants.NULL_DATE);
     },
   }
   //</editor-fold>
@@ -293,9 +294,9 @@ class SingleSelectConfig<TValue, TItem> {
 
   serverNull(type: ServerNullTypes<TValue>, initialValue?: TValue): SingleSelectNode<TValue | undefined, TItem> {
     const serverNullValue = (
-      type == 'date' ? new Date(1970, 0, 1) :
-        type === 'text' ? '\0' :
-          '00000000-0000-0000-0000-000000000000'
+      type == 'date' ? FormConstants.NULL_DATE :
+        type === 'text' ? FormConstants.NULL_STRING :
+          FormConstants.NULL_GUID
     ) as unknown as TValue;
     return this.nullable(initialValue).withRawDefault(serverNullValue);
   }
