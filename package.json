@@ -1,6 +1,6 @@
 {
   "name": "@consensus-labs/ngx-forms-core",
-  "version": "15.0.1",
+  "version": "15.0.2",
   "description": "Typed forms and then some",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

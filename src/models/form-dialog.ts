@@ -1,4 +1,4 @@
-import {firstValueFrom, lastValueFrom, Observable, of, switchMap} from "rxjs";
+import {BehaviorSubject, firstValueFrom, lastValueFrom, Observable, of, switchMap} from "rxjs";
 import {map} from "rxjs/operators";
 import {DeepPartial} from "@consensus-labs/ts-tools";
 import {persistentCache} from "@consensus-labs/rxjs-tools";
@@ -14,11 +14,13 @@ export class FormDialog<TControls extends Record<string, SmartFormUnion>> {
   get value(): FormGroupValueRaw<TControls> {return this.form.getRawValue()}
   controls: TControls;
 
-  private _show = false;
-  get show() {return this._show}
+  private _show$ = new BehaviorSubject(false);
+  show$ = this._show$.asObservable();
+  get show() {return this._show$.value}
 
-  private _working = false;
-  get working() {return this._working}
+  private _working$ = new BehaviorSubject(false);
+  working$ = this._working$.asObservable();
+  get working() {return this._working$.value}
 
   private readonly onSubmit: (data: FormGroupValueRaw<TControls>) => Promise<any>|Observable<any>|void;
   private readonly createForm: boolean;
@@ -62,11 +64,11 @@ export class FormDialog<TControls extends Record<string, SmartFormUnion>> {
 
   start(reset?: FormGroupValue<TControls>) {
     this.form.reset(reset);
-    this._show = true;
+    this._show$.next(true);
   }
 
   close() {
-    this._show = false;
+    this._show$.next(false);
   }
 
   async submit() {
@@ -74,7 +76,7 @@ export class FormDialog<TControls extends Record<string, SmartFormUnion>> {
     const valid = await firstValueFrom(this.valid$);
     if (!valid) return;
 
-    this._working = true;
+    this._working$.next(true);
 
     try {
 
@@ -88,10 +90,10 @@ export class FormDialog<TControls extends Record<string, SmartFormUnion>> {
         await result;
       }
 
-      this._show = false
+      this._show$.next(false);
 
     } finally {
-      this._working = false;
+      this._working$.next(false);
     }
 
   }
