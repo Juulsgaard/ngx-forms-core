@@ -31,7 +31,7 @@ export enum InputTypes {
   File = 'file'
 }
 
-interface FormNodeOptions {
+export interface FormNodeOptions {
   label?: string;
   autocomplete?: string;
   tooltip?: string;
@@ -48,10 +48,10 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   public readonly actions$ = new Subject<FormNodeEvent>();
   public readonly reset$ = new Subject<void>();
 
-  private readonly _status$: BehaviorSubject<FormControlStatus>;
+  protected readonly _status$: BehaviorSubject<FormControlStatus>;
   public readonly disabled$: Observable<boolean>;
 
-  private readonly _value$: BehaviorSubject<TInput>;
+  protected readonly _value$: BehaviorSubject<TInput>;
   public readonly value$: Observable<TInput>;
   public readonly throttledValue$: Observable<TInput>;
 
@@ -61,28 +61,30 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   public readonly errors$: Observable<FormError[]>;
   public readonly error$: Observable<string|undefined>;
 
-  label?: string;
-  autocomplete?: string;
-  tooltip?: string;
-  readonly?: boolean;
-  autoFocus?: boolean;
-  showDisabledField?: boolean;
+  readonly label?: string;
+  readonly autocomplete?: string;
+  readonly tooltip?: string;
+  readonly readonly?: boolean;
+  readonly autoFocus?: boolean;
+  readonly showDisabledField?: boolean;
 
-  private rawDefault?: TInput;
+  constructor(
+    public readonly type: InputTypes,
+    public readonly defaultValue: TInput,
+    protected readonly initialValue: TInput = defaultValue,
+    protected readonly nullable: boolean = false,
+    protected readonly rawDefault?: TInput,
+    protected readonly validators?: ValidatorFn[],
+    options?: FormNodeOptions
+  ) {
+    super(initialValue, {nonNullable: !nullable, validators: validators});
 
-  public type: InputTypes;
-  readonly defaultValue: TInput;
-  readonly initialValue: TInput;
-  readonly nullable: boolean;
-
-  constructor(type: InputTypes, defaultValue: TInput, initialValue = defaultValue, nullable = false) {
-    super(initialValue, {nonNullable: !nullable});
-
-    this.type = type;
-
-    this.initialValue = initialValue;
-    this.defaultValue = defaultValue;
-    this.nullable = nullable;
+    this.label = options?.label;
+    this.autocomplete = options?.autocomplete;
+    this.tooltip = options?.tooltip;
+    this.readonly = options?.readonly;
+    this.autoFocus = options?.autoFocus;
+    this.showDisabledField = options?.showDisabledField;
 
     this._status$ = new BehaviorSubject(this.status);
     this.statusChanges.subscribe(this._status$);
@@ -133,16 +135,6 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     //</editor-fold>
   }
 
-  /**
-   * Set a default value for raw value
-   * @param rawDefault
-   * @internal
-   */
-  withRawDefault(rawDefault: TInput): this {
-    this.rawDefault = rawDefault;
-    return this;
-  }
-
   //<editor-fold desc="Implementation">
   private getValueOrDefault(value: TInput|undefined): TInput {
     if (this.nullable) return value as TInput;
@@ -175,7 +167,55 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   }
   //</editor-fold>
 
-  //<editor-fold desc="Configuration">
+  //<editor-fold desc="Actions">
+  focus() {
+    setTimeout(() => this.actions$.next(FormNodeEvent.Focus), 0);
+  }
+
+  toggle() {
+    if (this.type !== InputTypes.Bool) {
+      console.error('You cannot toggle a non boolean value');
+      return;
+    }
+
+    this.setValue(!this.value as any);
+  }
+  //</editor-fold>
+
+  clone(): FormNode<TInput> {
+    const node = new FormNodeConfig<TInput>(
+      this.type,
+      this.initialValue,
+      this.defaultValue,
+      this.nullable,
+      this.rawDefault,
+      this.validators
+    );
+    node.from(this);
+    return node.done();
+  }
+}
+
+export class FormNodeConfig<TInput> {
+
+  protected label?: string;
+  protected autocomplete?: string;
+  protected tooltip?: string;
+  protected readonly?: boolean;
+  protected autoFocus?: boolean;
+  protected showDisabledField?: boolean;
+
+  constructor(
+    protected type: InputTypes,
+    protected defaultValue: TInput,
+    protected initialValue: TInput = defaultValue,
+    protected nullable: boolean = false,
+    protected rawDefault?: TInput,
+    protected validators: ValidatorFn[] = []
+  ) {
+
+  }
+
   public required(): this {
     this.withValidators(Validators.required);
     return this;
@@ -192,9 +232,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   }
 
   public withValidators(...validators: ValidatorFn[]): this {
-    if (this.validator) this.setValidators([this.validator, ...validators]);
-    else this.setValidators(validators);
-    this.updateValueAndValidity();
+    this.validators.push(...validators);
     return this;
   }
 
@@ -208,7 +246,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     return this;
   }
 
-  public lock(): this {
+  public asReadonly(): this {
     this.readonly = true;
     return this;
   }
@@ -217,24 +255,17 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     this.autoFocus = true;
     return this;
   }
-  //</editor-fold>
 
-  //<editor-fold desc="Actions">
-  focus() {
-    setTimeout(() => this.actions$.next(FormNodeEvent.Focus), 0);
+  /**
+   * Set a default value for raw value
+   * @param rawDefault
+   * @internal
+   */
+  withRawDefault(rawDefault: TInput): this {
+    this.rawDefault = rawDefault;
+    return this;
   }
 
-  toggle() {
-    if (this.type !== InputTypes.Bool) {
-      console.error('You cannot toggle a non boolean value');
-      return;
-    }
-
-    this.setValue(!this.value as any);
-  }
-  //</editor-fold>
-
-  //<editor-fold desc="Clone">
   public from(options: FormNodeOptions): this {
     this.label = options.label;
     this.autocomplete = options.autocomplete;
@@ -245,11 +276,27 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     return this;
   }
 
-  clone(): FormNode<TInput> {
-    const node = new FormNode<TInput>(this.type, this.initialValue, this.defaultValue, this.nullable);
-    node.from(this);
-    if (this.validator) node.withValidators(this.validator);
-    return node;
+  protected getOptions(): FormNodeOptions {
+    return {
+      label: this.label,
+      readonly: this.readonly,
+      autocomplete: this.autocomplete,
+      autoFocus: this.autoFocus,
+      showDisabledField: this.showDisabledField,
+      tooltip: this.tooltip
+    };
   }
-  //</editor-fold>
+
+  done(): FormNode<TInput> {
+    return new FormNode<TInput>(
+      this.type,
+      this.defaultValue,
+      this.initialValue,
+      this.nullable,
+      this.rawDefault,
+      this.validators,
+      this.getOptions()
+    )
+  }
+
 }

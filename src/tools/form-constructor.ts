@@ -1,8 +1,8 @@
 import {Validators} from "@angular/forms";
-import {FormNode, InputTypes} from "../models/form-node";
+import {FormNodeConfig, InputTypes} from "../models/form-node";
 import {Observable} from "rxjs";
 import {DeepPartial, MapFunc} from "@consensus-labs/ts-tools";
-import {FormSelectNode, MultiSelectNode, SingleSelectNode} from "../models/form-select-node";
+import {FormSelectNodeConfig, MultiSelectNodeConfig, SingleSelectNodeConfig} from "../models/form-select-node";
 import {FormLayer, FormLayerConstructors, ModelFormLayer} from "../models/form-layer";
 import {FormGroupControls, FormGroupTemplate, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "./form-types";
 import {ControlFormRoot, FormRoot, FormRootConstructors, ModelFormRoot} from "../models/form-root";
@@ -15,82 +15,82 @@ export class Form {
   //<editor-fold desc="Non Nullable">
 
   static generic(initialValue: any, defaultValue?: any) {
-    return new FormNode<any>(InputTypes.Generic, defaultValue ?? initialValue, initialValue);
+    return new FormNodeConfig<any>(InputTypes.Generic, defaultValue ?? initialValue, initialValue);
   }
 
   //<editor-fold desc="String Inputs">
   static id() {
-    return new FormNode<string>(InputTypes.Text, '').withLabel('Id').lock();
+    return new FormNodeConfig<string>(InputTypes.Text, '').withLabel('Id').asReadonly();
   }
 
   static text(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Text, defaultValue ?? initialValue ?? '', initialValue);
+    return new FormNodeConfig<string>(InputTypes.Text, defaultValue ?? initialValue ?? '', initialValue);
   }
 
   static guid(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Text, defaultValue ?? initialValue ?? FormConstants.NULL_GUID, initialValue);
+    return new FormNodeConfig<string>(InputTypes.Text, defaultValue ?? initialValue ?? FormConstants.NULL_GUID, initialValue);
   }
 
   static url(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Url, defaultValue ?? initialValue ?? '', initialValue).withValidators(NodeValidators.url);
+    return new FormNodeConfig<string>(InputTypes.Url, defaultValue ?? initialValue ?? '', initialValue).withValidators(NodeValidators.url);
   }
 
   static password(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Password, defaultValue ?? initialValue ?? '', initialValue);
+    return new FormNodeConfig<string>(InputTypes.Password, defaultValue ?? initialValue ?? '', initialValue);
   }
 
   static color(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Color, defaultValue ?? initialValue ?? '', initialValue);
+    return new FormNodeConfig<string>(InputTypes.Color, defaultValue ?? initialValue ?? '', initialValue);
   }
 
   static hexColor(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Color, defaultValue ?? initialValue ?? '', initialValue).withValidators(NodeValidators.hexColor);
+    return new FormNodeConfig<string>(InputTypes.Color, defaultValue ?? initialValue ?? '', initialValue).withValidators(NodeValidators.hexColor);
   }
 
   static email(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Email, defaultValue ?? initialValue ?? '', initialValue).withValidators(Validators.email);
+    return new FormNodeConfig<string>(InputTypes.Email, defaultValue ?? initialValue ?? '', initialValue).withValidators(Validators.email);
   }
 
   static phone(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Phone, defaultValue ?? initialValue ?? '', initialValue);
+    return new FormNodeConfig<string>(InputTypes.Phone, defaultValue ?? initialValue ?? '', initialValue);
   }
 
   static longText(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.LongText, defaultValue ?? initialValue ?? '', initialValue);
+    return new FormNodeConfig<string>(InputTypes.LongText, defaultValue ?? initialValue ?? '', initialValue);
   }
 
   static html(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.HTML, defaultValue ?? initialValue ?? '', initialValue);
+    return new FormNodeConfig<string>(InputTypes.HTML, defaultValue ?? initialValue ?? '', initialValue);
   }
 
   static search(initialValue?: string, defaultValue?: string) {
-    return new FormNode<string>(InputTypes.Search, defaultValue ?? initialValue ?? '', initialValue);
+    return new FormNodeConfig<string>(InputTypes.Search, defaultValue ?? initialValue ?? '', initialValue);
   }
 
   //</editor-fold>
 
   //<editor-fold desc="Misc Inputs">
   static number(initialValue?: number, defaultValue?: number) {
-    return new FormNode<number>(InputTypes.Number, defaultValue ?? initialValue ?? 0, initialValue);
+    return new FormNodeConfig<number>(InputTypes.Number, defaultValue ?? initialValue ?? 0, initialValue);
   }
 
   static bool(initialValue?: boolean, defaultValue?: boolean) {
-    return new FormNode<boolean>(InputTypes.Bool, defaultValue ?? initialValue ?? false, initialValue);
+    return new FormNodeConfig<boolean>(InputTypes.Bool, defaultValue ?? initialValue ?? false, initialValue);
   }
 
   //</editor-fold>
 
   //<editor-fold desc="Date Inputs">
   static date(initialValue?: Date, defaultValue?: Date) {
-    return new FormNode<Date>(InputTypes.Date, defaultValue ?? initialValue ?? new Date(0), initialValue);
+    return new FormNodeConfig<Date>(InputTypes.Date, defaultValue ?? initialValue ?? new Date(0), initialValue);
   }
 
   static datetime(initialValue?: Date, defaultValue?: Date) {
-    return new FormNode<Date>(InputTypes.DateTime, defaultValue ?? initialValue ?? new Date(0), initialValue);
+    return new FormNodeConfig<Date>(InputTypes.DateTime, defaultValue ?? initialValue ?? new Date(0), initialValue);
   }
 
   static time(initialValue?: Date, defaultValue?: Date) {
-    return new FormNode<Date>(InputTypes.Time, defaultValue ?? initialValue ?? new Date(0), initialValue);
+    return new FormNodeConfig<Date>(InputTypes.Time, defaultValue ?? initialValue ?? new Date(0), initialValue);
   }
 
   //</editor-fold>
@@ -130,66 +130,66 @@ export class Form {
   static nullable = {
 
     generic(initialValue: any) {
-      return new FormNode<any | undefined>(InputTypes.Generic, undefined, initialValue, true);
+      return new FormNodeConfig<any | undefined>(InputTypes.Generic, undefined, initialValue, true);
     },
 
     //<editor-fold desc="Text Inputs">
     id() {
-      return new FormNode<string | undefined>(InputTypes.Text, undefined, undefined, true).withLabel('Id').lock();
+      return new FormNodeConfig<string | undefined>(InputTypes.Text, undefined, undefined, true).withLabel('Id').asReadonly();
     },
     text(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.Text, undefined, initialValue, true);
+      return new FormNodeConfig<string | undefined>(InputTypes.Text, undefined, initialValue, true);
     },
     guid(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.Text, undefined, initialValue, true);
+      return new FormNodeConfig<string | undefined>(InputTypes.Text, undefined, initialValue, true);
     },
     url(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.Url, undefined, initialValue, true).withValidators(NodeValidators.url);
+      return new FormNodeConfig<string | undefined>(InputTypes.Url, undefined, initialValue, true).withValidators(NodeValidators.url);
     },
     password(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.Password, undefined, initialValue, true);
+      return new FormNodeConfig<string | undefined>(InputTypes.Password, undefined, initialValue, true);
     },
     color(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.Color, undefined, initialValue, true);
+      return new FormNodeConfig<string | undefined>(InputTypes.Color, undefined, initialValue, true);
     },
     hexColor(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.Color, undefined, initialValue, true).withValidators(NodeValidators.hexColor);
+      return new FormNodeConfig<string | undefined>(InputTypes.Color, undefined, initialValue, true).withValidators(NodeValidators.hexColor);
     },
     email(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.Email, undefined, initialValue, true).withValidators(Validators.email);
+      return new FormNodeConfig<string | undefined>(InputTypes.Email, undefined, initialValue, true).withValidators(Validators.email);
     },
     phone(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.Phone, undefined, initialValue, true);
+      return new FormNodeConfig<string | undefined>(InputTypes.Phone, undefined, initialValue, true);
     },
     longText(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.LongText, undefined, initialValue, true);
+      return new FormNodeConfig<string | undefined>(InputTypes.LongText, undefined, initialValue, true);
     },
     html(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.HTML, undefined, initialValue, true);
+      return new FormNodeConfig<string | undefined>(InputTypes.HTML, undefined, initialValue, true);
     },
     search(initialValue?: string) {
-      return new FormNode<string | undefined>(InputTypes.Search, undefined, initialValue, true);
+      return new FormNodeConfig<string | undefined>(InputTypes.Search, undefined, initialValue, true);
     },
     //</editor-fold>
 
     //<editor-fold desc="Misc Inputs">
     number(initialValue?: number) {
-      return new FormNode<number | undefined>(InputTypes.Number, undefined, initialValue, true);
+      return new FormNodeConfig<number | undefined>(InputTypes.Number, undefined, initialValue, true);
     },
     file() {
-      return new FormNode<File | undefined>(InputTypes.File, undefined, undefined, true);
+      return new FormNodeConfig<File | undefined>(InputTypes.File, undefined, undefined, true);
     },
     //</editor-fold>
 
     //<editor-fold desc="Date Inputs">
     date(initialValue?: Date) {
-      return new FormNode<Date | undefined>(InputTypes.Date, undefined, initialValue, true);
+      return new FormNodeConfig<Date | undefined>(InputTypes.Date, undefined, initialValue, true);
     },
     datetime(initialValue?: Date) {
-      return new FormNode<Date | undefined>(InputTypes.DateTime, undefined, initialValue, true);
+      return new FormNodeConfig<Date | undefined>(InputTypes.DateTime, undefined, initialValue, true);
     },
     time(initialValue?: Date) {
-      return new FormNode<Date | undefined>(InputTypes.Time, undefined, initialValue, true);
+      return new FormNodeConfig<Date | undefined>(InputTypes.Time, undefined, initialValue, true);
     },
     //</editor-fold>
   }
@@ -197,7 +197,9 @@ export class Form {
 
   //<editor-fold desc="Server Null">
   static serverNull = {
+
     //<editor-fold desc="Text Inputs">
+
     text(initialValue?: string) {
       return Form.nullable.text(initialValue).withRawDefault(FormConstants.NULL_STRING);
     },
@@ -255,6 +257,7 @@ export class Form {
       return Form.nullable.time(initialValue).withRawDefault(FormConstants.NULL_DATE);
     },
   }
+
   //</editor-fold>
 }
 
@@ -284,15 +287,15 @@ class SingleSelectConfig<TValue, TItem> {
   constructor(private items: TItem[] | Observable<TItem[]>, private map: MapFunc<TItem, TValue>) {
   }
 
-  nullable(initialValue?: TValue): SingleSelectNode<TValue | undefined, TItem> {
-    return new FormSelectNode(InputTypes.Select, undefined, this.items, this.map, initialValue, true);
+  nullable(initialValue?: TValue): SingleSelectNodeConfig<TValue | undefined, TItem> {
+    return new FormSelectNodeConfig(InputTypes.Select, undefined, this.items, this.map, initialValue, true);
   }
 
-  notNull(initialValue: TValue, defaultValue = initialValue): SingleSelectNode<TValue, TItem> {
-    return new FormSelectNode(InputTypes.Select, defaultValue, this.items, this.map, initialValue);
+  notNull(initialValue: TValue, defaultValue = initialValue): SingleSelectNodeConfig<TValue, TItem> {
+    return new FormSelectNodeConfig(InputTypes.Select, defaultValue, this.items, this.map, initialValue);
   }
 
-  serverNull(type: ServerNullTypes<TValue>, initialValue?: TValue): SingleSelectNode<TValue | undefined, TItem> {
+  serverNull(type: ServerNullTypes<TValue>, initialValue?: TValue): SingleSelectNodeConfig<TValue | undefined, TItem> {
     const serverNullValue = (
       type == 'date' ? FormConstants.NULL_DATE :
         type === 'text' ? FormConstants.NULL_STRING :
@@ -306,8 +309,8 @@ class MultiSelectConfig<TValue, TItem> {
   constructor(private items: TItem[] | Observable<TItem[]>, private map: MapFunc<TItem, TValue>) {
   }
 
-  notNull(initialValue?: TValue[], defaultValue = initialValue): MultiSelectNode<TValue, TItem> {
-    return new FormSelectNode(InputTypes.SelectMany, defaultValue ?? [], this.items, this.map, initialValue);
+  notNull(initialValue?: TValue[], defaultValue = initialValue): MultiSelectNodeConfig<TValue, TItem> {
+    return new FormSelectNodeConfig(InputTypes.SelectMany, defaultValue ?? [], this.items, this.map, initialValue);
   }
 }
 

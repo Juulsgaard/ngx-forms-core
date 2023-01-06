@@ -1,6 +1,6 @@
 import {ControlFormList, FormList, ModelFormList} from "../models/form-list";
 import {ControlFormLayer, FormLayer, ModelFormLayer} from "../models/form-layer";
-import {FormNode} from "../models/form-node";
+import {FormNode, FormNodeConfig} from "../models/form-node";
 import {AbstractControl} from "@angular/forms";
 
 export type FormError = { path: string[], error: string };
@@ -26,7 +26,7 @@ export type FormTemplate<T> =
   NonNullable<T> extends Date | File | string ? FormNode<T> | FormNode<NonNullable<T>> :
     NonNullable<T> extends (infer A)[] ? FormListTemplate<A> :
       NonNullable<T> extends Record<string, any> ? FormGroupTemplate<NonNullable<T>> :
-        FormNode<T> | FormNode<NonNullable<T>>;
+        FormNode<T> | FormNode<NonNullable<T>> | FormNodeConfig<T> | FormNodeConfig<NonNullable<T>>;
 
 export type FormGroupTemplate<T extends Record<string, any>> = { [K in keyof T]: FormTemplate<T[K]> };
 //</editor-fold>

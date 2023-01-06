@@ -1,8 +1,9 @@
 import {FormControls, FormGroupControls, FormGroupTemplate, FormTemplate} from "./form-types";
 import {isObject} from "@consensus-labs/ts-tools";
-import {isFormNode} from "./type-predicates";
+import {isFormNode, isFormNodeConfig} from "./type-predicates";
 import {FormLayerConstructors} from "../models/form-layer";
 import {FormListConstructors} from "../models/form-list";
+import {FormNode} from "../models/form-node";
 
 export function formTemplateToControls<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): FormGroupControls<TValue> {
 
@@ -18,7 +19,8 @@ export function formTemplateToControls<TValue extends Record<string, any>>(templ
 }
 
 function templateToControl<TValue>(template: FormTemplate<TValue>): FormControls<TValue> {
-  if (isFormNode(template)) return template as unknown as FormControls<TValue>;
+  if (isFormNodeConfig(template)) return template.done() as FormControls<TValue>;
+  if (isFormNode(template)) return template as FormNode<TValue> as FormControls<TValue>;
 
   if (Array.isArray(template)) {
     const subTemplate = template[0] as FormGroupTemplate<any>;
