@@ -18,18 +18,44 @@ type CustomSelection<TItem> = TItem extends Record<string, any> ? Selection<TIte
 
 export class FormSelectNode<TValue, TUnit, TItem> extends FormNode<TValue> implements FormSelectNodeOptions<TValue, TItem> {
 
+  /** An observable containing the items for the dropdown */
   public readonly items$: Observable<TItem[]>;
+  /** A mapping for getting the value of a given item */
   public readonly bindValue: MapFunc<TItem, TUnit>;
 
+  /** A mapping for the display name of an item */
   public readonly bindLabel?: Selection<TItem, string>;
+  /** A mapping for the display name specifically when shown in the dropdown */
   public readonly bindOption?: Selection<TItem, string>;
+  /** Whether multiple items can be selected */
   public readonly multiple;
+  /** Whether to, and how to group items in the dropdown */
   public readonly groupProp?: string | ((x: TItem) => string);
+  /** Whether groups can be selected all at once */
   public readonly selectGroups;
+  /** A custom search method */
   public readonly searchFn?: (query: string, ses: TItem) => boolean;
+  /** Whether the input can be cleared */
   public readonly clearable;
+  /** Whether the input should be hidden when it has no items to select from */
   public readonly hideWhenEmpty;
 
+  /**
+   * Create a FormSelect Node manually.
+   * It is recommended to use the `Form.xxx` constructors for configuring Nodes.
+   * @param type - The type of the input
+   * @param defaultValue - The default value of the input.
+   * This input is used as a fallback for missing values.
+   * @param items - The items to show in the select
+   * @param bindValue - A mapping for getting the value of the item
+   * @param initialValue - The initial value of the input.
+   * This is used for initial setup and resetting the input.
+   * Defaults to defaultValue.
+   * @param nullable - Whether the input is nullable
+   * @param rawDefault - Define a distinct default value for getting the raw value
+   * @param validators - Add validators
+   * @param options - Additional options
+   */
   constructor(
     type: InputTypes,
     defaultValue: TValue,
@@ -52,12 +78,16 @@ export class FormSelectNode<TValue, TUnit, TItem> extends FormNode<TValue> imple
     this.groupProp = options?.groupProp;
     this.selectGroups = options?.selectGroups ?? false;
     this.searchFn = options?.searchFn;
-    this.clearable = options?.clearable ?? false;
+    this.clearable = options?.clearable ?? nullable;
     this.hideWhenEmpty = options?.hideWhenEmpty ?? false;
   }
 
-  //<editor-fold desc="Clone">
 
+  /**
+   * Clone the input
+   * This creates a duplicate of the configuration
+   * It does not clone the value
+   */
   clone(): FormSelectNode<TValue, TUnit, TItem> {
     const config = new FormSelectNodeConfig<TValue, TUnit, TItem>(
       this.type,
@@ -72,8 +102,6 @@ export class FormSelectNode<TValue, TUnit, TItem> extends FormNode<TValue> imple
     config.fromSelect(this);
     return config.done();
   }
-
-  //</editor-fold>
 }
 
 export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<TValue> {
@@ -87,6 +115,21 @@ export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<T
   private clearable = true;
   private hideWhenEmpty = false;
 
+  /**
+   * Create a FormSelect Config manually.
+   * It is recommended to use the `Form.xxx` constructors for creating configurations.
+   * @param type - The type of the input
+   * @param defaultValue - The default value of the input.
+   * This input is used as a fallback for missing values.
+   * @param items - The items to show in the select
+   * @param bindValue - A mapping for getting the value of the item
+   * @param initialValue - The initial value of the input.
+   * This is used for initial setup and resetting the input.
+   * Defaults to defaultValue.
+   * @param nullable - Whether the input is nullable
+   * @param rawDefault - Define a distinct default value for getting the raw value
+   * @param validators - Add validators
+   */
   constructor(
     type: InputTypes,
     defaultValue: TValue,
@@ -100,10 +143,14 @@ export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<T
     super(type, defaultValue, initialValue, nullable, rawDefault, validators);
   }
 
-  public fromSelect(tmp: FormSelectNodeOptions<TValue, TItem> & FormNodeOptions): this {
-    super.from(tmp);
+  /**
+   * Populate this configuration based on a Select Node
+   * @param _options - The options from an existing Select Node
+   */
+  public fromSelect(_options: FormSelectNodeOptions<TValue, TItem> & FormNodeOptions): this {
+    super.from(_options);
 
-    const options = tmp as FormSelectNodeOptions<TValue, TItem>;
+    const options = _options as FormSelectNodeOptions<TValue, TItem>;
 
     this.bindLabel = options.bindLabel;
     this.bindOption = options.bindOption;
@@ -119,31 +166,52 @@ export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<T
 
   //<editor-fold desc="Configuration">
 
+  /**
+   * Define data bindings for the items
+   * @param label - A binding for the display name of items
+   * @param option - An optional binding for display names in the dropdown.
+   * Defaults to the label binding
+   */
   withBinds(
-    label?: CustomSelection<TItem>,
-    optionBinding?: CustomSelection<TItem>
+    label: CustomSelection<TItem>,
+    option?: CustomSelection<TItem>
   ): this {
     this.bindLabel = label;
-    this.bindOption = optionBinding;
+    this.bindOption = option;
     return this;
   }
 
+  /**
+   * Add grouping to the select
+   * @param prop - How to group the items
+   * @param selectGroups - Whether the groups should be selectable
+   */
   groupBy(prop: string | ((x: TItem) => string), selectGroups = false): this {
     this.groupProp = prop;
     this.selectGroups = selectGroups;
     return this;
   }
 
+  /**
+   * Add custom searching to the select
+   * @param searchFn
+   */
   withSearch(searchFn: (query: string, ses: TItem) => boolean): this {
     this.searchFn = searchFn;
     return this;
   }
 
+  /**
+   * Disable input clearing for nullable inputs
+   */
   noClear(): this {
     this.clearable = false;
     return this;
   }
 
+  /**
+   * Hide the input when it has no items to select
+   */
   hideEmpty(): this {
     this.hideWhenEmpty = true;
     return this;
@@ -164,6 +232,9 @@ export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<T
     }
   }
 
+  /**
+   * Finalise the config and produce the input
+   */
   done(): FormSelectNode<TValue, TUnit, TItem> {
     return new FormSelectNode<TValue, TUnit, TItem>(
       this.type,

@@ -8,42 +8,71 @@ import {Form} from "../tools/form-constructor";
 
 export class FormDialog<TControls extends Record<string, SmartFormUnion>> {
 
+  /**
+   * Create a new creation Form Dialog.
+   * Use this when the dialog is used for creating something.
+   * @constructor
+   */
+  static Create<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
+    return new FormDialogFactory('create');
+  }
+
+  /**
+   * Create a new update Form Dialog.
+   * Use this when the dialog is modifying data.
+   * @constructor
+   */
+  static Update<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
+    return new FormDialogFactory('update');
+  }
+
   private readonly _form: ControlFormRoot<TControls>;
+  /** The form of the dialog */
   get form(): ControlFormRoot<TControls> {return this._form}
 
+  /** The value of the dialog form */
   get value(): FormGroupValueRaw<TControls> {return this.form.getRawValue()}
-  controls: TControls;
+  /** The dialog form controls */
+  get controls() {return this._form.controls};
 
   private _show$ = new BehaviorSubject(false);
+  /** An observable denoting when to show the dialog */
   show$ = this._show$.asObservable();
+  /** Whether the dialog should be shown */
   get show() {return this._show$.value}
 
   private _working$ = new BehaviorSubject(false);
+  /** An observable denoting that the submission is in progress */
   working$ = this._working$.asObservable();
+  /** Whether the submission is currently in progress */
   get working() {return this._working$.value}
 
   private readonly onSubmit: (data: FormGroupValueRaw<TControls>) => Promise<any>|Observable<any>|void;
   private readonly createForm: boolean;
 
+  /** The title of the Dialog */
   readonly title: string;
+  /** The description text for the dialog */
   readonly description?: string;
+  /** The text for the submit button */
   readonly buttonText: string;
+  /** Whether the form should submit when enter is hit */
   readonly submitOnEnter: boolean;
 
+  /** An observable denoting when the form is valid for submission */
   valid$: Observable<boolean>;
+  /** An observable containing a display string for the error state when errors are present */
   error$: Observable<string|undefined>;
 
-  static Create<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
-    return new FormDialogFactory('create');
-  }
-
-  static Update<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
-    return new FormDialogFactory('update');
-  }
-
+  /**
+   * Manually create a Form Dialog.
+   * It is recommended to the `FormDialog.Create<T>()` or `FormDialog.Update<T>()` when creating a Form Dialog.
+   * @param template - The Form Template
+   * @param type - The type of dialog
+   * @param settings - Settings
+   */
   constructor(template: TControls, type: 'create'|'update', settings: Settings<TControls>) {
     this._form = Form.root(template);
-    this.controls = this._form.controls;
     this.createForm = type === 'create';
     this.onSubmit = settings.onSubmit;
     this.title = settings.title;
@@ -52,7 +81,7 @@ export class FormDialog<TControls extends Record<string, SmartFormUnion>> {
     this.submitOnEnter = settings.submitOnEnter ?? true;
 
     const error$ = settings.validate
-      ? this.form.throttledValue$.pipe(map(x => settings.validate!(x)))
+      ? this.form.throttledValue$.pipe(map(x => settings.validate!(x) ?? undefined))
       : of(undefined);
     this.error$ = error$.pipe(persistentCache());
 
@@ -62,15 +91,26 @@ export class FormDialog<TControls extends Record<string, SmartFormUnion>> {
     );
   }
 
+  /**
+   * Start the dialog.
+   * This will reset and show the dialog.
+   * @param reset - Optional reset data
+   */
   start(reset?: FormGroupValue<TControls>) {
     this.form.reset(reset);
     this._show$.next(true);
   }
 
+  /**
+   * Close the dialog
+   */
   close() {
     this._show$.next(false);
   }
 
+  /**
+   * Submit the form Dialog with the current values
+   */
   async submit() {
     if (this.working) return;
     const valid = await firstValueFrom(this.valid$);
@@ -101,15 +141,17 @@ export class FormDialog<TControls extends Record<string, SmartFormUnion>> {
 }
 
 interface Settings<TControls extends Record<string, SmartFormUnion>> {
+  /** The action to perform when submitting the form */
   onSubmit: (data: FormGroupValueRaw<TControls>) => Promise<any>|Observable<any>|void;
+  /** The title of the dialog */
   title: string;
+  /** The description for the dialog */
   description?: string;
+  /** The text to show on the submit button. Defaults to 'Submit' */
   buttonText?: string;
-  validate?: (data: FormGroupValue<TControls>) => string|undefined;
-  /**
-   * If true the form will submit when the user presses enter
-   * @default true
-   */
+  /** Optional validation for the form. Return a string when an error is present */
+  validate?: (data: FormGroupValue<TControls>) => string|void;
+  /** Whether to have enter submit the form */
   submitOnEnter?: boolean;
 }
 
@@ -118,6 +160,10 @@ class FormDialogFactory<TGuide extends Record<string, any>> {
 
   }
 
+  /**
+   * Define the form controls for the Dialog
+   * @param controls - The controls
+   */
   withForm<TControls extends FormGroupControls<DeepPartial<TGuide>>>(controls: TControls): FormDialogConfig<TControls> {
     return new FormDialogConfig(this.type, controls);
   }
@@ -129,6 +175,10 @@ class FormDialogConfig<TControls extends Record<string, SmartFormUnion>> {
 
   }
 
+  /**
+   * Configure the dialog
+   * @param settings
+   */
   configure(settings: Settings<TControls>) {
     return new FormDialog<TControls>(this.controls, this.type, settings)
   }

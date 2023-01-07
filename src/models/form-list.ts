@@ -3,27 +3,33 @@ import {FormLayer} from "./form-layer";
 import {asyncScheduler, BehaviorSubject, combineLatest, Observable, of, switchMap} from "rxjs";
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {AbstractControl, FormArray, FormControlStatus} from "@angular/forms";
-import {DeepPartial, hasId, SimpleObject} from "@consensus-labs/ts-tools";
-import {cache} from "../tools/rxjs";
-import {MoveModel} from "../tools/models";
+import {DeepPartial, SimpleObject} from "@consensus-labs/ts-tools";
+import {cache} from "@consensus-labs/rxjs-tools";
 
 
 export class FormList<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormArray {
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
+  /** Observable denoting when the list is disabled */
   public readonly disabled$: Observable<boolean>;
+  /** Observable containing all the current errors of the list */
   public readonly errors$: Observable<FormError[]>;
 
+  /** @inheritDoc */
   readonly value!: TValue[];
+  /** @inheritDoc */
   readonly valueChanges!: Observable<TValue[]>;
   private readonly _value$: BehaviorSubject<TValue[]>;
   public readonly value$: Observable<TValue[]>;
   public readonly throttledValue$: Observable<TValue[]>;
 
+  /** An observable containing the computed raw values of the list */
   public rawValue$: Observable<TRaw[]>;
 
+  /** A list of all the Form Layers making up the list */
   public controls!: FormLayer<TControls, TValue, TRaw>[];
-  public _controls$: BehaviorSubject<FormLayer<TControls, TValue, TRaw>[]>;
+  private _controls$: BehaviorSubject<FormLayer<TControls, TValue, TRaw>[]>;
+  /** An observable containing the current controls of the list */
   public controls$: Observable<FormLayer<TControls, TValue, TRaw>[]>;
 
   private templateLayer: FormLayer<TControls, TValue, TRaw>;
@@ -87,6 +93,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   }
 
   //<editor-fold desc="Helpers">
+
   private updateControls() {
     this._controls$.next(this.controls);
   }
@@ -114,33 +121,48 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
       this.updateControls();
     }
   }
+
   //</editor-fold>
 
+  /** @inheritDoc */
   clear() {
     super.clear();
     this.updateControls();
   }
 
+  /** @inheritDoc */
   reset(values: TValue[] = []) {
     this.scaleToSize(values.length);
     super.reset(values);
   }
 
+  /** @inheritDoc */
   patchValue(values: TValue[] = []) {
     super.patchValue(values);
   }
 
+  /** @inheritDoc */
   setValue(values: TRaw[]) {
     this.scaleToSize(values.length);
     super.setValue(values);
   }
 
   //<editor-fold desc="Mutations">
+
+  /**
+   * Add a form layer to the end of the list
+   * @param control - The layer
+   */
   push(control: FormLayer<TControls, TValue, TRaw>) {
     super.push(control);
     this.updateControls();
   }
 
+  /**
+   * Add a value to the end of the list.
+   * The value is converted to a Form Layer and appended.
+   * @param value - The value to add
+   */
   addElement(value?: TValue) {
     const layer = this.templateLayer.clone();
     if (value) layer.reset(value);
@@ -148,6 +170,12 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     return layer;
   }
 
+  /**
+   * Update the value of the first match in the list.
+   * If no match is found, add the item.
+   * @param filter - The search filter
+   * @param value - The value to update with
+   */
   setElement(filter: (x: TValue) => boolean, value: TValue) {
     const control = this.controls.find(x => filter(x.value));
     if (!control) return this.addElement(value);
@@ -155,6 +183,11 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     return control;
   }
 
+  /**
+   * Update the value of the first match in the list
+   * @param filter - The search filter
+   * @param value - The value to update with
+   */
   updateElement(filter: (x: TValue) => boolean, value: TValue) {
     const control = this.controls.find(x => filter(x.value));
     if (!control) return null;
@@ -162,13 +195,24 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     return control;
   }
 
+  /**
+   * Toggle the presence of an item based on the filter.
+   * If a match is found it will be removed.
+   * If no match is found the value will be added.
+   * @param filter - The search filter
+   * @param value - The value to add if applicable
+   */
   toggleElement(filter: (x: TValue) => boolean, value: TValue) {
-    const removed = this.remove(filter);
+    const removed = this.removeElement(filter);
     if (!removed) return this.addElement(value);
     return null;
   }
 
-  remove(filter: (x: TValue) => boolean) {
+  /**
+   * Remove the first item matching the predicate
+   * @param filter - The match predicate
+   */
+  removeElement(filter: (x: TValue) => boolean) {
     const index = this.controls.findIndex(x => filter(x.value));
     if (index < 0) return false;
 
@@ -176,7 +220,11 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     return true;
   }
 
-  removeElement(layer: AbstractControl) {
+  /**
+   * Remove the given form layer
+   * @param layer - The layer to remove
+   */
+  remove(layer: AbstractControl) {
     const index = this.controls.findIndex(x => x === layer);
     if (index < 0) return false;
 
@@ -184,6 +232,10 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     return true;
   }
 
+  /**
+   * Remove a layer at a specified index
+   * @param index - The index at which to remove the item
+   */
   removeAt(index: number) {
     super.removeAt(index);
     this.updateControls();
@@ -191,27 +243,38 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   //</editor-fold>
 
   //<editor-fold desc="Move Actions">
-  moveSortableElement(data: MoveModel) {
-    const oldIndex = this.value.findIndex(x => hasId(x) && x['id'] === data.id);
-    this.moveElement(oldIndex, data.index);
-  }
 
+  /**
+   * Move an item the list based on the Material CDK payload
+   * @param data - The CDK move data
+   */
   moveCdkElement(data: {previousIndex: number, currentIndex: number}) {
     this.moveElement(data.previousIndex, data.currentIndex);
   }
 
+  /**
+   * Move an element in the list
+   * @param oldIndex - The Index of the element to move
+   * @param newIndex - The target index for the element
+   */
   moveElement(oldIndex: number, newIndex: number) {
     const control = this.controls[oldIndex];
     super.removeAt(oldIndex);
     super.insert(newIndex, control);
     this.updateControls();
   }
+
   //</editor-fold>
 
+  /** @inheritDoc */
   getRawValue(): TRaw[] {
     return super.getRawValue();
   }
 
+  /**
+   * Clone the list based on its configuration.
+   * No values are moved over.
+   */
   clone(): FormList<TControls, TValue, TRaw> {
     return new FormList<TControls, TValue, TRaw>(
       this.templateLayer.clone().controls,

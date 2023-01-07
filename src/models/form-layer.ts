@@ -4,27 +4,35 @@ import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
 import {DeepPartial, mapObj, SimpleObject} from "@consensus-labs/ts-tools";
 import {FormNode} from "./form-node";
-import {cache} from "../tools/rxjs";
+import {cache} from "@consensus-labs/rxjs-tools";
 
 
 export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormGroup {
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
+  /** An observable denoting when the layer is disabled */
   public readonly disabled$: Observable<boolean>;
+  /** An observable containing all the current errors of the Layer */
   public readonly errors$: Observable<FormError[]>;
 
   private readonly _value$: BehaviorSubject<TValue>;
+  /** An observable containing the current value */
   public readonly value$: Observable<TValue>;
   protected readonly _throttledValue$ = new Subject<TValue>();
+  /** A throttled observable containing the current value */
   public readonly throttledValue$: Observable<TValue>;
 
   private readonly _controls$: BehaviorSubject<TControls>;
+  /** An observable containing the current controls in the layer */
   public readonly controls$: Observable<TControls>;
 
   private readonly _inputList$: BehaviorSubject<FormNode<any>[]>;
+  /** An observable containing a list of all the Form Nodes in the layer */
   public readonly inputList$: Observable<FormNode<any>[]>;
+  /** A list of all the Form Nodes in the layer */
   get inputList(): FormNode<any>[] {return this._inputList$.value}
 
+  /** A throttled observable containing the raw value of the layer */
   public rawValue$: Observable<TRaw>;
 
   constructor(controls: TControls) {
@@ -77,6 +85,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
     //</editor-fold>
   }
 
+  /** @inheritDoc */
   registerControl<K extends Extract<keyof TControls, string>>(name: K, control: TControls[K]): TControls[K] {
     const activeControl = super.registerControl(name, control);
     if (activeControl === control) {
@@ -85,36 +94,48 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
     return activeControl;
   }
 
+  /** @inheritDoc */
   removeControl<K extends Extract<keyof TControls, string>>(name: K) {
     super.removeControl(name);
     this._controls$.next(this.controls);
   }
 
+  /** @inheritDoc */
   addControl<K extends Extract<keyof TControls, string>>(name: K, control: Required<TControls>[K]) {
     super.addControl(name, control);
   }
 
+  /** @inheritDoc */
   setControl<K extends Extract<keyof TControls, string>>(name: K, control: TControls[K]) {
     super.setControl(name, control);
   }
 
   //<editor-fold desc="Value overrides">
+  /** @inheritDoc */
   public readonly value!: TValue;
+  /** @inheritDoc */
   public readonly valueChanges!: Observable<TValue>;
+  /**
+   * The current controls in this layer
+   */
   public readonly controls!: TControls;
 
+  /** @inheritDoc */
   getRawValue(): TRaw {
     return super.getRawValue();
   }
 
+  /** @inheritDoc */
   setValue(value: TRaw) {
     return super.setValue(value);
   }
 
+  /** @inheritDoc */
   patchValue(value: TValue) {
     return super.patchValue(value);
   }
 
+  /** @inheritDoc */
   reset(value?: TValue) {
     super.reset(value ?? {});
     this._throttledValue$.next(this.value);
@@ -122,16 +143,31 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
 
   //</editor-fold>
 
+  /**
+   * Create a clone of the layer and all it's controls.
+   * This does not clone over any values.
+   */
   clone(): FormLayer<TControls, TValue, TRaw> {
     return new FormLayer<TControls, TValue, TRaw>(mapObj(this.controls, x => x.clone()) as TControls);
   }
 }
 
 export class FormLayerConstructors {
+
+  /**
+   * Create an anonymously typed layer
+   * @param controls - The controls for the layer
+   * @constructor
+   */
   static Controls<TControls extends Record<string, SmartFormUnion>>(controls: TControls): ControlFormLayer<TControls> {
     return new FormLayer(controls);
   }
 
+  /**
+   * Create a layer based on a type
+   * @param controls - The controls matching the type
+   * @constructor
+   */
   static Model<TModel extends Record<string, any>>(controls: FormGroupControls<TModel>): ModelFormLayer<TModel> {
     return new FormLayer(controls);
   }

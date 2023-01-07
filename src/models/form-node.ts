@@ -1,10 +1,10 @@
 import {FormControl, FormControlStatus, ValidatorFn, Validators} from '@angular/forms';
 import {asyncScheduler, BehaviorSubject, combineLatest, delay, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, map, throttleTime} from 'rxjs/operators';
-import {FormError} from "../tools/form-types";
+import {AutoComplete, FormError} from "../tools/form-types";
 import {deepEquals} from "@consensus-labs/ts-tools";
-import {cache} from "../tools/rxjs";
 import {parseFormErrors} from "../tools/errors";
+import {cache} from "@consensus-labs/rxjs-tools";
 
 export enum FormNodeEvent {
   Focus = 'focus'
@@ -32,6 +32,7 @@ export enum InputTypes {
 }
 
 export interface FormNodeOptions {
+
   label?: string;
   autocomplete?: string;
   tooltip?: string;
@@ -42,34 +43,67 @@ export interface FormNodeOptions {
 
 export class FormNode<TInput> extends FormControl implements FormControl<TInput>, FormNodeOptions {
 
+  /** The current value of the input */
   value!: TInput;
+  /** @inheritDoc */
   valueChanges!: Observable<TInput>;
 
+  /** An observable emitting input actions */
   public readonly actions$ = new Subject<FormNodeEvent>();
+  /** An event emitted when the input resets */
   public readonly reset$ = new Subject<void>();
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
+  /** An observable denoting when the input is disabled */
   public readonly disabled$: Observable<boolean>;
 
   protected readonly _value$: BehaviorSubject<TInput>;
+  /** An observable for the current value of the input */
   public readonly value$: Observable<TInput>;
+  /** A throttled observable containing the value with a rolling delay */
   public readonly throttledValue$: Observable<TInput>;
 
+  /** An observable containing the computed raw value of the input */
   public rawValue$: Observable<TInput>
 
+  /** An observable denoting if the input has an error */
   public readonly hasError$: Observable<boolean>;
+  /** An observable denoting all the current errors for the input */
   public readonly errors$: Observable<FormError[]>;
+  /** An observable containing the current error state represented as a display string */
   public readonly error$: Observable<string|undefined>;
 
+  /** The input label */
   readonly label?: string;
+  /** The type of browser auto-compelte to use, if any */
   readonly autocomplete?: string;
+  /** An optional tooltip for the input */
   readonly tooltip?: string;
+  /** Whether or not the input is read-only */
   readonly readonly?: boolean;
+  /** Determines if the input should auto focus */
   readonly autoFocus?: boolean;
+  /** Show the input even when disabled */
   readonly showDisabledField?: boolean;
 
+  /**
+   * Create a Form Node manually.
+   * It is recommended to use the `Form.xxx` constructors for configuring Form Nodes.
+   * @param type - The type of the input
+   * @param defaultValue - The default value of the input.
+   * This input is used as a fallback for missing values.
+   * @param initialValue - The initial value of the input.
+   * This is used for initial setup and resetting the input.
+   * Defaults to defaultValue.
+   * @param nullable - Whether the input is nullable
+   * @param rawDefault - Define a distinct default value for getting the raw value
+   * @param validators - Add validators
+   * @param options - Additional options
+   */
   constructor(
+    /** The type of the input */
     public readonly type: InputTypes,
+    /** The default value of the input*/
     public readonly defaultValue: TInput,
     protected readonly initialValue: TInput = defaultValue,
     protected readonly nullable: boolean = false,
@@ -148,19 +182,23 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     return value;
   }
 
+  /** @inheritDoc */
   override setValue(value: TInput|undefined) {
     super.setValue(this.getValueOrDefault(value));
   }
 
+  /** @inheritDoc */
   override patchValue(value: TInput|undefined) {
     super.patchValue(this.getValueOrDefault(value));
   }
 
+  /** @inheritDoc */
   override reset(value?: TInput) {
     super.reset(this.getValueOrInitial(value));
     this.reset$.next();
   }
 
+  /** @inheritDoc */
   override getRawValue(): TInput {
     if (this.disabled) return this.rawDefault ?? this.defaultValue;
     return this.value ?? this.rawDefault as TInput;
@@ -168,10 +206,12 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   //</editor-fold>
 
   //<editor-fold desc="Actions">
+  /** Focus the input */
   focus() {
     setTimeout(() => this.actions$.next(FormNodeEvent.Focus), 0);
   }
 
+  /** Toggle the input value if boolean */
   toggle() {
     if (this.type !== InputTypes.Bool) {
       console.error('You cannot toggle a non boolean value');
@@ -182,6 +222,11 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   }
   //</editor-fold>
 
+  /**
+   * Clone the input
+   * This creates a duplicate of the configuration
+   * It does not clone the value
+   */
   clone(): FormNode<TInput> {
     const node = new FormNodeConfig<TInput>(
       this.type,
@@ -205,6 +250,19 @@ export class FormNodeConfig<TInput> {
   protected autoFocus?: boolean;
   protected showDisabledField?: boolean;
 
+  /**
+   * Manually create a Node Config.
+   * It is recommended to use the `Form.xxx` for creating a configuration.
+   * @param type - The type of the input
+   * @param defaultValue - The default value of the input.
+   * This input is used as a fallback for missing values.
+   * @param initialValue - The initial value of the input.
+   * This is used for initial setup and resetting the input.
+   * Defaults to defaultValue.
+   * @param nullable - Whether the input is nullable
+   * @param rawDefault - Define a distinct default value for getting the raw value
+   * @param validators - Add validators
+   */
   constructor(
     protected type: InputTypes,
     protected defaultValue: TInput,
@@ -216,41 +274,71 @@ export class FormNodeConfig<TInput> {
 
   }
 
+  /**
+   * Mark the input as required
+   */
   public required(): this {
     this.withValidators(Validators.required);
     return this;
   }
 
+  /**
+   * Add a label to the input
+   * @param label
+   */
   public withLabel(label: string): this {
     this.label = label;
     return this;
   }
 
-  public autocompleteAs(autocomplete: string): this {
+  /**
+   * Add HTML autocompletion to the input
+   * @param autocomplete - The type of autocomplete
+   */
+  public autocompleteAs(autocomplete: AutoComplete): this {
     this.autocomplete = autocomplete;
     return this;
   }
 
+  /**
+   * Add validators to the input
+   * @param validators
+   */
   public withValidators(...validators: ValidatorFn[]): this {
     this.validators.push(...validators);
     return this;
   }
 
+  /**
+   * Add a tooltip to the input.
+   * This can be used to explain details about the input and it's use.
+   * @param tooltip - The tooltip to show
+   */
   public withTooltip(tooltip: string): this {
     this.tooltip = tooltip;
     return this;
   }
 
+  /**
+   * Show the input even when disabled.
+   * By default, disabled inputs are hidden.
+   */
   public showDisabled(): this {
     this.showDisabledField = true;
     return this;
   }
 
+  /**
+   * Mark the input as read-only
+   */
   public asReadonly(): this {
     this.readonly = true;
     return this;
   }
 
+  /**
+   * Autofocus on the input
+   */
   public withFocus(): this {
     this.autoFocus = true;
     return this;
@@ -266,6 +354,10 @@ export class FormNodeConfig<TInput> {
     return this;
   }
 
+  /**
+   * Populate this configuration based on a Node
+   * @param options - The options from an existing Node
+   */
   public from(options: FormNodeOptions): this {
     this.label = options.label;
     this.autocomplete = options.autocomplete;
@@ -287,6 +379,9 @@ export class FormNodeConfig<TInput> {
     };
   }
 
+  /**
+   * Finalise the config and produce the input
+   */
   done(): FormNode<TInput> {
     return new FormNode<TInput>(
       this.type,
