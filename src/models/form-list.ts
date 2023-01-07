@@ -284,10 +284,23 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
 }
 
 export class FormListConstructors {
+
+  /**
+   * Create a Form List based on controls
+   * @param controls - The controls to use
+   * @param startLength - The initial length of the list
+   * @constructor
+   */
   static Controls<TControls extends Record<string, SmartFormUnion>>(controls: TControls, startLength?: number): ControlFormList<TControls> {
     return new FormList(controls, startLength);
   }
 
+  /**
+   * Create a Form List based on an element type
+   * @param controls - The controls to use
+   * @param startLength - The initial length of the list
+   * @constructor
+   */
   static Model<TModel extends Record<string, any>>(controls: FormGroupControls<TModel>, startLength?: number): ModelFormList<TModel> {
     return new FormList(controls);
   }

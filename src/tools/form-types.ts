@@ -20,15 +20,17 @@ export type FormGroupControls<T extends Record<string, any>> = { [K in keyof T]:
 //</editor-fold>
 
 //<editor-fold desc="Value to Template">
-type FormListTemplate<A> = A extends Record<string, any> ? [FormGroupTemplate<A>] : FormNode<NonNullable<A>>;
+
+type FormListTemplate<A> = A extends Record<string, any> ? [FormGroupTemplate<A>, number?] : FormNode<NonNullable<A>[]> | FormNodeConfig<NonNullable<A>[]>;
 
 export type FormTemplate<T> =
-  NonNullable<T> extends Date | File | string ? FormNode<T> | FormNode<NonNullable<T>> :
+  NonNullable<T> extends Date | File | string ? FormNode<T> | FormNode<NonNullable<T>> | FormNodeConfig<T> | FormNodeConfig<NonNullable<T>> :
     NonNullable<T> extends (infer A)[] ? FormListTemplate<A> :
       NonNullable<T> extends Record<string, any> ? FormGroupTemplate<NonNullable<T>> :
         FormNode<T> | FormNode<NonNullable<T>> | FormNodeConfig<T> | FormNodeConfig<NonNullable<T>>;
 
 export type FormGroupTemplate<T extends Record<string, any>> = { [K in keyof T]: FormTemplate<T[K]> };
+
 //</editor-fold>
 
 //<editor-fold desc="Controls to Value">
@@ -44,6 +46,19 @@ export type FormValueRaw<T extends AbstractControl> = T extends ControlFormList<
 
 export type FormGroupValue<T extends Record<string, AbstractControl>> = { [K in keyof T]?: FormValue<T[K]> };
 export type FormGroupValueRaw<T extends Record<string, AbstractControl>> = { [K in keyof T]: FormValueRaw<T[K]> };
+//</editor-fold>
+
+//<editor-fold desc="Template to Value">
+
+export type FormTemplateValue<T extends FormTemplate<any>> =
+  T extends [infer X extends FormGroupTemplate<any>, number?] ? FormGroupTemplateValue<X>[] :
+    T extends FormGroupTemplate<any> ? FormGroupTemplateValue<T> :
+      T extends FormNode<infer X> ? X :
+        T extends FormNodeConfig<infer X> ? X :
+          never;
+
+export type FormGroupTemplateValue<T extends FormGroupTemplate<any>> = { [K in keyof T]: FormTemplateValue<T[K]> };
+
 //</editor-fold>
 
 //<editor-fold desc="Config Values">
