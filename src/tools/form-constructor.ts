@@ -4,7 +4,9 @@ import {Observable} from "rxjs";
 import {DeepPartial, MapFunc} from "@consensus-labs/ts-tools";
 import {FormSelectNodeConfig, MultiSelectNodeConfig, SingleSelectNodeConfig} from "../models/form-select-node";
 import {FormLayer, FormLayerConstructors, ModelFormLayer} from "../models/form-layer";
-import {FormGroupControls, FormGroupTemplate, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "./form-types";
+import {
+  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValue, FormGroupValueRaw, SmartFormUnion
+} from "./form-types";
 import {ControlFormRoot, FormRoot, FormRootConstructors, ModelFormRoot} from "../models/form-root";
 import {NodeValidators} from "./validation";
 import {FormList, FormListConstructors} from "../models/form-list";
@@ -639,11 +641,35 @@ class MultiSelectConfig<TValue, TItem> {
 class FormGuideFactory<TGuide extends Record<string, any>> {
 
   /**
-   * Supply the controls that fulfill the guide
-   * @param controls - Form controls
+   * Define the form using a strict template
+   * @param template - The template
    */
-  withForm<TControls extends FormGroupControls<DeepPartial<TGuide>>>(controls: TControls): ControlFormRoot<TControls> {
-    return new FormRoot(controls);
+  withForm(template: FormGroupTemplate<TGuide>): ModelFormRoot<TGuide>;
+  /**
+   * Define the form using a loose template.
+   * This sacrifices type conciseness for flexibility.
+   * @param template - The template
+   */
+  withForm<TTemplate extends FormGroupTemplate<DeepPartial<TGuide>>>(template: TTemplate): ModelFormRoot<FormGroupTemplateValue<TTemplate>>;
+  withForm<T extends Record<string, any>>(template: FormGroupTemplate<T>): ModelFormRoot<T> {
+    return FormRootConstructors.Model<T>(
+      formTemplateToControls(template)
+    );
+  }
+
+  /**
+   * Define the form controls strictly based on the type
+   * @param controls - The controls
+   */
+  withControls(controls: FormGroupControls<TGuide>): ModelFormRoot<TGuide>;
+  /**
+   * Define the form controls loosely based on the type.
+   * This sacrifices type conciseness for flexibility.
+   * @param controls - The controls
+   */
+  withControls<TControls extends FormGroupControls<DeepPartial<TGuide>>>(controls: TControls): ControlFormRoot<TControls>;
+  withControls<T extends Record<string, any>>(controls: FormGroupControls<T>): ModelFormRoot<T> {
+    return FormRootConstructors.Model<T>(controls);
   }
 
 }
