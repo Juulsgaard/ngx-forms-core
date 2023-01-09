@@ -33,38 +33,41 @@ export enum InputTypes {
 
 export interface FormNodeOptions {
 
-  label?: string;
-  autocomplete?: string;
-  tooltip?: string;
-  readonly?: boolean;
-  autoFocus?: boolean;
-  showDisabledField?: boolean;
+  readonly label?: string;
+  readonly autocomplete?: string;
+  readonly tooltip?: string;
+  readonly readonly?: boolean;
+  readonly autoFocus?: boolean;
+  readonly showDisabledField?: boolean;
 }
 
 export class FormNode<TInput> extends FormControl implements FormControl<TInput>, FormNodeOptions {
 
   /** The current value of the input */
-  value!: TInput;
+  readonly value!: TInput;
   /** @inheritDoc */
-  valueChanges!: Observable<TInput>;
+  readonly valueChanges!: Observable<TInput>;
 
+  private readonly _actions$ = new Subject<FormNodeEvent>()
   /** An observable emitting input actions */
-  public readonly actions$ = new Subject<FormNodeEvent>();
+  public readonly actions$ = this._actions$.asObservable();
+
+  private readonly _reset$ = new Subject<void>();
   /** An event emitted when the input resets */
-  public readonly reset$ = new Subject<void>();
+  public readonly reset$ = this._reset$.asObservable();
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
   /** An observable denoting when the input is disabled */
   public readonly disabled$: Observable<boolean>;
 
-  protected readonly _value$: BehaviorSubject<TInput>;
+  private readonly _value$: BehaviorSubject<TInput>;
   /** An observable for the current value of the input */
   public readonly value$: Observable<TInput>;
   /** A throttled observable containing the value with a rolling delay */
   public readonly throttledValue$: Observable<TInput>;
 
   /** An observable containing the computed raw value of the input */
-  public rawValue$: Observable<TInput>
+  public readonly rawValue$: Observable<TInput>
 
   /** An observable denoting if the input has an error */
   public readonly hasError$: Observable<boolean>;
@@ -195,7 +198,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   /** @inheritDoc */
   override reset(value?: TInput) {
     super.reset(this.getValueOrInitial(value));
-    this.reset$.next();
+    this._reset$.next();
   }
 
   /** @inheritDoc */
@@ -208,7 +211,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   //<editor-fold desc="Actions">
   /** Focus the input */
   focus() {
-    setTimeout(() => this.actions$.next(FormNodeEvent.Focus), 0);
+    setTimeout(() => this._actions$.next(FormNodeEvent.Focus), 0);
   }
 
   /** Toggle the input value if boolean */
