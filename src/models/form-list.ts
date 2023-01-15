@@ -283,7 +283,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   }
 }
 
-export class FormListConstructors {
+export abstract class FormListConstructors {
 
   /**
    * Create a Form List based on controls

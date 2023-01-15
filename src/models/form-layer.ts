@@ -152,7 +152,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   }
 }
 
-export class FormLayerConstructors {
+export abstract class FormLayerConstructors {
 
   /**
    * Create an anonymously typed layer

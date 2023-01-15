@@ -135,7 +135,7 @@ export class FormRoot<TControls extends Record<string, SmartFormUnion>, TValue e
   }
 }
 
-export class FormRootConstructors {
+export abstract class FormRootConstructors {
 
   /**
    * Create an anonymously typed form

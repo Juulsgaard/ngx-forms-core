@@ -13,7 +13,7 @@ import {FormList, FormListConstructors} from "../models/form-list";
 import {formTemplateToControls} from "./templates";
 import {FormConstants} from "./constants";
 
-export class Form {
+export abstract class Form {
 
   //<editor-fold desc="Non Nullable">
 
