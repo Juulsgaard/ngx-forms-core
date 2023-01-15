@@ -1,13 +1,25 @@
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
-import {FormLayer} from "./form-layer";
+import {AnonFormLayer, FormLayer} from "./form-layer";
 import {asyncScheduler, BehaviorSubject, combineLatest, Observable, of, switchMap} from "rxjs";
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {AbstractControl, FormArray, FormControlStatus} from "@angular/forms";
 import {DeepPartial, SimpleObject} from "@consensus-labs/ts-tools";
 import {cache} from "@consensus-labs/rxjs-tools";
 
+export interface AnonFormList {
 
-export class FormList<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormArray {
+  /** Observable denoting when the list is disabled */
+  readonly disabled$: Observable<boolean>;
+  /** Observable containing all the current errors of the list */
+  readonly errors$: Observable<FormError[]>;
+
+  /** A list of all the Form Layers making up the list */
+  readonly controls: AnonFormLayer[];
+  /** An observable containing the current controls of the list */
+  readonly controls$: Observable<AnonFormLayer[]>;
+}
+
+export class FormList<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormArray implements AnonFormList {
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
   /** Observable denoting when the list is disabled */
@@ -283,7 +295,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   }
 }
 
-export abstract class FormListConstructors {
+export module FormListConstructors {
 
   /**
    * Create a Form List based on controls
@@ -291,7 +303,7 @@ export abstract class FormListConstructors {
    * @param startLength - The initial length of the list
    * @constructor
    */
-  static Controls<TControls extends Record<string, SmartFormUnion>>(controls: TControls, startLength?: number): ControlFormList<TControls> {
+  export function Controls<TControls extends Record<string, SmartFormUnion>>(controls: TControls, startLength?: number): ControlFormList<TControls> {
     return new FormList(controls, startLength);
   }
 
@@ -301,7 +313,7 @@ export abstract class FormListConstructors {
    * @param startLength - The initial length of the list
    * @constructor
    */
-  static Model<TModel extends Record<string, any>>(controls: FormGroupControls<TModel>, startLength?: number): ModelFormList<TModel> {
+  export function Model<TModel extends Record<string, any>>(controls: FormGroupControls<TModel>, startLength?: number): ModelFormList<TModel> {
     return new FormList(controls);
   }
 }

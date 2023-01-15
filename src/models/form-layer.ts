@@ -3,9 +3,20 @@ import {asyncScheduler, BehaviorSubject, combineLatest, mergeWith, Observable, s
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
 import {DeepPartial, mapObj, SimpleObject} from "@consensus-labs/ts-tools";
-import {FormNode} from "./form-node";
+import {AnonFormNode, FormNode} from "./form-node";
 import {cache} from "@consensus-labs/rxjs-tools";
 
+export interface AnonFormLayer {
+  /** An observable denoting when the layer is disabled */
+  readonly disabled$: Observable<boolean>;
+  /** An observable containing all the current errors of the Layer */
+  readonly errors$: Observable<FormError[]>;
+
+  /** An observable containing a list of all the Form Nodes in the layer */
+  readonly inputList$: Observable<AnonFormNode[]>;
+  /** A list of all the Form Nodes in the layer */
+  readonly inputList: FormNode<any>[];
+}
 
 export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormGroup {
 
@@ -152,14 +163,14 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   }
 }
 
-export abstract class FormLayerConstructors {
+export module FormLayerConstructors {
 
   /**
    * Create an anonymously typed layer
    * @param controls - The controls for the layer
    * @constructor
    */
-  static Controls<TControls extends Record<string, SmartFormUnion>>(controls: TControls): ControlFormLayer<TControls> {
+  export function Controls<TControls extends Record<string, SmartFormUnion>>(controls: TControls): ControlFormLayer<TControls> {
     return new FormLayer(controls);
   }
 
@@ -168,7 +179,7 @@ export abstract class FormLayerConstructors {
    * @param controls - The controls matching the type
    * @constructor
    */
-  static Model<TModel extends Record<string, any>>(controls: FormGroupControls<TModel>): ModelFormLayer<TModel> {
+  export function Model<TModel extends Record<string, any>>(controls: FormGroupControls<TModel>): ModelFormLayer<TModel> {
     return new FormLayer(controls);
   }
 }

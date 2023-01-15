@@ -13,7 +13,7 @@ import {FormList, FormListConstructors} from "../models/form-list";
 import {formTemplateToControls} from "./templates";
 import {FormConstants} from "./constants";
 
-export abstract class Form {
+export module Form {
 
   //<editor-fold desc="Non Nullable">
 
@@ -22,7 +22,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static generic(initialValue: any, defaultValue?: any) {
+  export function generic(initialValue: any, defaultValue?: any) {
     return new FormNodeConfig<any>(InputTypes.Generic, defaultValue ?? initialValue, initialValue);
   }
 
@@ -30,7 +30,7 @@ export abstract class Form {
   /**
    * Create a readonly input for storing Ids
    */
-  static id() {
+  export function id() {
     return new FormNodeConfig<string>(InputTypes.Text, '').withLabel('Id').asReadonly();
   }
 
@@ -39,7 +39,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static text(initialValue?: string, defaultValue?: string) {
+  export function text(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(InputTypes.Text, defaultValue ?? initialValue ?? '', initialValue);
   }
 
@@ -48,7 +48,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static guid(initialValue?: string, defaultValue?: string) {
+  export function guid(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(
       InputTypes.Text,
       defaultValue ?? initialValue ?? FormConstants.NULL_GUID,
@@ -61,7 +61,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static url(initialValue?: string, defaultValue?: string) {
+  export function url(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(InputTypes.Url, defaultValue ?? initialValue ?? '', initialValue).withValidators(
       NodeValidators.url);
   }
@@ -71,7 +71,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static password(initialValue?: string, defaultValue?: string) {
+  export function password(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(InputTypes.Password, defaultValue ?? initialValue ?? '', initialValue);
   }
 
@@ -80,7 +80,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static color(initialValue?: string, defaultValue?: string) {
+  export function color(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(InputTypes.Color, defaultValue ?? initialValue ?? '', initialValue);
   }
 
@@ -89,7 +89,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static hexColor(initialValue?: string, defaultValue?: string) {
+  export function hexColor(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(
       InputTypes.Color,
       defaultValue ?? initialValue ?? '',
@@ -102,7 +102,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static email(initialValue?: string, defaultValue?: string) {
+  export function email(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(
       InputTypes.Email,
       defaultValue ?? initialValue ?? '',
@@ -115,7 +115,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static phone(initialValue?: string, defaultValue?: string) {
+  export function phone(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(InputTypes.Phone, defaultValue ?? initialValue ?? '', initialValue);
   }
 
@@ -124,7 +124,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static longText(initialValue?: string, defaultValue?: string) {
+  export function longText(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(InputTypes.LongText, defaultValue ?? initialValue ?? '', initialValue);
   }
 
@@ -133,7 +133,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static html(initialValue?: string, defaultValue?: string) {
+  export function html(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(InputTypes.HTML, defaultValue ?? initialValue ?? '', initialValue);
   }
 
@@ -142,7 +142,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static search(initialValue?: string, defaultValue?: string) {
+  export function search(initialValue?: string, defaultValue?: string) {
     return new FormNodeConfig<string>(InputTypes.Search, defaultValue ?? initialValue ?? '', initialValue);
   }
 
@@ -155,7 +155,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static number(initialValue?: number, defaultValue?: number) {
+  export function number(initialValue?: number, defaultValue?: number) {
     return new FormNodeConfig<number>(InputTypes.Number, defaultValue ?? initialValue ?? 0, initialValue);
   }
 
@@ -164,7 +164,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static bool(initialValue?: boolean, defaultValue?: boolean) {
+  export function bool(initialValue?: boolean, defaultValue?: boolean) {
     return new FormNodeConfig<boolean>(InputTypes.Bool, defaultValue ?? initialValue ?? false, initialValue);
   }
 
@@ -177,7 +177,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static date(initialValue?: Date, defaultValue?: Date) {
+  export function date(initialValue?: Date, defaultValue?: Date) {
     return new FormNodeConfig<Date>(InputTypes.Date, defaultValue ?? initialValue ?? new Date(0), initialValue);
   }
 
@@ -186,7 +186,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static datetime(initialValue?: Date, defaultValue?: Date) {
+  export function datetime(initialValue?: Date, defaultValue?: Date) {
     return new FormNodeConfig<Date>(InputTypes.DateTime, defaultValue ?? initialValue ?? new Date(0), initialValue);
   }
 
@@ -195,7 +195,7 @@ export abstract class Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  static time(initialValue?: Date, defaultValue?: Date) {
+  export function time(initialValue?: Date, defaultValue?: Date) {
     return new FormNodeConfig<Date>(InputTypes.Time, defaultValue ?? initialValue ?? new Date(0), initialValue);
   }
 
@@ -205,7 +205,7 @@ export abstract class Form {
    * Create a select endpoint
    * @param items - The items to select from
    */
-  static select<TItem>(items: TItem[] | Observable<TItem[]>) {
+  export function select<TItem>(items: TItem[] | Observable<TItem[]>) {
     return new SelectConfig<TItem>(items);
   }
 
@@ -213,7 +213,7 @@ export abstract class Form {
    * Create a Form Layer
    * @param controls - The controls of the group
    */
-  static group<TControls extends Record<string, SmartFormUnion>>(controls: TControls): FormLayer<TControls, FormGroupValue<TControls>, FormGroupValueRaw<TControls>> {
+  export function group<TControls extends Record<string, SmartFormUnion>>(controls: TControls): FormLayer<TControls, FormGroupValue<TControls>, FormGroupValueRaw<TControls>> {
     return FormLayerConstructors.Controls(controls);
   }
 
@@ -221,7 +221,7 @@ export abstract class Form {
    * Create a Form
    * @param controls - The controls of the form
    */
-  static root<TControls extends Record<string, SmartFormUnion>>(controls: TControls): FormRoot<TControls, FormGroupValue<TControls>, FormGroupValueRaw<TControls>> {
+  export function root<TControls extends Record<string, SmartFormUnion>>(controls: TControls): FormRoot<TControls, FormGroupValue<TControls>, FormGroupValueRaw<TControls>> {
     return FormRootConstructors.Controls(controls);
   }
 
@@ -230,7 +230,7 @@ export abstract class Form {
    * @param controls - The control to populate the list with
    * @param startLength - The starting length of the list
    */
-  static list<TControls extends Record<string, SmartFormUnion>>(
+  export function list<TControls extends Record<string, SmartFormUnion>>(
     controls: TControls,
     startLength?: number
   ): FormList<TControls, FormGroupValue<TControls>, FormGroupValueRaw<TControls>> {
@@ -241,7 +241,7 @@ export abstract class Form {
    * Create a form using a type based template
    * @param template - The form template to create the form from
    */
-  static template<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormRoot<TValue> {
+  export function template<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormRoot<TValue> {
     return FormRootConstructors.Model<TValue>(formTemplateToControls(template));
   }
 
@@ -249,14 +249,14 @@ export abstract class Form {
    * Create a Form Layer using a type based template
    * @param template - The form template to create the layer from
    */
-  static groupTemplate<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormLayer<TValue> {
+  export function groupTemplate<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormLayer<TValue> {
     return FormLayerConstructors.Model<TValue>(formTemplateToControls(template));
   }
 
   /**
    * Create a Form using a type based guide
    */
-  static guide<TGuide extends Record<string, any>>(): FormGuideFactory<TGuide> {
+  export function guide<TGuide extends Record<string, any>>(): FormGuideFactory<TGuide> {
     return new FormGuideFactory<TGuide>();
   }
 
@@ -266,7 +266,7 @@ export abstract class Form {
   //<editor-fold desc="Nullable">
 
   /** Create a nullable input */
-  static nullable = {
+  export const nullable = {
 
     /**
      * Create a generic input with no type, which can be null
@@ -429,7 +429,7 @@ export abstract class Form {
   //<editor-fold desc="Server Null">
 
   /** Create a nullable input that returns a non-null raw value */
-  static serverNull = {
+  export const serverNull = {
 
     //<editor-fold desc="Text Inputs">
 

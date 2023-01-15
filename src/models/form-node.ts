@@ -41,7 +41,35 @@ export interface FormNodeOptions {
   readonly showDisabledField?: boolean;
 }
 
-export class FormNode<TInput> extends FormControl implements FormControl<TInput>, FormNodeOptions {
+export interface AnonFormNode extends FormNodeOptions {
+
+  /** The type of the input */
+  readonly type: InputTypes,
+
+  /** An observable emitting input actions */
+  readonly actions$: Observable<FormNodeEvent>;
+
+  /** An event emitted when the input resets */
+  readonly reset$: Observable<void>;
+
+  /** An observable denoting when the input is disabled */
+  readonly disabled$: Observable<boolean>;
+
+  /** An observable denoting if the input has an error */
+  readonly hasError$: Observable<boolean>;
+  /** An observable denoting all the current errors for the input */
+  readonly errors$: Observable<FormError[]>;
+  /** An observable containing the current error state represented as a display string */
+  readonly error$: Observable<string|undefined>;
+
+  /** Focus the input */
+  focus(): void;
+
+  /** Toggle the input value if boolean */
+  toggle(): void;
+}
+
+export class FormNode<TInput> extends FormControl implements FormControl<TInput>, AnonFormNode {
 
   /** The current value of the input */
   readonly value!: TInput;
