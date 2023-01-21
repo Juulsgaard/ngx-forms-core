@@ -28,9 +28,9 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   public readonly errors$: Observable<FormError[]>;
 
   /** @inheritDoc */
-  readonly value!: TValue[];
+  declare readonly value: TValue[];
   /** @inheritDoc */
-  readonly valueChanges!: Observable<TValue[]>;
+  declare readonly valueChanges: Observable<TValue[]>;
   private readonly _value$: BehaviorSubject<TValue[]>;
   public readonly value$: Observable<TValue[]>;
   public readonly throttledValue$: Observable<TValue[]>;
@@ -39,7 +39,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   public rawValue$: Observable<TRaw[]>;
 
   /** A list of all the Form Layers making up the list */
-  public controls!: FormLayer<TControls, TValue, TRaw>[];
+  declare public controls: FormLayer<TControls, TValue, TRaw>[];
   private _controls$: BehaviorSubject<FormLayer<TControls, TValue, TRaw>[]>;
   /** An observable containing the current controls of the list */
   public controls$: Observable<FormLayer<TControls, TValue, TRaw>[]>;

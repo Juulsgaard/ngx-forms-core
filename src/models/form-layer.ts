@@ -123,13 +123,13 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
 
   //<editor-fold desc="Value overrides">
   /** @inheritDoc */
-  public readonly value!: TValue;
+  declare public readonly value: TValue;
   /** @inheritDoc */
-  public readonly valueChanges!: Observable<TValue>;
+  declare public readonly valueChanges: Observable<TValue>;
   /**
    * The current controls in this layer
    */
-  public readonly controls!: TControls;
+  declare public readonly controls: TControls;
 
   /** @inheritDoc */
   getRawValue(): TRaw {

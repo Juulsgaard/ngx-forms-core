@@ -72,9 +72,9 @@ export interface AnonFormNode extends FormNodeOptions {
 export class FormNode<TInput> extends FormControl implements FormControl<TInput>, AnonFormNode {
 
   /** The current value of the input */
-  readonly value!: TInput;
+  declare readonly value: TInput;
   /** @inheritDoc */
-  readonly valueChanges!: Observable<TInput>;
+  declare readonly valueChanges: Observable<TInput>;
 
   private readonly _actions$ = new Subject<FormNodeEvent>()
   /** An observable emitting input actions */
