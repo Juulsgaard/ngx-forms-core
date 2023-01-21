@@ -173,7 +173,7 @@ export class FormRoot<TControls extends Record<string, SmartFormUnion>, TValue e
   }
 
   /** @inheritDoc */
-  reset(value?: TValue): void {
+  override reset(value?: TValue): void {
     super.reset(value);
     const rawValue = this.getRawValue();
     this._oldValue$.next(rawValue);

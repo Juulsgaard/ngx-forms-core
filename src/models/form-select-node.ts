@@ -88,7 +88,7 @@ export class FormSelectNode<TValue, TUnit, TItem> extends FormNode<TValue> imple
    * This creates a duplicate of the configuration
    * It does not clone the value
    */
-  clone(): FormSelectNode<TValue, TUnit, TItem> {
+  override clone(): FormSelectNode<TValue, TUnit, TItem> {
     const config = new FormSelectNodeConfig<TValue, TUnit, TItem>(
       this.type,
       this.defaultValue,
@@ -235,7 +235,7 @@ export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<T
   /**
    * Finalise the config and produce the input
    */
-  done(): FormSelectNode<TValue, TUnit, TItem> {
+  override done(): FormSelectNode<TValue, TUnit, TItem> {
     return new FormSelectNode<TValue, TUnit, TItem>(
       this.type,
       this.defaultValue,

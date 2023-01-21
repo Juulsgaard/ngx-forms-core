@@ -97,7 +97,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   }
 
   /** @inheritDoc */
-  registerControl<K extends Extract<keyof TControls, string>>(name: K, control: TControls[K]): TControls[K] {
+  override registerControl<K extends Extract<keyof TControls, string>>(name: K, control: TControls[K]): TControls[K] {
     const activeControl = super.registerControl(name, control);
     if (activeControl === control) {
       this._controls$.next(this.controls);
@@ -106,18 +106,18 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   }
 
   /** @inheritDoc */
-  removeControl<K extends Extract<keyof TControls, string>>(name: K) {
+  override removeControl<K extends Extract<keyof TControls, string>>(name: K) {
     super.removeControl(name);
     this._controls$.next(this.controls);
   }
 
   /** @inheritDoc */
-  addControl<K extends Extract<keyof TControls, string>>(name: K, control: Required<TControls>[K]) {
+  override addControl<K extends Extract<keyof TControls, string>>(name: K, control: Required<TControls>[K]) {
     super.addControl(name, control);
   }
 
   /** @inheritDoc */
-  setControl<K extends Extract<keyof TControls, string>>(name: K, control: TControls[K]) {
+  override setControl<K extends Extract<keyof TControls, string>>(name: K, control: TControls[K]) {
     super.setControl(name, control);
   }
 
@@ -132,22 +132,22 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   declare public readonly controls: TControls;
 
   /** @inheritDoc */
-  getRawValue(): TRaw {
+  override getRawValue(): TRaw {
     return super.getRawValue();
   }
 
   /** @inheritDoc */
-  setValue(value: TRaw) {
+  override setValue(value: TRaw) {
     return super.setValue(value);
   }
 
   /** @inheritDoc */
-  patchValue(value: TValue) {
+  override patchValue(value: TValue) {
     return super.patchValue(value);
   }
 
   /** @inheritDoc */
-  reset(value?: TValue) {
+  override reset(value?: TValue) {
     super.reset(value ?? {});
     this._throttledValue$.next(this.value);
   }

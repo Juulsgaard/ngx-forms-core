@@ -137,24 +137,24 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   //</editor-fold>
 
   /** @inheritDoc */
-  clear() {
+  override clear() {
     super.clear();
     this.updateControls();
   }
 
   /** @inheritDoc */
-  reset(values: TValue[] = []) {
+  override reset(values: TValue[] = []) {
     this.scaleToSize(values.length);
     super.reset(values);
   }
 
   /** @inheritDoc */
-  patchValue(values: TValue[] = []) {
+  override patchValue(values: TValue[] = []) {
     super.patchValue(values);
   }
 
   /** @inheritDoc */
-  setValue(values: TRaw[]) {
+  override setValue(values: TRaw[]) {
     this.scaleToSize(values.length);
     super.setValue(values);
   }
@@ -165,7 +165,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
    * Add a form layer to the end of the list
    * @param control - The layer
    */
-  push(control: FormLayer<TControls, TValue, TRaw>) {
+  override push(control: FormLayer<TControls, TValue, TRaw>) {
     super.push(control);
     this.updateControls();
   }
@@ -248,7 +248,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
    * Remove a layer at a specified index
    * @param index - The index at which to remove the item
    */
-  removeAt(index: number) {
+  override removeAt(index: number) {
     super.removeAt(index);
     this.updateControls();
   }
@@ -279,7 +279,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   //</editor-fold>
 
   /** @inheritDoc */
-  getRawValue(): TRaw[] {
+  override getRawValue(): TRaw[] {
     return super.getRawValue();
   }
 

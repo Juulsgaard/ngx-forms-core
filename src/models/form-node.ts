@@ -135,7 +135,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     /** The type of the input */
     public readonly type: InputTypes,
     /** The default value of the input*/
-    public readonly defaultValue: TInput,
+    public override readonly defaultValue: TInput,
     protected readonly initialValue: TInput = defaultValue,
     protected readonly nullable: boolean = false,
     protected readonly rawDefault?: TInput,
