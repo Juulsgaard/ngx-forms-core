@@ -1,0 +1,168 @@
+import {of, Subscribable} from "rxjs";
+import {DeepPartial, isBool, isFunction, SimpleObject} from "@consensus-labs/ts-tools";
+import {FormConfirmService} from "./form-confirm.service";
+import {FormGroupControls} from "../tools/form-types";
+import {FormPage} from "./form-page";
+
+export interface WarningDialog {
+  title: string;
+  text: string;
+  btnText?: string;
+}
+
+export interface FormPageOptions<T> {
+  onSubmit?: FormPageAction<T>;
+  submitBtnText: string;
+  submitWarning?: (value: T) => WarningDialog;
+  canEdit$?: Subscribable<boolean>;
+
+  onDelete?: FormPageAction<T>;
+  deleteBtnText: string;
+  deleteWarning?: (value: T) => WarningDialog;
+  canDelete$?: Subscribable<boolean>;
+
+  getError?: (value: DeepPartial<T>) => string | void;
+  getWarning?: (value: DeepPartial<T>) => string | void;
+
+  warningService?: FormConfirmService;
+}
+
+export type FormPageAction<T> = (data: T) => Promise<any> | Subscribable<any> | void;
+
+export abstract class BaseFormPageConfig<TVal extends SimpleObject> {
+
+  protected options: FormPageOptions<TVal>;
+
+  protected constructor(
+    protected type: 'create' | 'update',
+    protected controls: FormGroupControls<TVal>,
+    options?: FormPageOptions<TVal>
+  ) {
+    this.options = options ?? {
+      submitBtnText: type === 'create' ? 'Create' : 'Save',
+      deleteBtnText: 'Delete'
+    };
+  }
+
+  renderWarnings(service: FormConfirmService): this {
+    this.options.warningService = service;
+    return this;
+  }
+
+  withSubmitWarning(
+    title: string | ((value: TVal) => string),
+    text: string | ((value: TVal) => string),
+    btnText?: string
+  ): this {
+    const getTitle = isFunction(title) ? title : () => title;
+    const getText = isFunction(text) ? text : () => text;
+    this.options.submitWarning = val => (
+      {
+        title: getTitle(val),
+        text: getText(val),
+        btnText
+      }
+    );
+    return this;
+  }
+
+  withDeleteWarning(
+    title: string | ((value: TVal) => string),
+    text: string | ((value: TVal) => string),
+    btnText?: string
+  ): this {
+    const getTitle = isFunction(title) ? title : () => title;
+    const getText = isFunction(text) ? text : () => text;
+    this.options.deleteWarning = val => (
+      {
+        title: getTitle(val),
+        text: getText(val),
+        btnText
+      }
+    );
+    return this;
+  }
+
+  limitSubmit(canEdit$: Subscribable<boolean> | boolean): this {
+    this.options.canEdit$ = isBool(canEdit$) ? of(canEdit$) : canEdit$;
+    return this;
+  }
+
+  limitDelete(canDelete$: Subscribable<boolean> | boolean): this {
+    this.options.canDelete$ = isBool(canDelete$) ? of(canDelete$) : canDelete$;
+    return this;
+  }
+
+  done(): FormPage<TVal> {
+    return new FormPage<TVal>(this.type, this.controls, this.options)
+  }
+}
+
+export class FormPageConfig<TVal extends SimpleObject> extends BaseFormPageConfig<TVal> {
+
+  constructor(type: 'create' | 'update', controls: FormGroupControls<TVal>) {
+    super(type, controls);
+  }
+
+  bind<TBound extends object>(bound: TBound): BoundFormPageConfig<TVal, TBound> {
+    return new BoundFormPageConfig(this.type, this.controls, this.options, bound);
+  }
+
+  withSubmit(action: FormPageAction<TVal>, btnText?: string): this {
+    this.options.onSubmit = action;
+    this.options.submitBtnText = btnText ?? this.options.submitBtnText;
+    return this;
+  }
+
+  withDelete(action: FormPageAction<TVal>, btnText?: string): this {
+    this.options.onDelete = action;
+    this.options.deleteBtnText = btnText ?? this.options.deleteBtnText;
+    return this;
+  }
+
+  withCustomError(getError: (value: DeepPartial<TVal>) => string | void): this {
+    this.options.getError = getError;
+    return this;
+  }
+
+  withCustomWarning(getWarning: (value: DeepPartial<TVal>) => string | void): this {
+    this.options.getWarning = getWarning;
+    return this;
+  }
+}
+
+export class BoundFormPageConfig<TVal extends SimpleObject, TBound extends object> extends BaseFormPageConfig<TVal> {
+
+
+  constructor(
+    type: "create" | "update",
+    controls: FormGroupControls<TVal>,
+    options: FormPageOptions<TVal>,
+    private bound: TBound
+  ) {
+    super(type, controls, options);
+  }
+
+  withSubmit(action: (bound: TBound) => FormPageAction<TVal>, btnText?: string): this {
+    this.options.onSubmit = action(this.bound).bind(this.bound);
+    this.options.submitBtnText = btnText ?? this.options.submitBtnText;
+    return this;
+  }
+
+  withDelete(action: (bound: TBound) => FormPageAction<TVal>, btnText?: string): this {
+    this.options.onDelete = action(this.bound).bind(this.bound);
+    this.options.deleteBtnText = btnText ?? this.options.deleteBtnText;
+    return this;
+  }
+
+  withCustomError(getError: (bound: TBound) => (value: DeepPartial<TVal>) => string | void): this {
+    this.options.getError = getError(this.bound).bind(this.bound);
+    return this;
+  }
+
+  withCustomWarning(getWarning: (bound: TBound) => (value: DeepPartial<TVal>) => string | void): this {
+    this.options.getWarning = getWarning(this.bound).bind(this.bound);
+    return this;
+  }
+
+}

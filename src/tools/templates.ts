@@ -1,9 +1,9 @@
 import {FormControls, FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormTemplate} from "./form-types";
 import {isObject} from "@consensus-labs/ts-tools";
 import {isFormNode, isFormNodeConfig} from "./type-predicates";
-import {FormLayerConstructors} from "../models/form-layer";
-import {FormListConstructors} from "../models/form-list";
-import {FormNode} from "../models/form-node";
+import {FormLayerConstructors} from "../forms/form-layer";
+import {FormListConstructors} from "../forms/form-list";
+import {FormNode} from "../forms/form-node";
 
 export function formTemplateToControls<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): FormGroupControls<TValue> {
 

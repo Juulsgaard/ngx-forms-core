@@ -1,6 +1,6 @@
-import {ControlFormList, FormList, ModelFormList} from "../models/form-list";
-import {ControlFormLayer, FormLayer, ModelFormLayer} from "../models/form-layer";
-import {FormNode, FormNodeConfig} from "../models/form-node";
+import {ControlFormList, FormList, ModelFormList} from "../forms/form-list";
+import {ControlFormLayer, FormLayer, ModelFormLayer} from "../forms/form-layer";
+import {FormNode, FormNodeConfig} from "../forms/form-node";
 import {AbstractControl} from "@angular/forms";
 
 export type FormError = { path: string[], error: string };

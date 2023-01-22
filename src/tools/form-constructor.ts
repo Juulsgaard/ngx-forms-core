@@ -1,15 +1,15 @@
 import {Validators} from "@angular/forms";
-import {FormNodeConfig, InputTypes} from "../models/form-node";
+import {FormNodeConfig, InputTypes} from "../forms/form-node";
 import {Observable} from "rxjs";
 import {DeepPartial, MapFunc} from "@consensus-labs/ts-tools";
-import {FormSelectNodeConfig, MultiSelectNodeConfig, SingleSelectNodeConfig} from "../models/form-select-node";
-import {FormLayer, FormLayerConstructors, ModelFormLayer} from "../models/form-layer";
+import {FormSelectNodeConfig, MultiSelectNodeConfig, SingleSelectNodeConfig} from "../forms/form-select-node";
+import {FormLayer, FormLayerConstructors, ModelFormLayer} from "../forms/form-layer";
 import {
   FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValue, FormGroupValueRaw, SmartFormUnion
 } from "./form-types";
-import {ControlFormRoot, FormRoot, FormRootConstructors, ModelFormRoot} from "../models/form-root";
+import {ControlFormRoot, FormRoot, FormRootConstructors, ModelFormRoot} from "../forms/form-root";
 import {NodeValidators} from "./validation";
-import {FormList, FormListConstructors} from "../models/form-list";
+import {FormList, FormListConstructors} from "../forms/form-list";
 import {formTemplateToControls} from "./templates";
 import {FormConstants} from "./constants";
 

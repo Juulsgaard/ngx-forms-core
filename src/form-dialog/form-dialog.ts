@@ -2,9 +2,10 @@ import {BehaviorSubject, firstValueFrom, lastValueFrom, Observable, of, switchMa
 import {map} from "rxjs/operators";
 import {DeepPartial} from "@consensus-labs/ts-tools";
 import {persistentCache} from "@consensus-labs/rxjs-tools";
-import {FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValueRaw} from "../tools/form-types";
-import {FormRootConstructors, ModelFormRoot} from "./form-root";
-import {formTemplateToControls} from "../tools/templates";
+import {FormGroupControls} from "../tools/form-types";
+import {FormRootConstructors, ModelFormRoot} from "../forms/form-root";
+import {FormDialogFactory} from "./form-dialog-factory";
+import {FormDialogOptions} from "./form-dialog-config";
 
 export class FormDialog<TValue extends Record<string, any>> {
 
@@ -71,7 +72,7 @@ export class FormDialog<TValue extends Record<string, any>> {
    * @param type - The type of dialog
    * @param settings - Settings
    */
-  constructor(template: FormGroupControls<TValue>, type: 'create'|'update', settings: Settings<TValue>) {
+  constructor(template: FormGroupControls<TValue>, type: 'create'|'update', settings: FormDialogOptions<TValue>) {
     this._form = FormRootConstructors.Model<TValue>(template);
     this.createForm = type === 'create';
     this.onSubmit = settings.onSubmit;
@@ -140,91 +141,3 @@ export class FormDialog<TValue extends Record<string, any>> {
 
 }
 
-interface Settings<T> {
-  /** The action to perform when submitting the form */
-  onSubmit: (data: T) => Promise<any>|Observable<any>|void;
-  /** The title of the dialog */
-  title: string;
-  /** The description for the dialog */
-  description?: string;
-  /** The text to show on the submit button. Defaults to 'Submit' */
-  buttonText?: string;
-  /** Optional validation for the form. Return a string when an error is present */
-  validate?: (data: DeepPartial<T>) => string|void;
-  /** Whether to have enter submit the form */
-  submitOnEnter?: boolean;
-}
-
-class FormDialogFactory<TGuide extends Record<string, any>> {
-  constructor(private type: 'create'|'update') {
-
-  }
-
-  /**
-   * Define the dialog form using a strict template
-    * @param template - The template
-   */
-  withTemplate(template: FormGroupTemplate<TGuide>): FormDialogConfig<TGuide> {
-    return new FormDialogConfig(this.type, formTemplateToControls(template));
-  }
-
-  /**
-   * Define the dialog form using a strict template with keys omitted
-   * @param template - The template
-   */
-  withModifiedTemplate<TOmit extends keyof TGuide>(template: FormGroupTemplate<Omit<TGuide, TOmit>>): FormDialogConfig<Omit<TGuide, TOmit>> {
-    return new FormDialogConfig(this.type, formTemplateToControls(template));
-  }
-
-  /**
-   * Define the dialog form using a strict template
-   * @param template - The template
-   */
-  withForm(template: FormGroupTemplate<TGuide>): FormDialogConfig<TGuide>;
-  /**
-   * Define the dialog form using a loose template.
-   * This sacrifices type conciseness for flexibility.
-   * @param template - The template
-   */
-  withForm<TTemplate extends FormGroupTemplate<DeepPartial<TGuide>>>(template: TTemplate): FormDialogConfig<FormGroupTemplateValue<TTemplate>>;
-  withForm<T extends Record<string, any>>(template: FormGroupTemplate<T>): FormDialogConfig<T> {
-    return new FormDialogConfig<T>(
-      this.type,
-      formTemplateToControls(template)
-    );
-  }
-
-  /**
-   * Define the form controls for the Dialog strictly based on the type
-   * @param controls - The controls
-   */
-  withControls(controls: FormGroupControls<TGuide>): FormDialogConfig<TGuide>;
-  /**
-   * Define the form controls for the Dialog loosely based on the type.
-   * This sacrifices type conciseness for flexibility.
-   * @param controls - The controls
-   */
-  withControls<TControls extends FormGroupControls<DeepPartial<TGuide>>>(controls: TControls): FormDialogConfig<FormGroupValueRaw<TControls>>;
-  withControls<T extends Record<string, any>>(controls: FormGroupControls<T>): FormDialogConfig<T> {
-    return new FormDialogConfig<T>(
-      this.type,
-      controls
-    );
-  }
-
-}
-
-class FormDialogConfig<TValue extends Record<string, any>> {
-
-  constructor(private type: 'create'|'update', private controls: FormGroupControls<TValue>) {
-
-  }
-
-  /**
-   * Configure the dialog
-   * @param settings
-   */
-  configure(settings: Settings<TValue>) {
-    return new FormDialog<TValue>(this.controls, this.type, settings)
-  }
-}
