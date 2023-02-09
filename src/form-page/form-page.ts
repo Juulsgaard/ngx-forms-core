@@ -210,13 +210,15 @@ export class FormPage<TVal extends SimpleObject> {
   }
 }
 
-function execute(action: () => Promise<any> | Subscribable<any> | void): ILoadingState {
+function execute(action: () => Promise<any> | Subscribable<any> | ILoadingState | void): ILoadingState {
   try {
     const result = action();
+    if (result instanceof ILoadingState) return result;
     if (!result) return Loading.Empty();
     return Loading.Async(result);
   } catch (e: unknown) {
-    return Loading.FromError(e instanceof Error ? e : Error(e?.toString()));
+    const error = e instanceof Error ? e : Error(e?.toString());
+    return Loading.FromError(() => error);
   }
 }
 

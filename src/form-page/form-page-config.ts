@@ -3,6 +3,7 @@ import {DeepPartial, isBool, isFunction, SimpleObject} from "@consensus-labs/ts-
 import {FormConfirmService} from "./form-confirm.service";
 import {FormGroupControls} from "../tools/form-types";
 import {FormPage} from "./form-page";
+import {ILoadingState} from "@consensus-labs/rxjs-tools";
 
 export interface WarningDialog {
   title: string;
@@ -27,7 +28,7 @@ export interface FormPageOptions<T> {
   warningService?: FormConfirmService;
 }
 
-export type FormPageAction<T> = (data: T) => Promise<any> | Subscribable<any> | void;
+export type FormPageAction<T> = (data: T) => Promise<any> | Subscribable<any> | ILoadingState | void;
 
 export abstract class BaseFormPageConfig<TVal extends SimpleObject> {
 
