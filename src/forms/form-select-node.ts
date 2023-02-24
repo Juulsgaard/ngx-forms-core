@@ -141,6 +141,7 @@ export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<T
     validators: ValidatorFn[] = []
   ) {
     super(type, defaultValue, initialValue, nullable, rawDefault, validators);
+    this.multiple = type === InputTypes.SelectMany;
   }
 
   /**
