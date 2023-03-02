@@ -141,36 +141,3 @@ export type AutoComplete =
   | string;
 
 //</editor-fold>
-
-enum E {
-  First = 'First',
-  Second = 'Second'
-}
-
-interface M {
-  test?: string;
-  many: string | Date | number;
-  manyNull: string | Date | number | null;
-  manyUndefined: string | Date | number | undefined;
-  manyUnset?: string | Date | number;
-  bool: boolean;
-  boolUndefined: boolean | undefined;
-  enum: E;
-}
-
-type test = FormGroupTemplate<M>;
-type test2 = FormTemplate<Omit<M, 'test'>["bool"]>;
-type test3 = true | false extends boolean ? true : false;
-type test4 = test['enum'];
-type test5 = true | false;
-type test6 = E.First | E.Second;
-type test7 = [E] extends [string] ? true : false;
-
-function test(form: FormGroupTemplate<M>) {
-  const t = form.enum;
-
-}
-
-const tt: FormGroupTemplate<M>['enum'] = null!;
-
-
