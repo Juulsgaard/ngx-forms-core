@@ -10,7 +10,7 @@ export function formTemplateToControls<TValue extends Record<string, any>>(templ
   const result = {} as FormGroupControls<TValue>;
 
   for (let key in template) {
-    const sub = template[key] as FormTemplate<TValue[keyof TValue]>;
+    const sub = template[key] as FormTemplate<TValue[Extract<keyof TValue, string>]>;
     if (!sub) continue;
     result[key] = templateToControl(sub as TValue[Extract<keyof TValue, string>]) as FormControls<TValue[Extract<keyof TValue, string>]>;
   }

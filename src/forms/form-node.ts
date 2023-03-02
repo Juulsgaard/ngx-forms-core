@@ -46,6 +46,9 @@ export interface AnonFormNode extends FormNodeOptions {
   /** The type of the input */
   readonly type: InputTypes,
 
+  /** Indicates if the value can be null */
+  readonly nullable: boolean;
+
   /** An observable emitting input actions */
   readonly actions$: Observable<FormNodeEvent>;
 
@@ -137,7 +140,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     /** The default value of the input*/
     public override readonly defaultValue: TInput,
     protected readonly initialValue: TInput = defaultValue,
-    protected readonly nullable: boolean = false,
+    public readonly nullable: boolean = false,
     protected readonly rawDefault?: TInput,
     protected readonly validators?: ValidatorFn[],
     options?: FormNodeOptions
