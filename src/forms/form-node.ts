@@ -251,7 +251,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   focus(selectValue?: true) {
     setTimeout(() => {
       this._actions$.next(FormNodeEvent.Focus);
-      this._actions$.next(FormNodeEvent.Select);
+      if (selectValue) this._actions$.next(FormNodeEvent.Select);
     }, 0);
   }
 
