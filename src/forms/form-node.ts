@@ -7,7 +7,8 @@ import {parseFormErrors} from "../tools/errors";
 import {cache} from "@consensus-labs/rxjs-tools";
 
 export enum FormNodeEvent {
-  Focus = 'focus'
+  Focus = 'focus',
+  Select = 'select',
 }
 
 export enum InputTypes {
@@ -65,8 +66,11 @@ export interface AnonFormNode extends FormNodeOptions {
   /** An observable containing the current error state represented as a display string */
   readonly error$: Observable<string|undefined>;
 
-  /** Focus the input */
-  focus(): void;
+  /**
+   * Focus the input
+   * @param selectValue - If true the contents of the input will be selected
+   */
+  focus(selectValue?: true): void;
 
   /** Toggle the input value if boolean */
   toggle(): void;
@@ -240,9 +244,15 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   //</editor-fold>
 
   //<editor-fold desc="Actions">
-  /** Focus the input */
-  focus() {
-    setTimeout(() => this._actions$.next(FormNodeEvent.Focus), 0);
+  /**
+   * Focus the input
+   * @param selectValue - If true the contents of the input will be selected
+   */
+  focus(selectValue?: true) {
+    setTimeout(() => {
+      this._actions$.next(FormNodeEvent.Focus);
+      this._actions$.next(FormNodeEvent.Select);
+    }, 0);
   }
 
   /** Toggle the input value if boolean */
