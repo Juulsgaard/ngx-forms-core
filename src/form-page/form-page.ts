@@ -20,6 +20,7 @@ export class FormPage<TVal extends SimpleObject> {
   }
 
   form: ModelFormRoot<TVal>;
+  get controls(): FormGroupControls<TVal> {return this.form.controls};
 
   private _submitting$ = new BehaviorSubject<ILoadingState>(Loading.Empty());
   readonly submitting$ = this._submitting$.pipe(switchMap(x => x.loading$), distinctUntilChanged());
@@ -60,9 +61,6 @@ export class FormPage<TVal extends SimpleObject> {
   private readonly deleteWarning?: (value: TVal) => WarningDialog;
   private readonly canDelete$?: Subscribable<boolean>;
 
-  private readonly getError?: (value: DeepPartial<TVal>) => string | void;
-  private readonly getWarning?: (value: DeepPartial<TVal>) => string | void;
-
   private readonly warningService?: FormConfirmService;
 
   //</editor-fold>
@@ -72,7 +70,10 @@ export class FormPage<TVal extends SimpleObject> {
     controls: FormGroupControls<TVal>,
     options: FormPageOptions<TVal>
   ) {
-    this.form = FormRootConstructors.Model<TVal>(controls);
+    this.form = FormRootConstructors.Model<TVal>(
+      controls,
+      {generateError: options.getError, generateWarning: options.getWarning}
+    );
 
     this.hasSubmit = !!options.onSubmit;
     this.hasDelete = !!options.onDelete;
@@ -105,8 +106,6 @@ export class FormPage<TVal extends SimpleObject> {
     this.deleteBtnText = options.deleteBtnText;
     this.deleteWarning = options.deleteWarning;
     this.canDelete$ = options.canDelete$;
-    this.getError = options.getError;
-    this.getWarning = options.getWarning;
 
     // If needed, get warning rendering service
     if (this.submitWarning || this.deleteWarning) {

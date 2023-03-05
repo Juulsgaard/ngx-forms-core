@@ -22,8 +22,8 @@ export interface FormPageOptions<T> {
   deleteWarning?: (value: T) => WarningDialog;
   canDelete$?: Subscribable<boolean>;
 
-  getError?: (value: DeepPartial<T>) => string | void;
-  getWarning?: (value: DeepPartial<T>) => string | void;
+  getError?: (value: DeepPartial<T>) => string | undefined;
+  getWarning?: (value: DeepPartial<T>) => string | undefined;
 
   warningService?: FormConfirmService;
 }
@@ -121,12 +121,12 @@ export class FormPageConfig<TVal extends SimpleObject> extends BaseFormPageConfi
     return this;
   }
 
-  withCustomError(getError: (value: DeepPartial<TVal>) => string | void): this {
+  withCustomError(getError: (value: DeepPartial<TVal>) => string | undefined): this {
     this.options.getError = getError;
     return this;
   }
 
-  withCustomWarning(getWarning: (value: DeepPartial<TVal>) => string | void): this {
+  withCustomWarning(getWarning: (value: DeepPartial<TVal>) => string | undefined): this {
     this.options.getWarning = getWarning;
     return this;
   }
@@ -156,12 +156,12 @@ export class BoundFormPageConfig<TVal extends SimpleObject, TBound extends objec
     return this;
   }
 
-  withCustomError(getError: (bound: TBound) => (value: DeepPartial<TVal>) => string | void): this {
+  withCustomError(getError: (bound: TBound) => (value: DeepPartial<TVal>) => string | undefined): this {
     this.options.getError = getError(this.bound).bind(this.bound);
     return this;
   }
 
-  withCustomWarning(getWarning: (bound: TBound) => (value: DeepPartial<TVal>) => string | void): this {
+  withCustomWarning(getWarning: (bound: TBound) => (value: DeepPartial<TVal>) => string | undefined): this {
     this.options.getWarning = getWarning(this.bound).bind(this.bound);
     return this;
   }
