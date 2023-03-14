@@ -135,6 +135,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
    * Defaults to defaultValue.
    * @param nullable - Whether the input is nullable
    * @param rawDefault - Define a distinct default value for getting the raw value
+   * @param disabledDefault - Define a distinct default raw value for when the input is disabled
    * @param validators - Add validators
    * @param options - Additional options
    */
@@ -146,6 +147,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     protected readonly initialValue: TInput = defaultValue,
     public readonly nullable: boolean = false,
     protected readonly rawDefault?: TInput,
+    protected readonly disabledDefault?: TInput,
     protected readonly validators?: ValidatorFn[],
     options?: FormNodeOptions
   ) {
@@ -210,14 +212,12 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   //<editor-fold desc="Implementation">
   private getValueOrDefault(value: TInput|undefined): TInput {
     if (this.nullable) return value as TInput;
-    if (!value) return this.defaultValue;
-    return value;
+    return value ?? this.defaultValue;
   }
 
   private getValueOrInitial(value: TInput|undefined): TInput {
     if (this.nullable) return value as TInput;
-    if (!value) return this.initialValue;
-    return value;
+    return value ?? this.initialValue;
   }
 
   /** @inheritDoc */
@@ -238,8 +238,9 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
 
   /** @inheritDoc */
   override getRawValue(): TInput {
-    if (this.disabled) return this.rawDefault ?? this.defaultValue;
-    return this.value ?? this.rawDefault as TInput;
+    if (this.disabled) return this.disabledDefault ?? this.rawDefault ?? this.defaultValue;
+    if (this.nullable) return this.value;
+    return this.value ?? this.rawDefault ?? this.defaultValue;
   }
   //</editor-fold>
 
@@ -278,6 +279,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
       this.defaultValue,
       this.nullable,
       this.rawDefault,
+      this.disabledDefault,
       this.validators
     );
     node.from(this);
@@ -305,6 +307,7 @@ export class FormNodeConfig<TInput> {
    * Defaults to defaultValue.
    * @param nullable - Whether the input is nullable
    * @param rawDefault - Define a distinct default value for getting the raw value
+   * @param disabledDefault - Define a distinct default raw value for when the input is disabled
    * @param validators - Add validators
    */
   constructor(
@@ -313,6 +316,7 @@ export class FormNodeConfig<TInput> {
     protected initialValue: TInput = defaultValue,
     protected nullable: boolean = false,
     protected rawDefault?: TInput,
+    protected disabledDefault?: TInput,
     protected validators: ValidatorFn[] = []
   ) {
 
@@ -399,6 +403,16 @@ export class FormNodeConfig<TInput> {
   }
 
   /**
+   * Set a default value for raw value when input is disabled
+   * @param disabledDefault
+   * @internal
+   */
+  withDisabledDefault(disabledDefault: TInput): this {
+    this.disabledDefault = disabledDefault;
+    return this;
+  }
+
+  /**
    * Populate this configuration based on a Node
    * @param options - The options from an existing Node
    */
@@ -433,6 +447,7 @@ export class FormNodeConfig<TInput> {
       this.initialValue,
       this.nullable,
       this.rawDefault,
+      this.disabledDefault,
       this.validators,
       this.getOptions()
     )

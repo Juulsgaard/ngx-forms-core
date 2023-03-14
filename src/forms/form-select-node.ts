@@ -53,6 +53,7 @@ export class FormSelectNode<TValue, TUnit, TItem> extends FormNode<TValue> imple
    * Defaults to defaultValue.
    * @param nullable - Whether the input is nullable
    * @param rawDefault - Define a distinct default value for getting the raw value
+   * @param disabledDefault - Define a distinct default raw value for when the input is disabled
    * @param validators - Add validators
    * @param options - Additional options
    */
@@ -64,10 +65,11 @@ export class FormSelectNode<TValue, TUnit, TItem> extends FormNode<TValue> imple
     initialValue: TValue = defaultValue,
     nullable: boolean = false,
     rawDefault?: TValue,
+    disabledDefault?: TValue,
     validators?: ValidatorFn[],
     options?: FormNodeOptions&FormSelectNodeOptions<TValue, TItem>
   ) {
-    super(type, defaultValue, initialValue, nullable, rawDefault, validators, options);
+    super(type, defaultValue, initialValue, nullable, rawDefault, disabledDefault, validators, options);
 
     this.items$ = items instanceof Observable ? items : of(items);
     this.bindValue = bindValue;
@@ -97,6 +99,7 @@ export class FormSelectNode<TValue, TUnit, TItem> extends FormNode<TValue> imple
       this.initialValue,
       this.nullable,
       this.rawDefault,
+      this.disabledDefault,
       this.validators
     );
     config.fromSelect(this);
@@ -128,6 +131,7 @@ export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<T
    * Defaults to defaultValue.
    * @param nullable - Whether the input is nullable
    * @param rawDefault - Define a distinct default value for getting the raw value
+   * @param disabledDefault - Define a distinct default raw value for when the input is disabled
    * @param validators - Add validators
    */
   constructor(
@@ -138,9 +142,10 @@ export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<T
     initialValue: TValue = defaultValue,
     nullable: boolean = false,
     rawDefault?: TValue,
+    disabledDefault?: TValue,
     validators: ValidatorFn[] = []
   ) {
-    super(type, defaultValue, initialValue, nullable, rawDefault, validators);
+    super(type, defaultValue, initialValue, nullable, rawDefault, disabledDefault, validators);
     this.multiple = type === InputTypes.SelectMany;
   }
 
@@ -245,6 +250,7 @@ export class FormSelectNodeConfig<TValue, TUnit, TItem> extends FormNodeConfig<T
       this.initialValue,
       this.nullable,
       this.rawDefault,
+      this.disabledDefault,
       this.validators,
       {
         ...this.getOptions(),
