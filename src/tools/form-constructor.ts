@@ -30,8 +30,8 @@ export module Form {
   /**
    * Create a readonly input for storing Ids
    */
-  export function id() {
-    return new FormNodeConfig<string>(InputTypes.Text, '').withLabel('Id').asReadonly();
+  export function id(initialValue?: string, defaultValue?: string) {
+    return new FormNodeConfig<string>(InputTypes.Text, defaultValue ?? initialValue ?? '', initialValue).withLabel('Id').asReadonly();
   }
 
   /**
