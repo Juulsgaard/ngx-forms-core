@@ -170,6 +170,17 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     this.updateControls();
   }
 
+  append(...controls: FormLayer<TControls, TValue, TRaw>[]) {
+    controls.forEach(c => super.push(c));
+    this.updateControls();
+  }
+
+  setControls(controls: FormLayer<TControls, TValue, TRaw>[]) {
+    super.clear();
+    controls.forEach(c => super.push(c));
+    this.updateControls();
+  }
+
   /**
    * Add a value to the end of the list.
    * The value is converted to a Form Layer and appended.
