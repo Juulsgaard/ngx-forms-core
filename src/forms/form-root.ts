@@ -180,6 +180,12 @@ export class FormRoot<TControls extends Record<string, SmartFormUnion>, TValue e
     this._resetValue$.next(value === undefined ? undefined : rawValue);
   }
 
+  /** Resets the change detection state without affecting any controls */
+  resetState(): void {
+    const rawValue = this.getRawValue();
+    this._oldValue$.next(rawValue);
+  }
+
   /**
    * Roll back to the last reset value.
    * Will reset to initial values of the form has never been reset.
