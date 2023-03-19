@@ -110,28 +110,30 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     this._controls$.next(this.controls);
   }
 
-  private scaleToSize(size: number) {
+  private scaleToSize(size: number): boolean {
     size = Math.max(0, size);
-    if (this.controls.length === size) return;
+
+    if (this.controls.length === size) return false;
     if (size === 0) {
-      this.clear();
-      return;
+      super.clear();
+      return true;
     }
 
     if (size < this.controls.length) {
       while (size < this.controls.length) {
         super.removeAt(this.controls.length - 1);
       }
-      this.updateControls();
-      return;
+      return true;
     }
 
     if (size > this.controls.length) {
       while (size > this.controls.length) {
         super.push(this.templateLayer.clone());
       }
-      this.updateControls();
+      return true;
     }
+
+    return false;
   }
 
   //</editor-fold>
@@ -144,8 +146,9 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
 
   /** @inheritDoc */
   override reset(values: TValue[] = []) {
-    this.scaleToSize(values.length);
+    const changed = this.scaleToSize(values.length);
     super.reset(values);
+    if (changed) this.updateControls();
   }
 
   /** @inheritDoc */
@@ -155,8 +158,9 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
 
   /** @inheritDoc */
   override setValue(values: TRaw[]) {
-    this.scaleToSize(values.length);
+    const changed = this.scaleToSize(values.length);
     super.setValue(values);
+    if (changed) this.updateControls();
   }
 
   //<editor-fold desc="Mutations">
