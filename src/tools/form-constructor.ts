@@ -674,8 +674,8 @@ class FormGuideFactory<TGuide extends Record<string, any>> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): ModelFormRoot<FormGroupTemplateValue<Extract<TTemplate, TGuide>>> {
-    return FormRootConstructors.Model<FormGroupTemplateValue<Extract<TTemplate, TGuide>>>(
+  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): ModelFormRoot<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>> {
+    return FormRootConstructors.Model<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>>(
       formTemplateToValueControls(template)
     );
   }

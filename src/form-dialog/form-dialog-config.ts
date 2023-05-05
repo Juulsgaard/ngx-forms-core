@@ -25,7 +25,10 @@ export class FormDialogConfig<TValue extends Record<string, any>> {
     type: 'create' | 'update',
     controls: T
   ): FormDialogConfig<FormGroupValueRaw<T>> {
-    return new FormDialogConfig<FormGroupValueRaw<T>>(type, controls as unknown as FormGroupControls<FormGroupValueRaw<T>>);
+    return new FormDialogConfig<FormGroupValueRaw<T>>(
+      type,
+      controls as unknown as FormGroupControls<FormGroupValueRaw<T>>
+    );
   }
 
   constructor(private type: 'create' | 'update', private controls: FormGroupControls<TValue>) {

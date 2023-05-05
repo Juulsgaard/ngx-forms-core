@@ -45,8 +45,8 @@ export class FormPageFactory<TGuide extends SimpleObject> {
    */
   withPartialForm<TTemplate extends FormGroupTemplate<any>>(
     template: TTemplate & PartialTemplate<TGuide>
-  ): FormPageConfig<FormGroupTemplateValue<Extract<TTemplate, TGuide>>> {
-    return new FormPageConfig<FormGroupTemplateValue<Extract<TTemplate, TGuide>>>(
+  ): FormPageConfig<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>> {
+    return new FormPageConfig<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>>(
       this.type,
       formTemplateToValueControls(template)
     );
