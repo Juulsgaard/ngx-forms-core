@@ -1,7 +1,8 @@
-import {FormGroupControls} from "../tools/form-types";
+import {FormGroupControls, FormGroupValueRaw} from "../tools/form-types";
 import {FormDialog} from "./form-dialog";
 import {Observable} from "rxjs";
 import {DeepPartial} from "@consensus-labs/ts-tools";
+import {AbstractControl} from "@angular/forms";
 
 export interface FormDialogOptions<T> {
   /** The action to perform when submitting the form */
@@ -19,6 +20,13 @@ export interface FormDialogOptions<T> {
 }
 
 export class FormDialogConfig<TValue extends Record<string, any>> {
+
+  static FromControls<T extends Record<string, AbstractControl>>(
+    type: 'create' | 'update',
+    controls: T
+  ): FormDialogConfig<FormGroupValueRaw<T>> {
+    return new FormDialogConfig<FormGroupValueRaw<T>>(type, controls as unknown as FormGroupControls<FormGroupValueRaw<T>>);
+  }
 
   constructor(private type: 'create' | 'update', private controls: FormGroupControls<TValue>) {
 

@@ -1,9 +1,13 @@
-import {FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValueRaw} from "../tools/form-types";
+import {
+  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValueRaw, PartialControls, PartialTemplate,
+  TemplateGuide
+} from "../tools/form-types";
 import {FormDialogConfig} from "./form-dialog-config";
-import {formTemplateToControls} from "../tools/templates";
-import {DeepPartial} from "@consensus-labs/ts-tools";
+import {formTemplateToControls, formTemplateToValueControls} from "../tools/templates";
+import {AbstractControl} from "@angular/forms";
 
 export class FormDialogFactory<TGuide extends Record<string, any>> {
+
   constructor(private type: 'create' | 'update') {
 
   }
@@ -12,33 +16,34 @@ export class FormDialogFactory<TGuide extends Record<string, any>> {
    * Define the dialog form using a strict template
    * @param template - The template
    */
-  withTemplate(template: FormGroupTemplate<TGuide>): FormDialogConfig<TGuide> {
-    return new FormDialogConfig(this.type, formTemplateToControls(template));
+  withForm(template: FormGroupTemplate<TGuide>): FormDialogConfig<TGuide> {
+    return new FormDialogConfig<TGuide>(
+      this.type,
+      formTemplateToControls(template)
+    );
   }
 
   /**
-   * Define the dialog form using a strict template with keys omitted
+   * Define the dialog form using subset of the guide template.
+   * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withModifiedTemplate<TOmit extends keyof TGuide>(template: FormGroupTemplate<Omit<TGuide, TOmit>>): FormDialogConfig<Omit<TGuide, TOmit>> {
-    return new FormDialogConfig(this.type, formTemplateToControls(template));
+  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): FormDialogConfig<FormGroupTemplateValue<Extract<TTemplate, TGuide>>> {
+    return new FormDialogConfig<FormGroupTemplateValue<Extract<TTemplate, TGuide>>>(
+      this.type,
+      formTemplateToValueControls(template)
+    );
   }
 
-  /**
-   * Define the dialog form using a strict template
-   * @param template - The template
-   */
-  withForm(template: FormGroupTemplate<TGuide>): FormDialogConfig<TGuide>;
   /**
    * Define the dialog form using a loose template.
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withForm<TTemplate extends FormGroupTemplate<DeepPartial<TGuide>>>(template: TTemplate): FormDialogConfig<FormGroupTemplateValue<TTemplate>>;
-  withForm<T extends Record<string, any>>(template: FormGroupTemplate<T>): FormDialogConfig<T> {
-    return new FormDialogConfig<T>(
+  withAltForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & TemplateGuide<TGuide>): FormDialogConfig<FormGroupTemplateValue<TTemplate>> {
+    return new FormDialogConfig<FormGroupTemplateValue<TTemplate>>(
       this.type,
-      formTemplateToControls(template)
+      formTemplateToValueControls(template)
     );
   }
 
@@ -46,18 +51,21 @@ export class FormDialogFactory<TGuide extends Record<string, any>> {
    * Define the form controls for the Dialog strictly based on the type
    * @param controls - The controls
    */
-  withControls(controls: FormGroupControls<TGuide>): FormDialogConfig<TGuide>;
-  /**
-   * Define the form controls for the Dialog loosely based on the type.
-   * This sacrifices type conciseness for flexibility.
-   * @param controls - The controls
-   */
-  withControls<TControls extends FormGroupControls<DeepPartial<TGuide>>>(controls: TControls): FormDialogConfig<FormGroupValueRaw<TControls>>;
-  withControls<T extends Record<string, any>>(controls: FormGroupControls<T>): FormDialogConfig<T> {
-    return new FormDialogConfig<T>(
+  withControls(controls: FormGroupControls<TGuide>): FormDialogConfig<TGuide> {
+    return new FormDialogConfig<TGuide>(
       this.type,
       controls
     );
   }
 
+  /**
+   * Define the form controls for the Dialog loosely based on the type.
+   * This sacrifices type conciseness for flexibility.
+   * @param controls - The controls
+   */
+  withPartialControls<TControls extends PartialControls<TGuide> & Record<string, AbstractControl>>(
+    controls: TControls
+  ): FormDialogConfig<FormGroupValueRaw<TControls>> {
+    return FormDialogConfig.FromControls(this.type, controls);
+  }
 }

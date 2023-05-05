@@ -1,7 +1,8 @@
-import {ControlFormList, FormList, ModelFormList} from "../forms/form-list";
-import {ControlFormLayer, FormLayer, ModelFormLayer} from "../forms/form-layer";
-import {FormNode, FormNodeConfig} from "../forms/form-node";
+import {AnyControlFormList, ControlFormList, FormList, ModelFormList} from "../forms/form-list";
+import {AnyControlFormLayer, ControlFormLayer, FormLayer, ModelFormLayer} from "../forms/form-layer";
+import {AnonFormNode, FormNode, FormNodeConfig} from "../forms/form-node";
 import {AbstractControl} from "@angular/forms";
+import {DeepPartial} from "@consensus-labs/ts-tools";
 
 export type FormError = { path: string[], error: string };
 
@@ -58,18 +59,22 @@ export type FormTemplate<T> = undefined extends T ? NullableFormTemplate<T> : No
 
 export type FormGroupTemplate<T extends Record<string, any>> = { [K in keyof T]-?: FormTemplate<T[K]> };
 
+export type TemplateListUnion<T extends TemplateGroupUnion> = [T, number?];
+export type TemplateGroupUnion = Record<string, TemplateUnion>;
+export type TemplateUnion = AnonFormNode|FormNodeConfig<any>|Record<string, any>|[Record<string, any>, number?];
+
 //</editor-fold>
 
 //<editor-fold desc="Controls to Value">
-export type FormValue<T extends AbstractControl> = T extends ControlFormList<infer X>
-  ? { [K in keyof X]?: FormValue<X[K]> }[]
-  : T extends ControlFormLayer<infer X> ? { [K in keyof X]?: FormValue<X[K]> }
+export type FormValue<T extends AbstractControl> =
+  T extends ControlFormList<infer X> ? FormGroupValue<X>[]
+  : T extends ControlFormLayer<infer X> ? FormGroupValue<X>
     : T extends FormNode<infer X> ? X
       : never;
 
-export type FormValueRaw<T extends AbstractControl> = T extends ControlFormList<infer X>
-  ? { [K in keyof X]: FormValue<X[K]> }[]
-  : T extends ControlFormLayer<infer X> ? { [K in keyof X]: FormValueRaw<X[K]> }
+export type FormValueRaw<T extends AbstractControl> =
+  T extends ControlFormList<infer X> ? FormGroupValueRaw<X>[]
+  : T extends ControlFormLayer<infer X> ? FormGroupValueRaw<X>
     : T extends FormNode<infer X> ? X
       : never;
 
@@ -79,14 +84,14 @@ export type FormGroupValueRaw<T extends Record<string, AbstractControl>> = { [K 
 
 //<editor-fold desc="Template to Value">
 
-export type FormTemplateValue<T extends FormTemplate<any>> =
-  T extends [infer X extends FormGroupTemplate<any>, number?] ? FormGroupTemplateValue<X>[] :
-    T extends FormGroupTemplate<any> ? FormGroupTemplateValue<T> :
+export type FormTemplateValue<T extends TemplateUnion> =
+  T extends TemplateListUnion<infer X> ? FormGroupTemplateValue<X>[] :
+    T extends TemplateGroupUnion ? FormGroupTemplateValue<T> :
       T extends FormNode<infer X> ? X :
         T extends FormNodeConfig<infer X> ? X :
           never;
 
-export type FormGroupTemplateValue<T extends FormGroupTemplate<any>> = { [K in keyof T]: FormTemplateValue<T[K]> };
+export type FormGroupTemplateValue<T extends Record<string, TemplateUnion>> = { [K in keyof T]: FormTemplateValue<T[K]> };
 
 //</editor-fold>
 
@@ -141,3 +146,54 @@ export type AutoComplete =
   | string;
 
 //</editor-fold>
+
+//<editor-fold desc="Partial Controls">
+type PartialControl<T> =
+  NonNullable<T> extends AnyControlFormList<infer A> ? ModelFormList<DeepPartial<A>> :
+    NonNullable<T> extends AnyControlFormLayer<infer A> ? ModelFormLayer<DeepPartial<A>> :
+      T;
+
+type PartialControlGroup<T extends Record<string, FormControls<any>>> = {[K in keyof T]?: PartialControl<T[K]>};
+
+export type PartialControls<T extends Record<string, any>> = PartialControlGroup<FormGroupControls<T>>;
+//</editor-fold>
+
+//<editor-fold desc="Guide Templates">
+type TemplateItemGuide<T> =
+  T extends undefined ? never
+    : T extends FormNode<infer A> ? FormNode<A | any>
+      : T extends FormNodeConfig<infer A> ? FormNodeConfig<A | any>
+        : T extends [infer A extends Record<string, any>, ...(infer B)] ? [TemplateGroupGuide<A>, ...B]
+          : T extends Record<string, any> ? TemplateGroupGuide<T>
+            : T;
+
+type TemplateGroupGuide<T extends Record<string, any>> = { [K in keyof T]?: TemplateItemGuide<T[K]> } & FormGroupTemplate<any>;
+
+export type TemplateGuide<T extends Record<string, any>> = TemplateGroupGuide<FormGroupTemplate<T>>;
+//</editor-fold>
+
+//<editor-fold desc="Partial Templates">
+type PartialTemplateItem<T extends TemplateUnion> =
+  T extends undefined ? never
+    : T extends FormNode<infer A> ? FormNode<A>|FormNode<A|undefined>
+      : T extends FormNodeConfig<infer A> ? FormNodeConfig<A>|FormNodeConfig<A|undefined>
+        : T extends TemplateListUnion<infer A> ? [PartialTemplateGroup<A>, number?]
+          : T extends TemplateGroupUnion ? PartialTemplateGroup<T>
+            : never;
+
+type PartialTemplateGroup<T extends TemplateGroupUnion> = { [K in keyof T]?: PartialTemplateItem<T[K]> };
+
+export type PartialTemplate<T extends Record<string, any>> = PartialTemplateGroup<FormGroupTemplate<T>>;
+//</editor-fold>
+
+interface Test {
+  str: string;
+  optional?: string;
+  nullable: string|undefined;
+  both?: string|undefined;
+}
+
+type x = PartialControls<Test>;
+type y = x['both'];
+
+type z = Partial<never>;

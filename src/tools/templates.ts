@@ -1,4 +1,6 @@
-import {FormControls, FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormTemplate} from "./form-types";
+import {
+  FormControls, FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormTemplate, TemplateGroupUnion
+} from "./form-types";
 import {isObject} from "@consensus-labs/ts-tools";
 import {isFormNode, isFormNodeConfig} from "./type-predicates";
 import {FormLayerConstructors} from "../forms/form-layer";
@@ -18,8 +20,16 @@ export function formTemplateToControls<TValue extends Record<string, any>>(templ
   return result;
 }
 
-export function formTemplateToValueControls<TTemplate extends FormGroupTemplate<any>>(template: TTemplate): FormGroupControls<FormGroupTemplateValue<TTemplate>> {
-  return formTemplateToControls(template) as FormGroupControls<FormGroupTemplateValue<TTemplate>>;
+export function formTemplateToValueControls<TTemplate extends TemplateGroupUnion>(template: TTemplate): FormGroupControls<FormGroupTemplateValue<TTemplate>> {
+  return formTemplateToControls(templateUnionToTemplate(template));
+}
+
+/**
+ * Method to enforce that FormGroupTemplate is the inverse of FormGroupTemplateValue
+ * @param union
+ */
+function templateUnionToTemplate<T extends TemplateGroupUnion>(union: T): FormGroupTemplate<FormGroupTemplateValue<T>> {
+  return union as unknown as FormGroupTemplate<FormGroupTemplateValue<T>>;
 }
 
 function templateToControl<TValue>(template: FormTemplate<TValue>): FormControls<TValue> {
@@ -35,7 +45,7 @@ function templateToControl<TValue>(template: FormTemplate<TValue>): FormControls
   }
 
   if (isObject(template)) {
-    return FormLayerConstructors.Model(formTemplateToControls(template as FormGroupTemplate<any>)) as FormControls<TValue>;
+    return FormLayerConstructors.Model(formTemplateToControls(template as FormGroupTemplate<any>)) as unknown as FormControls<TValue>;
   }
 
   return template as FormControls<TValue>;

@@ -1,16 +1,17 @@
 import {Validators} from "@angular/forms";
 import {FormNodeConfig, InputTypes} from "../forms/form-node";
 import {Observable} from "rxjs";
-import {DeepPartial, MapFunc} from "@consensus-labs/ts-tools";
+import {MapFunc} from "@consensus-labs/ts-tools";
 import {FormSelectNodeConfig, MultiSelectNodeConfig, SingleSelectNodeConfig} from "../forms/form-select-node";
 import {FormLayer, FormLayerConstructors, ModelFormLayer} from "../forms/form-layer";
 import {
-  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValue, FormGroupValueRaw, SmartFormUnion
+  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValue, FormGroupValueRaw, PartialTemplate,
+  SmartFormUnion, TemplateGuide
 } from "./form-types";
-import {ControlFormRoot, FormRoot, FormRootConstructors, ModelFormRoot} from "../forms/form-root";
+import {FormRoot, FormRootConstructors, ModelFormRoot} from "../forms/form-root";
 import {NodeValidators} from "./validation";
 import {FormList, FormListConstructors} from "../forms/form-list";
-import {formTemplateToControls} from "./templates";
+import {formTemplateToControls, formTemplateToValueControls} from "./templates";
 import {FormConstants} from "./constants";
 
 export module Form {
@@ -662,16 +663,31 @@ class FormGuideFactory<TGuide extends Record<string, any>> {
    * Define the form using a strict template
    * @param template - The template
    */
-  withForm(template: FormGroupTemplate<TGuide>): ModelFormRoot<TGuide>;
+  withForm(template: FormGroupTemplate<TGuide>): ModelFormRoot<TGuide> {
+    return FormRootConstructors.Model<TGuide>(
+      formTemplateToControls(template)
+    );
+  }
+
+  /**
+   * Define the form using subset of the guide template.
+   * This sacrifices type conciseness for flexibility.
+   * @param template - The template
+   */
+  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): ModelFormRoot<FormGroupTemplateValue<Extract<TTemplate, TGuide>>> {
+    return FormRootConstructors.Model<FormGroupTemplateValue<Extract<TTemplate, TGuide>>>(
+      formTemplateToValueControls(template)
+    );
+  }
+
   /**
    * Define the form using a loose template.
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withForm<TTemplate extends FormGroupTemplate<DeepPartial<TGuide>>>(template: TTemplate): ModelFormRoot<FormGroupTemplateValue<TTemplate>>;
-  withForm<T extends Record<string, any>>(template: FormGroupTemplate<T>): ModelFormRoot<T> {
-    return FormRootConstructors.Model<T>(
-      formTemplateToControls(template)
+  withAltForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & TemplateGuide<TGuide>): ModelFormRoot<FormGroupTemplateValue<TTemplate>> {
+    return FormRootConstructors.Model<FormGroupTemplateValue<TTemplate>>(
+      formTemplateToValueControls(template)
     );
   }
 
@@ -679,15 +695,8 @@ class FormGuideFactory<TGuide extends Record<string, any>> {
    * Define the form controls strictly based on the type
    * @param controls - The controls
    */
-  withControls(controls: FormGroupControls<TGuide>): ModelFormRoot<TGuide>;
-  /**
-   * Define the form controls loosely based on the type.
-   * This sacrifices type conciseness for flexibility.
-   * @param controls - The controls
-   */
-  withControls<TControls extends FormGroupControls<DeepPartial<TGuide>>>(controls: TControls): ControlFormRoot<TControls>;
-  withControls<T extends Record<string, any>>(controls: FormGroupControls<T>): ModelFormRoot<T> {
-    return FormRootConstructors.Model<T>(controls);
+  withControls(controls: FormGroupControls<TGuide>): ModelFormRoot<TGuide> {
+    return FormRootConstructors.Model<TGuide>(controls);
   }
 
 }
