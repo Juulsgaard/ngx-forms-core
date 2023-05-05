@@ -29,7 +29,7 @@ type NonNullFormControls<T> = T extends undefined | null ? never
 
 export type FormControls<T> = undefined extends T ? NullableFormControls<T> : NonNullFormControls<T>;
 
-export type FormGroupControls<T extends Record<string, any>> = { [K in keyof T]: FormControls<T[K]> };
+export type FormGroupControls<T extends Record<string, any>> = { [K in keyof T]-?: FormControls<T[K]> };
 //</editor-fold>
 
 //<editor-fold desc="Value to Template">
@@ -56,7 +56,7 @@ type NonNullFormTemplate<T> = T extends undefined | null ? never
 
 export type FormTemplate<T> = undefined extends T ? NullableFormTemplate<T> : NonNullFormTemplate<T>;
 
-export type FormGroupTemplate<T extends Record<string, any>> = { [K in keyof T]: FormTemplate<T[K]> };
+export type FormGroupTemplate<T extends Record<string, any>> = { [K in keyof T]-?: FormTemplate<T[K]> };
 
 //</editor-fold>
 
