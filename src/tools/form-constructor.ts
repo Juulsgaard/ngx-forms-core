@@ -1,7 +1,7 @@
 import {Validators} from "@angular/forms";
 import {FormNodeConfig, InputTypes} from "../forms/form-node";
 import {Observable} from "rxjs";
-import {MapFunc} from "@consensus-labs/ts-tools";
+import {Constrain, MapFunc} from "@consensus-labs/ts-tools";
 import {FormSelectNodeConfig, MultiSelectNodeConfig, SingleSelectNodeConfig} from "../forms/form-select-node";
 import {FormLayer, FormLayerConstructors, ModelFormLayer} from "../forms/form-layer";
 import {
@@ -674,8 +674,8 @@ class FormGuideFactory<TGuide extends Record<string, any>> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): ModelFormRoot<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>> {
-    return FormRootConstructors.Model<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>>(
+  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): ModelFormRoot<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
+    return FormRootConstructors.Model<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(
       formTemplateToValueControls(template)
     );
   }

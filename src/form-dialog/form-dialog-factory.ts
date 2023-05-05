@@ -5,6 +5,7 @@ import {
 import {FormDialogConfig} from "./form-dialog-config";
 import {formTemplateToControls, formTemplateToValueControls} from "../tools/templates";
 import {AbstractControl} from "@angular/forms";
+import {Constrain} from "@consensus-labs/ts-tools";
 
 export class FormDialogFactory<TGuide extends Record<string, any>> {
 
@@ -28,8 +29,8 @@ export class FormDialogFactory<TGuide extends Record<string, any>> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): FormDialogConfig<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>> {
-    return new FormDialogConfig<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>>(
+  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): FormDialogConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
+    return new FormDialogConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(
       this.type,
       formTemplateToValueControls(template)
     );

@@ -1,4 +1,4 @@
-import {SimpleObject} from "@consensus-labs/ts-tools";
+import {Constrain, SimpleObject} from "@consensus-labs/ts-tools";
 import {
   FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, PartialTemplate, TemplateGuide
 } from "../tools/form-types";
@@ -45,8 +45,8 @@ export class FormPageFactory<TGuide extends SimpleObject> {
    */
   withPartialForm<TTemplate extends FormGroupTemplate<any>>(
     template: TTemplate & PartialTemplate<TGuide>
-  ): FormPageConfig<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>> {
-    return new FormPageConfig<FormGroupTemplateValue<Pick<TTemplate, keyof TGuide>>>(
+  ): FormPageConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
+    return new FormPageConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(
       this.type,
       formTemplateToValueControls(template)
     );
