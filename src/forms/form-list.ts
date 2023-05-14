@@ -17,6 +17,16 @@ export interface AnonFormList {
   readonly controls: AnonFormLayer[];
   /** An observable containing the current controls of the list */
   readonly controls$: Observable<AnonFormLayer[]>;
+
+  /** The current amount of controls */
+  readonly length: number;
+  /** An observable containing the current amount of controls */
+  readonly length$: Observable<number>;
+
+  /** True if the list has no controls */
+  readonly empty: boolean;
+  /** An observable indicating if there are no controls in the list */
+  readonly empty$: Observable<boolean>;
 }
 
 export class FormList<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormArray implements AnonFormList {
@@ -44,6 +54,12 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   /** An observable containing the current controls of the list */
   public controls$: Observable<FormLayer<TControls, TValue, TRaw>[]>;
 
+  public override get length() {return this.controls.length}
+  public readonly length$: Observable<number>;
+
+  public get empty() {return this.controls.length < 1}
+  public readonly empty$: Observable<boolean>;
+
   private templateLayer: FormLayer<TControls, TValue, TRaw>;
 
   constructor(
@@ -60,6 +76,9 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
 
     this._controls$ = new BehaviorSubject(this.controls);
     this.controls$ = this._controls$.asObservable();
+
+    this.length$ = this.controls$.pipe(map(x => x.length));
+    this.empty$ = this.controls$.pipe(map(x => x.length < 1));
 
     this._status$ = new BehaviorSubject(this.status);
     this.statusChanges.subscribe(this._status$);
