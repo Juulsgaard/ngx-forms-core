@@ -172,7 +172,9 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
 
   /** @inheritDoc */
   override patchValue(values: TValue[] = []) {
+    const changed = this.scaleToSize(values.length);
     super.patchValue(values);
+    if (changed) this.updateControls();
   }
 
   /** @inheritDoc */
