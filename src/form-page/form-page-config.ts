@@ -1,9 +1,9 @@
 import {of, Subscribable} from "rxjs";
-import {DeepPartial, isBool, isFunction, SimpleObject} from "@consensus-labs/ts-tools";
+import {DeepPartial, isBool, isFunction, SimpleObject} from "@juulsgaard/ts-tools";
 import {FormConfirmService} from "./form-confirm.service";
 import {FormGroupControls} from "../tools/form-types";
 import {FormPage} from "./form-page";
-import {ILoadingState} from "@consensus-labs/rxjs-tools";
+import {ILoadingState} from "@juulsgaard/rxjs-tools";
 
 export interface WarningDialog {
   title: string;

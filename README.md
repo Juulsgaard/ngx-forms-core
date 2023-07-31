@@ -1,19 +1,12 @@
-# Angular Forms
+# Angular Forms Core
 
-Typed forms and then some
+![NPM License](https://img.shields.io/npm/v/@juulsgaard/ngx-forms-core)
+![NPM License](https://img.shields.io/npm/l/@juulsgaard/ngx-forms-core)
+![NPM Downloads](https://img.shields.io/npm/dw/@juulsgaard/ngx-forms-core)
 
-## Getting started
+A strictly typed form system for Angular
 
-In order to be able to publish the NPM package you will need to add your GitLab API token (API Access) via the following command
+## Description
 
-```cmd
-npm config set //gitlab.com/api/v4/projects/37055767/packages/npm/:_authToken $AUTH_TOKEN$
-```
-
-Where `$AUTH_TOKEN$` is your GitLab API token
-
-You will also need to add the following for package download:
-
-```cmd
-npm config set //gitlab.com/api/v4/packages/npm/:_authToken $AUTH_TOKEN$
-```
+This library provides strictly typed versions of the Angular form system. 
+The classes extend the Angular form system and provides several tools to improve type strictness as well as making it easier to work with advanced forms.

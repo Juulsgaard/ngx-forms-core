@@ -1,4 +1,4 @@
-import {Constrain, SimpleObject} from "@consensus-labs/ts-tools";
+import {Constrain, SimpleObject} from "@juulsgaard/ts-tools";
 import {
   FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, PartialTemplate, TemplateGuide
 } from "../tools/form-types";

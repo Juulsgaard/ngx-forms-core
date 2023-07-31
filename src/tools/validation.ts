@@ -1,5 +1,5 @@
 import {AbstractControl, ValidationErrors, ValidatorFn} from "@angular/forms";
-import {isString} from "@consensus-labs/ts-tools";
+import {isString} from "@juulsgaard/ts-tools";
 
 export class NodeValidators {
 

@@ -1,7 +1,7 @@
 import {FormGroupControls, FormGroupValueRaw} from "../tools/form-types";
 import {FormDialog} from "./form-dialog";
 import {Observable} from "rxjs";
-import {DeepPartial} from "@consensus-labs/ts-tools";
+import {DeepPartial} from "@juulsgaard/ts-tools";
 import {AbstractControl} from "@angular/forms";
 
 export interface FormDialogOptions<T> {

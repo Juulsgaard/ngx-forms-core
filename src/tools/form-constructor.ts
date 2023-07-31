@@ -1,7 +1,7 @@
 import {Validators} from "@angular/forms";
 import {FormNodeConfig, InputTypes} from "../forms/form-node";
 import {Observable} from "rxjs";
-import {Constrain, MapFunc} from "@consensus-labs/ts-tools";
+import {Constrain, MapFunc} from "@juulsgaard/ts-tools";
 import {FormSelectNodeConfig, MultiSelectNodeConfig, SingleSelectNodeConfig} from "../forms/form-select-node";
 import {FormLayer, FormLayerConstructors, ModelFormLayer} from "../forms/form-layer";
 import {

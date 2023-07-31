@@ -1,7 +1,7 @@
 import {BehaviorSubject, firstValueFrom, lastValueFrom, Observable, of, switchMap} from "rxjs";
 import {map} from "rxjs/operators";
-import {DeepPartial} from "@consensus-labs/ts-tools";
-import {persistentCache} from "@consensus-labs/rxjs-tools";
+import {DeepPartial} from "@juulsgaard/ts-tools";
+import {persistentCache} from "@juulsgaard/rxjs-tools";
 import {FormGroupControls} from "../tools/form-types";
 import {FormRootConstructors, ModelFormRoot} from "../forms/form-root";
 import {FormDialogFactory} from "./form-dialog-factory";

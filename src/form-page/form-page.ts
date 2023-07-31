@@ -1,6 +1,6 @@
-import {DeepPartial, isObject, SimpleObject} from "@consensus-labs/ts-tools";
+import {DeepPartial, isObject, SimpleObject} from "@juulsgaard/ts-tools";
 import {BehaviorSubject, distinctUntilChanged, Observable, of, Subscribable, switchMap} from "rxjs";
-import {ILoadingState, latestValueFromOrDefault, Loading} from "@consensus-labs/rxjs-tools";
+import {ILoadingState, latestValueFromOrDefault, Loading} from "@juulsgaard/rxjs-tools";
 import {inject} from "@angular/core";
 import {FormGroupControls} from "../tools/form-types";
 import {formUpdated} from "../tools/form-population";

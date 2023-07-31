@@ -2,9 +2,9 @@ import {FormControl, FormControlStatus, ValidatorFn, Validators} from '@angular/
 import {asyncScheduler, BehaviorSubject, combineLatest, delay, Observable, Subject} from 'rxjs';
 import {distinctUntilChanged, map, throttleTime} from 'rxjs/operators';
 import {AutoComplete, FormError} from "../tools/form-types";
-import {deepEquals} from "@consensus-labs/ts-tools";
+import {deepEquals} from "@juulsgaard/ts-tools";
 import {parseFormErrors} from "../tools/errors";
-import {cache} from "@consensus-labs/rxjs-tools";
+import {cache} from "@juulsgaard/rxjs-tools";
 
 export enum FormNodeEvent {
   Focus = 'focus',

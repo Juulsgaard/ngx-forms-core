@@ -5,7 +5,7 @@ import {
 import {FormDialogConfig} from "./form-dialog-config";
 import {formTemplateToControls, formTemplateToValueControls} from "../tools/templates";
 import {AbstractControl} from "@angular/forms";
-import {Constrain} from "@consensus-labs/ts-tools";
+import {Constrain} from "@juulsgaard/ts-tools";
 
 export class FormDialogFactory<TGuide extends Record<string, any>> {
 

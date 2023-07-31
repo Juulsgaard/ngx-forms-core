@@ -2,8 +2,8 @@ import {auditTime, BehaviorSubject, combineLatest, Observable, of, switchMap} fr
 import {distinctUntilChanged, map, tap} from 'rxjs/operators';
 import {AnonFormLayer, FormLayer} from "./form-layer";
 import {FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
-import {deepEquals, DeepPartial, SimpleObject} from "@consensus-labs/ts-tools";
-import {cache} from "@consensus-labs/rxjs-tools";
+import {deepEquals, DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
+import {cache} from "@juulsgaard/rxjs-tools";
 
 export interface FormRootOptions<TValue> {
   /** A method for validating the form */

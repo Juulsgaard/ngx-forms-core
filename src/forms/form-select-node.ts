@@ -1,5 +1,5 @@
 import {Observable, of} from "rxjs";
-import {MapFunc, Selection} from "@consensus-labs/ts-tools";
+import {MapFunc, Selection} from "@juulsgaard/ts-tools";
 import {FormNode, FormNodeConfig, FormNodeOptions, InputTypes} from "./form-node";
 import {ValidatorFn} from "@angular/forms";
 

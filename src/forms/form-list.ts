@@ -3,8 +3,8 @@ import {AnonFormLayer, FormLayer} from "./form-layer";
 import {asyncScheduler, BehaviorSubject, combineLatest, Observable, of, switchMap} from "rxjs";
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {AbstractControl, FormArray, FormControlStatus} from "@angular/forms";
-import {DeepPartial, SimpleObject} from "@consensus-labs/ts-tools";
-import {cache} from "@consensus-labs/rxjs-tools";
+import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
+import {cache} from "@juulsgaard/rxjs-tools";
 
 export interface AnonFormList {
 

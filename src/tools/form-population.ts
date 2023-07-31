@@ -1,4 +1,4 @@
-import {deepEquals, DeepPartial} from "@consensus-labs/ts-tools";
+import {deepEquals, DeepPartial} from "@juulsgaard/ts-tools";
 import {ModelFormRoot} from "../forms/form-root";
 
 /**

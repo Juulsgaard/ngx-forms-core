@@ -4,7 +4,7 @@ import {AnonFormLayer, ControlFormLayer, FormLayer, ModelFormLayer} from "../for
 import {AnonFormList, FormList} from "../forms/form-list";
 import {AnonFormRoot, ControlFormRoot, FormRoot, ModelFormRoot} from "../forms/form-root";
 import {SmartFormUnion} from "./form-types";
-import {SimpleObject} from "@consensus-labs/ts-tools";
+import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormControl} from "@angular/forms";
 
 export function isFormNode<T>(data: FormNode<T>): data is FormNode<T>;

@@ -1,7 +1,7 @@
 import {
   FormControls, FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormTemplate, TemplateGroupUnion
 } from "./form-types";
-import {isObject} from "@consensus-labs/ts-tools";
+import {isObject} from "@juulsgaard/ts-tools";
 import {isFormNode, isFormNodeConfig} from "./type-predicates";
 import {FormLayerConstructors} from "../forms/form-layer";
 import {FormListConstructors} from "../forms/form-list";

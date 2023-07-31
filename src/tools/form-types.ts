@@ -2,7 +2,7 @@ import {AnyControlFormList, ControlFormList, FormList, ModelFormList} from "../f
 import {AnyControlFormLayer, ControlFormLayer, FormLayer, ModelFormLayer} from "../forms/form-layer";
 import {AnonFormNode, FormNode, FormNodeConfig} from "../forms/form-node";
 import {AbstractControl} from "@angular/forms";
-import {DeepPartial} from "@consensus-labs/ts-tools";
+import {DeepPartial} from "@juulsgaard/ts-tools";
 
 export type FormError = { path: string[], error: string };
 
