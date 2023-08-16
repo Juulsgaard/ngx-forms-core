@@ -12,23 +12,21 @@ export type SmartFormUnion = FormNode<any> | FormLayer<any, any, any> | FormList
 
 type FormListControls<A> = NonNullable<A> extends Record<string, any> ? ModelFormList<NonNullable<A>> : FormNode<A[]>;
 
-type NullableFormControls<T> = T extends undefined | null ? never
-  : T extends string ? FormNode<string | undefined>
+type NullableFormControls<T> = T extends string ? FormNode<string | undefined>
     : T extends boolean ? FormNode<boolean | undefined>
       : T extends File | Date ? FormNode<T | undefined>
         : T extends (infer A)[] ? FormListControls<A>
           : T extends Record<string, any> ? ModelFormLayer<T>
             : FormNode<T | undefined>;
 
-type NonNullFormControls<T> = T extends undefined | null ? never
-  : T extends string ? FormNode<string>
+type NonNullFormControls<T> = T extends string ? FormNode<string>
     : T extends boolean ? FormNode<boolean>
-      : T extends File | string | Date ? FormNode<T>
+      : T extends File | Date ? FormNode<Date>
         : T extends (infer A)[] ? FormListControls<A>
           : T extends Record<string, any> ? ModelFormLayer<T>
             : FormNode<T>;
 
-export type FormControls<T> = undefined extends T ? NullableFormControls<T> : NonNullFormControls<T>;
+export type FormControls<T> = undefined extends T ? NullableFormControls<NonNullable<T>> : NonNullFormControls<NonNullable<T>>;
 
 export type FormGroupControls<T extends Record<string, any>> = { [K in keyof T]-?: FormControls<T[K]> };
 //</editor-fold>
@@ -185,15 +183,3 @@ type PartialTemplateGroup<T extends TemplateGroupUnion> = { [K in keyof T]?: Par
 
 export type PartialTemplate<T extends Record<string, any>> = PartialTemplateGroup<FormGroupTemplate<T>>;
 //</editor-fold>
-
-interface Test {
-  str: string;
-  optional?: string;
-  nullable: string|undefined;
-  both?: string|undefined;
-}
-
-type x = PartialControls<Test>;
-type y = x['both'];
-
-type z = Partial<never>;
