@@ -105,10 +105,6 @@ export class FormPageConfig<TVal extends SimpleObject> extends BaseFormPageConfi
     super(type, controls);
   }
 
-  bind<TBound extends object>(bound: TBound): BoundFormPageConfig<TVal, TBound> {
-    return new BoundFormPageConfig(this.type, this.controls, this.options, bound);
-  }
-
   withSubmit(action: FormPageAction<TVal>, btnText?: string): this {
     this.options.onSubmit = action;
     this.options.submitBtnText = btnText ?? this.options.submitBtnText;
@@ -130,40 +126,4 @@ export class FormPageConfig<TVal extends SimpleObject> extends BaseFormPageConfi
     this.options.getWarning = getWarning;
     return this;
   }
-}
-
-export class BoundFormPageConfig<TVal extends SimpleObject, TBound extends object> extends BaseFormPageConfig<TVal> {
-
-
-  constructor(
-    type: "create" | "update",
-    controls: FormGroupControls<TVal>,
-    options: FormPageOptions<TVal>,
-    private bound: TBound
-  ) {
-    super(type, controls, options);
-  }
-
-  withSubmit(action: (bound: TBound) => FormPageAction<TVal>, btnText?: string): this {
-    this.options.onSubmit = action(this.bound).bind(this.bound);
-    this.options.submitBtnText = btnText ?? this.options.submitBtnText;
-    return this;
-  }
-
-  withDelete(action: (bound: TBound) => FormPageAction<TVal>, btnText?: string): this {
-    this.options.onDelete = action(this.bound).bind(this.bound);
-    this.options.deleteBtnText = btnText ?? this.options.deleteBtnText;
-    return this;
-  }
-
-  withCustomError(getError: (bound: TBound) => (value: DeepPartial<TVal>) => string | undefined): this {
-    this.options.getError = getError(this.bound).bind(this.bound);
-    return this;
-  }
-
-  withCustomWarning(getWarning: (bound: TBound) => (value: DeepPartial<TVal>) => string | undefined): this {
-    this.options.getWarning = getWarning(this.bound).bind(this.bound);
-    return this;
-  }
-
 }

@@ -21,6 +21,8 @@ export class FormPage<TVal extends SimpleObject> {
 
   form: ModelFormRoot<TVal>;
   get controls(): FormGroupControls<TVal> {return this.form.controls};
+  get value(): DeepPartial<TVal> {return this.form.value};
+  getRawValue(): TVal {return this.form.getRawValue()};
 
   private _submitting$ = new BehaviorSubject<ILoadingState>(Loading.Empty());
   readonly submitting$ = this._submitting$.pipe(switchMap(x => x.loading$), distinctUntilChanged());
@@ -115,9 +117,6 @@ export class FormPage<TVal extends SimpleObject> {
       if (!this.warningService) {
         try {
           this.warningService = inject(FormConfirmService);
-          if (!this.warningService) {
-
-          }
         } catch (e: unknown) {
           if (isObject(e) && 'name' in e) {
 
@@ -129,7 +128,8 @@ export class FormPage<TVal extends SimpleObject> {
           }
 
           console.error(
-            'Form Page warnings can only be setup in a constructor, initializer or by manually providing a confirmation renderer using `renderWarnings`');
+            'Form Page warnings can only be setup in a constructor, initializer or by manually providing a confirmation renderer using `renderWarnings`'
+          );
         }
       }
     }
