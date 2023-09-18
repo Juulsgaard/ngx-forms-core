@@ -1,6 +1,6 @@
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
 import {AnonFormLayer, FormLayer} from "./form-layer";
-import {asyncScheduler, BehaviorSubject, combineLatest, Observable, of, switchMap} from "rxjs";
+import {asyncScheduler, BehaviorSubject, combineLatest, Observable, of, Subject, switchMap} from "rxjs";
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {AbstractControl, FormArray, FormControlStatus} from "@angular/forms";
 import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
@@ -44,6 +44,14 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   private readonly _value$: BehaviorSubject<TValue[]>;
   public readonly value$: Observable<TValue[]>;
   public readonly throttledValue$: Observable<TValue[]>;
+
+  private readonly _valueReset$: Subject<TValue[]> = new Subject();
+  /** Emits the current value every time the list is reset */
+  public readonly valueReset$: Observable<TValue[]> = this._valueReset$.asObservable();
+
+  private readonly _controlsReset$: Subject<FormLayer<TControls, TValue, TRaw>[]> = new Subject();
+  /** Emits the current controls every time the list is reset */
+  public readonly controlsReset$: Observable<FormLayer<TControls, TValue, TRaw>[]> = this._controlsReset$.asObservable();
 
   /** An observable containing the computed raw values of the list */
   public rawValue$: Observable<TRaw[]>;
@@ -168,6 +176,8 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     const changed = this.scaleToSize(values.length);
     super.reset(values);
     if (changed) this.updateControls();
+    this._valueReset$.next(this.value);
+    this._controlsReset$.next(this.controls);
   }
 
   /** @inheritDoc */

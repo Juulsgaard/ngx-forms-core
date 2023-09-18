@@ -101,6 +101,10 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   /** A throttled observable containing the value with a rolling delay */
   public readonly throttledValue$: Observable<TInput>;
 
+  private readonly _valueReset$: Subject<TInput> = new Subject();
+  /** Emits the current value every time the node is reset */
+  public readonly valueReset$: Observable<TInput> = this._valueReset$.asObservable();
+
   /** An observable containing the computed raw value of the input */
   public readonly rawValue$: Observable<TInput>
 
@@ -234,6 +238,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   override reset(value?: TInput) {
     super.reset(this.getValueOrInitial(value));
     this._reset$.next();
+    this._valueReset$.next(this.value);
   }
 
   /** @inheritDoc */

@@ -29,9 +29,12 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   private readonly _value$: BehaviorSubject<TValue>;
   /** An observable containing the current value */
   public readonly value$: Observable<TValue>;
-  protected readonly _throttledValue$ = new Subject<TValue>();
   /** A throttled observable containing the current value */
   public readonly throttledValue$: Observable<TValue>;
+
+  private readonly _valueReset$: Subject<TValue> = new Subject();
+  /** Emits the current value every time the layer is reset */
+  public readonly valueReset$: Observable<TValue> = this._valueReset$.asObservable();
 
   private readonly _controls$: BehaviorSubject<TControls>;
   /** An observable containing the current controls in the layer */
@@ -71,7 +74,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
 
     this.throttledValue$ = this.value$.pipe(
       throttleTime(200, asyncScheduler, {trailing: true}),
-      mergeWith(this._throttledValue$),
+      mergeWith(this._valueReset$),
       distinctUntilChanged(),
       cache()
     );
@@ -149,7 +152,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   /** @inheritDoc */
   override reset(value?: TValue) {
     super.reset(value ?? {});
-    this._throttledValue$.next(this.value);
+    this._valueReset$.next(this.value);
   }
 
   //</editor-fold>
