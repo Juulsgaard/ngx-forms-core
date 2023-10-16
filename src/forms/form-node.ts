@@ -244,8 +244,9 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   /** @inheritDoc */
   override getRawValue(): TInput {
     if (this.disabled) return this.disabledDefault ?? this.rawDefault ?? this.defaultValue;
+    if (this.rawDefault !== undefined) return this.value ?? this.rawDefault;
     if (this.nullable) return this.value;
-    return this.value ?? this.rawDefault ?? this.defaultValue;
+    return this.value ?? this.defaultValue;
   }
   //</editor-fold>
 
