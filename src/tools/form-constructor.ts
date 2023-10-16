@@ -556,14 +556,6 @@ export module Form {
     datetime(initialValue?: Date) {
       return Form.nullable.datetime(initialValue).withRawDefault(FormConstants.NULL_DATE);
     },
-
-    /**
-     * Create a nullable time input field coalescing to Unix Epoch
-     * @param initialValue - The starting value of the input
-     */
-    time(initialValue?: Date) {
-      return Form.nullable.time(initialValue).withRawDefault(FormConstants.NULL_DATE);
-    },
   }
 
   //</editor-fold>
