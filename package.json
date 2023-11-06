@@ -1,6 +1,6 @@
 {
   "name": "@juulsgaard/ngx-forms-core",
-  "version": "16.0.7",
+  "version": "16.0.8",
   "description": "A strictly typed form system for Angular",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -10,7 +10,10 @@ export type SmartFormUnion = FormNode<any> | FormLayer<any, any, any> | FormList
 
 //<editor-fold desc="Value to Controls">
 
-type FormListControls<A> = NonNullable<A> extends Record<string, any> ? ModelFormList<NonNullable<A>> : FormNode<A[]>;
+type FormListControls<A> = NonNullable<A> extends string ? FormNode<A[]> :
+  NonNullable<A> extends number ? FormNode<A[]> :
+    NonNullable<A> extends Record<string, any> ? ModelFormList<NonNullable<A>> :
+      FormNode<A[]>;
 
 type NullableFormControls<T> = T extends string ? FormNode<string | undefined>
     : T extends boolean ? FormNode<boolean | undefined>
@@ -33,9 +36,10 @@ export type FormGroupControls<T extends Record<string, any>> = { [K in keyof T]-
 
 //<editor-fold desc="Value to Template">
 
-type FormListTemplate<A> = NonNullable<A> extends Record<string, any>
-  ? [FormGroupTemplate<NonNullable<A>>, number?]
-  : FormNode<A[]> | FormNodeConfig<A[]>;
+type FormListTemplate<A> = NonNullable<A> extends string ? FormNode<A[]> | FormNodeConfig<A[]> :
+  NonNullable<A> extends number ? FormNode<A[]> | FormNodeConfig<A[]> :
+    NonNullable<A> extends Record<string, any> ? [FormGroupTemplate<NonNullable<A>>, number?] :
+      FormNode<A[]> | FormNodeConfig<A[]>;
 
 type NullableFormTemplate<T> = T extends undefined | null ? never
   : T extends string ? FormNode<string | undefined> | FormNodeConfig<string | undefined>
