@@ -34,7 +34,7 @@ export class NodeValidators {
     }
 
     if (match[1] === 'http') {
-      return {error: 'http URL are not supported'};
+      return {error: 'http URLs are not supported'};
     }
 
     const valid = url.match(/^([a-z][-.+a-z\d]*):\/\/[-a-z0-9@:%_+.~#?&/=]*$/i);
