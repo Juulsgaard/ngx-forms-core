@@ -5,10 +5,13 @@ import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFo
 import {DeepPartial, mapObj, SimpleObject} from "@juulsgaard/ts-tools";
 import {AnonFormNode, FormNode} from "./form-node";
 import {cache} from "@juulsgaard/rxjs-tools";
+import {computed, signal, Signal, WritableSignal} from "@angular/core";
 
 export interface AnonFormLayer {
   /** An observable denoting when the layer is disabled */
   readonly disabled$: Observable<boolean>;
+  /** A signal denoting when the layer is disabled */
+  readonly disabledSignal: Observable<boolean>;
   /** An observable containing all the current errors of the Layer */
   readonly errors$: Observable<FormError[]>;
 
@@ -23,6 +26,11 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
   /** An observable denoting when the layer is disabled */
   public readonly disabled$: Observable<boolean>;
+
+  protected readonly _statusSignal: WritableSignal<FormControlStatus>;
+  /** A Signal denoting when the layer is disabled */
+  public readonly disabledSignal: Signal<boolean>;
+
   /** An observable containing all the current errors of the Layer */
   public readonly errors$: Observable<FormError[]>;
 
@@ -31,6 +39,14 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   public readonly value$: Observable<TValue>;
   /** A throttled observable containing the current value */
   public readonly throttledValue$: Observable<TValue>;
+  /** A throttled observable containing the raw value of the layer */
+  public rawValue$: Observable<TRaw>;
+
+  private _valueSignal: WritableSignal<TValue>;
+  /** A signal containing the current value */
+  public readonly valueSignal: Signal<TValue>;
+  /** A signal containing the computed raw value */
+  public readonly rawValueSignal: Signal<TRaw>;
 
   private readonly _valueReset$: Subject<TValue> = new Subject();
   /** Emits the current value every time the layer is reset */
@@ -40,20 +56,26 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   /** An observable containing the current controls in the layer */
   public readonly controls$: Observable<TControls>;
 
+  private readonly _controlsSignal: WritableSignal<TControls>;
+  /** A signal containing the current controls in the layer */
+  public readonly controlsSignal: Signal<TControls>;
+
   private readonly _inputList$: BehaviorSubject<FormNode<any>[]>;
   /** An observable containing a list of all the Form Nodes in the layer */
   public readonly inputList$: Observable<FormNode<any>[]>;
   /** A list of all the Form Nodes in the layer */
   get inputList(): FormNode<any>[] {return this._inputList$.value}
 
-  /** A throttled observable containing the raw value of the layer */
-  public rawValue$: Observable<TRaw>;
 
   constructor(controls: TControls) {
     super(controls);
 
+    //<editor-fold desc="Controls">
     this._controls$ = new BehaviorSubject(this.controls);
     this.controls$ = this._controls$.asObservable();
+
+    this._controlsSignal = signal(this.controls);
+    this.controlsSignal = this._controlsSignal.asReadonly();
 
     this._inputList$ = new BehaviorSubject(Object.values(this.controls).filter(x => x instanceof FormNode) as FormNode<any>[]);
     this.controls$.pipe(
@@ -61,13 +83,21 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
       map(controls => Object.values(controls).filter(x => x instanceof FormNode) as FormNode<any>[])
     ).subscribe(this._inputList$);
     this.inputList$ = this._inputList$.asObservable();
+    //</editor-fold>
 
+    //<editor-fold desc="Status">
     this._status$ = new BehaviorSubject(this.status);
     this.statusChanges.subscribe(this._status$);
     this.disabled$ = this._status$.pipe(
       map(x => x === 'DISABLED')
     );
 
+    this._statusSignal = signal(this.status);
+    this.statusChanges.subscribe(status => this._statusSignal.set(status));
+    this.disabledSignal = computed(() => this._statusSignal() === 'DISABLED');
+    //</editor-fold>
+
+    //<editor-fold desc="Value">
     this._value$ = new BehaviorSubject(this.value);
     this.valueChanges.subscribe(this._value$);
     this.value$ = this._value$.asObservable();
@@ -83,6 +113,21 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
       map(() => this.getRawValue()),
       cache()
     );
+
+    this._valueSignal = signal(this.value);
+    this.valueChanges.subscribe(value => this._valueSignal.set(value));
+    this.valueSignal = this._valueSignal.asReadonly();
+    this.rawValueSignal = computed(() => {
+      const controls = this.controlsSignal();
+      const out: Record<string, any> = {};
+      for (let key in controls) {
+        const control = controls[key];
+        if (!control) continue;
+        out[key] = control.getRawValue();
+      }
+      return out as TRaw;
+    });
+    //</editor-fold>
 
     //<editor-fold desc="Errors">
     const errorLists = Object.entries(this.controls)
@@ -102,16 +147,14 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   /** @inheritDoc */
   override registerControl<K extends Extract<keyof TControls, string>>(name: K, control: TControls[K]): TControls[K] {
     const activeControl = super.registerControl(name, control);
-    if (activeControl === control) {
-      this._controls$.next(this.controls);
-    }
+    if (activeControl === control) this.updatedControls();
     return activeControl;
   }
 
   /** @inheritDoc */
   override removeControl<K extends Extract<keyof TControls, string>>(name: K) {
     super.removeControl(name);
-    this._controls$.next(this.controls);
+    this.updatedControls();
   }
 
   /** @inheritDoc */
@@ -163,6 +206,11 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
    */
   clone(): FormLayer<TControls, TValue, TRaw> {
     return new FormLayer<TControls, TValue, TRaw>(mapObj(this.controls, x => x.clone()) as TControls);
+  }
+
+  private updatedControls() {
+    this._controls$.next(this.controls);
+    this._controlsSignal.set(this.controls);
   }
 }
 

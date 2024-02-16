@@ -97,9 +97,10 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   public readonly reset$ = this._reset$.asObservable();
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
-  protected readonly _statusSignal: WritableSignal<FormControlStatus>;
   /** An observable denoting when the input is disabled */
   public readonly disabled$: Observable<boolean>;
+
+  protected readonly _statusSignal: WritableSignal<FormControlStatus>;
   /** A Signal denoting when the input is disabled */
   public readonly disabledSignal: Signal<boolean>;
 
@@ -108,19 +109,18 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   public readonly value$: Observable<TInput>;
   /** A throttled observable containing the value with a rolling delay */
   public readonly throttledValue$: Observable<TInput>;
+  /** An observable containing the computed raw value of the input */
+  public readonly rawValue$: Observable<TInput>
 
-  private _valueSignal: WritableSignal<TInput>;
+  private readonly _valueSignal: WritableSignal<TInput>;
   /** A signal containing the value of the input */
   public readonly valueSignal: Signal<TInput>;
+  /** A signal containing the computed raw value of the input */
+  public readonly rawValueSignal: Signal<TInput>;
 
   private readonly _valueReset$: Subject<TInput> = new Subject();
   /** Emits the current value every time the node is reset */
   public readonly valueReset$: Observable<TInput> = this._valueReset$.asObservable();
-
-  /** An observable containing the computed raw value of the input */
-  public readonly rawValue$: Observable<TInput>
-  /** A signal containing the computed raw value of the input */
-  public readonly rawValueSignal: Signal<TInput>;
 
   /** An observable denoting if the input has an error */
   public readonly hasError$: Observable<boolean>;
