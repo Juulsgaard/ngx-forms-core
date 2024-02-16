@@ -4,7 +4,8 @@ import {distinctUntilChanged, map, throttleTime} from 'rxjs/operators';
 import {AutoComplete, FormError} from "../tools/form-types";
 import {deepEquals} from "@juulsgaard/ts-tools";
 import {parseFormErrors} from "../tools/errors";
-import {cache} from "@juulsgaard/rxjs-tools";
+import {cache, persistentCache} from "@juulsgaard/rxjs-tools";
+import {computed, signal, Signal, WritableSignal} from "@angular/core";
 
 export enum FormNodeEvent {
   Focus = 'focus',
@@ -58,6 +59,8 @@ export interface AnonFormNode extends FormNodeOptions {
 
   /** An observable denoting when the input is disabled */
   readonly disabled$: Observable<boolean>;
+  /** A Signal denoting when the input is disabled */
+  readonly disabledSignal: Signal<boolean>;
 
   /** An observable denoting if the input has an error */
   readonly hasError$: Observable<boolean>;
@@ -65,6 +68,8 @@ export interface AnonFormNode extends FormNodeOptions {
   readonly errors$: Observable<FormError[]>;
   /** An observable containing the current error state represented as a display string */
   readonly error$: Observable<string|undefined>;
+  /** A signal that contains the current error if one is present */
+  readonly errorSignal: Signal<string|undefined>;
 
   /**
    * Focus the input
@@ -92,8 +97,11 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   public readonly reset$ = this._reset$.asObservable();
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
+  protected readonly _statusSignal: WritableSignal<FormControlStatus>;
   /** An observable denoting when the input is disabled */
   public readonly disabled$: Observable<boolean>;
+  /** A Signal denoting when the input is disabled */
+  public readonly disabledSignal: Signal<boolean>;
 
   private readonly _value$: BehaviorSubject<TInput>;
   /** An observable for the current value of the input */
@@ -101,12 +109,18 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   /** A throttled observable containing the value with a rolling delay */
   public readonly throttledValue$: Observable<TInput>;
 
+  private _valueSignal: WritableSignal<TInput>;
+  /** A signal containing the value of the input */
+  public readonly valueSignal: Signal<TInput>;
+
   private readonly _valueReset$: Subject<TInput> = new Subject();
   /** Emits the current value every time the node is reset */
   public readonly valueReset$: Observable<TInput> = this._valueReset$.asObservable();
 
   /** An observable containing the computed raw value of the input */
   public readonly rawValue$: Observable<TInput>
+  /** A signal containing the computed raw value of the input */
+  public readonly rawValueSignal: Signal<TInput>;
 
   /** An observable denoting if the input has an error */
   public readonly hasError$: Observable<boolean>;
@@ -114,6 +128,8 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   public readonly errors$: Observable<FormError[]>;
   /** An observable containing the current error state represented as a display string */
   public readonly error$: Observable<string|undefined>;
+  /** A signal that contains the current error if one is present */
+  public readonly errorSignal: Signal<string|undefined>;
 
   /** The input label */
   readonly label?: string;
@@ -157,19 +173,29 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   ) {
     super(initialValue, {nonNullable: !nullable, validators: validators});
 
+    //<editor-fold desc="Options">
     this.label = options?.label;
     this.autocomplete = options?.autocomplete;
     this.tooltip = options?.tooltip;
     this.readonly = options?.readonly;
     this.autoFocus = options?.autoFocus;
     this.showDisabledField = options?.showDisabledField;
+    //</editor-fold>
 
+    //<editor-fold desc="Status">
     this._status$ = new BehaviorSubject(this.status);
     this.statusChanges.subscribe(this._status$);
     this.disabled$ = this._status$.pipe(
       map(x => x === 'DISABLED')
     );
 
+    this._statusSignal = signal(this.status);
+    this.statusChanges.subscribe(status => this._statusSignal.set(status));
+    this.disabledSignal = computed(() => this._statusSignal() === 'DISABLED');
+    //</editor-fold>
+
+
+    //<editor-fold desc="Value">
     this._value$ = new BehaviorSubject(this.value);
     this.valueChanges.subscribe(this._value$);
     this.value$ = this._value$.asObservable();
@@ -179,23 +205,29 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     );
 
     this.rawValue$ = combineLatest([this.value$, this.disabled$]).pipe(
-      map(([val, disabled]) => disabled ? this.defaultValue : val),
+      map(([val, disabled]) => this.generateRawValue(disabled, () => val)),
       cache()
     );
+
+    this._valueSignal = signal(this.value);
+    this.valueChanges.subscribe(value => this._valueSignal.set(value));
+    this.valueSignal = this._valueSignal.asReadonly();
+    this.rawValueSignal = computed(() => this.generateRawValue(this.disabledSignal(), this.valueSignal));
+    //</editor-fold>
 
     //<editor-fold desc="Errors">
     const errors$ = this.statusChanges.pipe(
       throttleTime(200, asyncScheduler, {leading: true, trailing: true}),
       map(x => x === 'INVALID' ? this.errors : null),
       distinctUntilChanged(deepEquals),
-      cache()
+      persistentCache()
     );
-    errors$.subscribe();
 
     this.errors$ = errors$.pipe(
       map(x => parseFormErrors(x).map(error => ({path: [], error}))),
       cache()
     );
+
     this.error$ = this.errors$.pipe(
       map(x => x[0]?.error),
       cache()
@@ -210,6 +242,14 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
       }),
       cache()
     );
+
+    this.errorSignal = computed(() => {
+      // Status signal first, since dirty isn't available as a signal
+      if (this._statusSignal() !== 'INVALID') return undefined;
+      if (!this.dirty) return undefined;
+      const errors = parseFormErrors(this.errors);
+      return errors.at(0);
+    });
     //</editor-fold>
   }
 
@@ -243,10 +283,15 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
 
   /** @inheritDoc */
   override getRawValue(): TInput {
-    if (this.disabled) return this.disabledDefault ?? this.rawDefault ?? this.defaultValue;
-    if (this.rawDefault !== undefined) return this.value ?? this.rawDefault;
-    if (this.nullable) return this.value;
-    return this.value ?? this.defaultValue;
+    return this.generateRawValue(this.disabled, () => this.value);
+  }
+
+  private generateRawValue(disabled: boolean, getVal: () => TInput) {
+    if (disabled) return this.disabledDefault ?? this.rawDefault ?? this.defaultValue;
+    const value = getVal();
+    if (this.rawDefault !== undefined) return value ?? this.rawDefault;
+    if (this.nullable) return value;
+    return value ?? this.defaultValue;
   }
   //</editor-fold>
 
