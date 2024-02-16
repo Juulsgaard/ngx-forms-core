@@ -5,11 +5,21 @@ import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {AbstractControl, FormArray, FormControlStatus} from "@angular/forms";
 import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
 import {cache} from "@juulsgaard/rxjs-tools";
+import {computed, Signal} from "@angular/core";
+import {subjectToSignal} from "../tools/signals";
 
 export interface AnonFormList {
 
+  /** An observable denoting the status of the list */
+  readonly status$: Observable<FormControlStatus>;
+  /** A signal denoting the status of the list */
+  readonly statusSignal: Signal<FormControlStatus>;
+
   /** Observable denoting when the list is disabled */
   readonly disabled$: Observable<boolean>;
+  /** Signal denoting when the list is disabled */
+  readonly disabledSignal: Signal<boolean>;
+
   /** Observable containing all the current errors of the list */
   readonly errors$: Observable<FormError[]>;
 
@@ -17,23 +27,37 @@ export interface AnonFormList {
   readonly controls: AnonFormLayer[];
   /** An observable containing the current controls of the list */
   readonly controls$: Observable<AnonFormLayer[]>;
+  /** A signal containing the current controls of the list */
+  readonly controlsSignal: Signal<AnonFormLayer[]>;
 
   /** The current amount of controls */
   readonly length: number;
   /** An observable containing the current amount of controls */
   readonly length$: Observable<number>;
+  /** A signal containing the current amount of controls */
+  readonly lengthSignal: Signal<number>;
 
   /** True if the list has no controls */
   readonly empty: boolean;
   /** An observable indicating if there are no controls in the list */
   readonly empty$: Observable<boolean>;
+  /** A signal indicating if there are no controls in the list */
+  readonly emptySignal: Signal<boolean>;
 }
 
 export class FormList<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormArray implements AnonFormList {
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
+  /** An observable denoting the status of the list */
+  readonly status$: Observable<FormControlStatus>;
+  /** A signal denoting the status of the list */
+  readonly statusSignal: Signal<FormControlStatus>;
+
   /** Observable denoting when the list is disabled */
   public readonly disabled$: Observable<boolean>;
+  /** Signal denoting when the list is disabled */
+  public readonly disabledSignal: Signal<boolean>;
+
   /** Observable containing all the current errors of the list */
   public readonly errors$: Observable<FormError[]>;
 
@@ -44,6 +68,12 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   private readonly _value$: BehaviorSubject<TValue[]>;
   public readonly value$: Observable<TValue[]>;
   public readonly throttledValue$: Observable<TValue[]>;
+  /** An observable containing the computed raw values of the list */
+  public rawValue$: Observable<TRaw[]>;
+
+  public readonly valueSignal: Signal<TValue[]>;
+  /** A signal containing the computed raw values of the list */
+  public rawValueSignal: Signal<TRaw[]>;
 
   private readonly _valueReset$: Subject<TValue[]> = new Subject();
   /** Emits the current value every time the list is reset */
@@ -53,20 +83,27 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   /** Emits the current controls every time the list is reset */
   public readonly controlsReset$: Observable<FormLayer<TControls, TValue, TRaw>[]> = this._controlsReset$.asObservable();
 
-  /** An observable containing the computed raw values of the list */
-  public rawValue$: Observable<TRaw[]>;
-
   /** A list of all the Form Layers making up the list */
   declare public controls: FormLayer<TControls, TValue, TRaw>[];
-  private _controls$: BehaviorSubject<FormLayer<TControls, TValue, TRaw>[]>;
+
+  private readonly _controls$: BehaviorSubject<FormLayer<TControls, TValue, TRaw>[]>;
   /** An observable containing the current controls of the list */
-  public controls$: Observable<FormLayer<TControls, TValue, TRaw>[]>;
+  readonly controls$: Observable<FormLayer<TControls, TValue, TRaw>[]>;
+  /** A signal containing the current controls of the list */
+  readonly controlsSignal: Signal<FormLayer<TControls, TValue, TRaw>[]>;
 
   public override get length() {return this.controls.length}
-  public readonly length$: Observable<number>;
+  /** An observable containing the current amount of controls */
+  readonly length$: Observable<number>;
+  /** A signal containing the current amount of controls */
+  readonly lengthSignal: Signal<number>;
+
 
   public get empty() {return this.controls.length < 1}
-  public readonly empty$: Observable<boolean>;
+  /** An observable indicating if there are no controls in the list */
+  readonly empty$: Observable<boolean>;
+  /** A signal indicating if there are no controls in the list */
+  readonly emptySignal: Signal<boolean>;
 
   private templateLayer: FormLayer<TControls, TValue, TRaw>;
 
@@ -82,18 +119,31 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
       super.push(this.templateLayer.clone());
     }
 
+    //<editor-fold desc="Controls">
     this._controls$ = new BehaviorSubject(this.controls);
     this.controls$ = this._controls$.asObservable();
+    this.controlsSignal = subjectToSignal(this._controls$);
 
     this.length$ = this.controls$.pipe(map(x => x.length));
     this.empty$ = this.controls$.pipe(map(x => x.length < 1));
 
+    this.lengthSignal = computed(() => this.controlsSignal().length)
+    this.emptySignal = computed(() => this.controlsSignal().length <= 0)
+    //</editor-fold>
+
+    //<editor-fold desc="Status">
     this._status$ = new BehaviorSubject(this.status);
     this.statusChanges.subscribe(this._status$);
+    this.status$ = this._status$.asObservable();
     this.disabled$ = this._status$.pipe(
       map(x => x === 'DISABLED')
     );
 
+    this.statusSignal = subjectToSignal(this._status$);
+    this.disabledSignal = computed(() => this.statusSignal() === 'DISABLED');
+    //</editor-fold>
+
+    //<editor-fold desc="Values">
     this._value$ = new BehaviorSubject(this.value);
     this.valueChanges.subscribe(this._value$);
     this.value$ = this._value$.asObservable();
@@ -107,6 +157,13 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
       map(() => this.getRawValue()),
       cache()
     );
+
+    this.valueSignal = subjectToSignal(this._value$);
+    this.rawValueSignal = computed(() => {
+      const controls = this.controlsSignal();
+      return controls.map(x => x.getRawValue());
+    });
+    //</editor-fold>
 
     //<editor-fold desc="Errors">
     this.errors$ = this.controls$.pipe(
