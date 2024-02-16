@@ -1,7 +1,7 @@
 import {DeepPartial, isObject, SimpleObject} from "@juulsgaard/ts-tools";
 import {BehaviorSubject, distinctUntilChanged, Observable, of, Subscribable, switchMap} from "rxjs";
 import {ILoadingState, latestValueFromOrDefault, Loading} from "@juulsgaard/rxjs-tools";
-import {inject} from "@angular/core";
+import {computed, inject, Signal} from "@angular/core";
 import {FormGroupControls} from "../tools/form-types";
 import {formUpdated} from "../tools/form-population";
 import {FormRootConstructors, ModelFormRoot} from "../forms/form-root";
@@ -19,7 +19,7 @@ export class FormPage<TVal extends SimpleObject> {
     return new FormPageFactory<T>('create');
   }
 
-  form: ModelFormRoot<TVal>;
+  readonly form: ModelFormRoot<TVal>;
   get controls(): FormGroupControls<TVal> {return this.form.controls};
   get value(): DeepPartial<TVal> {return this.form.value};
   getRawValue(): TVal {return this.form.getRawValue()};
@@ -43,10 +43,10 @@ export class FormPage<TVal extends SimpleObject> {
   readonly hasSubmit: boolean;
   readonly showSubmit$: Subscribable<boolean>;
   readonly canSubmit$: Observable<boolean>;
-  private readonly getCanSubmit: () => boolean;
+  readonly canSubmitSignal: Signal<boolean>;
 
   get canSubmit() {
-    return this.getCanSubmit()
+    return this.canSubmitSignal()
   }
 
   readonly hasDelete: boolean;
@@ -90,11 +90,10 @@ export class FormPage<TVal extends SimpleObject> {
       ? of(false)
       : options.canEdit$ ?? of(true);
 
-    this.getCanSubmit = !this.hasSubmit
-      ? () => false
-      : type === 'update'
-        ? () => this.form.canSubmit
-        : () => this.form.canCreate;
+    this.canSubmitSignal = computed(() => {
+      if (!this.hasSubmit) return false;
+      return type === "update" ? this.form.canSubmitSignal() : this.form.canCreateSignal();
+    });
 
     this.showDelete$ = !this.hasDelete
       ? of(false)

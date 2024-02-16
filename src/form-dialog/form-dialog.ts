@@ -1,7 +1,7 @@
 import {BehaviorSubject, firstValueFrom, lastValueFrom, Observable, of, switchMap} from "rxjs";
 import {map} from "rxjs/operators";
 import {DeepPartial} from "@juulsgaard/ts-tools";
-import {persistentCache} from "@juulsgaard/rxjs-tools";
+import {ILoadingState, persistentCache} from "@juulsgaard/rxjs-tools";
 import {FormGroupControls} from "../tools/form-types";
 import {FormRootConstructors, ModelFormRoot} from "../forms/form-root";
 import {FormDialogFactory} from "./form-dialog-factory";
@@ -54,7 +54,7 @@ export class FormDialog<TValue extends Record<string, any>> {
   /** Whether the submission is currently in progress */
   get working(): boolean {return this._working$.value}
 
-  private readonly onSubmit: (data: TValue) => Promise<any>|Observable<any>|void;
+  private readonly onSubmit: (data: TValue) => Promise<any>|Observable<any>|ILoadingState|void;
   private readonly createForm: boolean;
 
   /** The title of the Dialog */
@@ -144,6 +144,11 @@ export class FormDialog<TValue extends Record<string, any>> {
     try {
 
       let result = this.onSubmit(this.form.getRawValue());
+
+      if (result instanceof ILoadingState) {
+        await result;
+        return;
+      }
 
       if (result instanceof Observable) {
         result = lastValueFrom(result);

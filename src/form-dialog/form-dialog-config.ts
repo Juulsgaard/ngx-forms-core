@@ -3,10 +3,11 @@ import {FormDialog} from "./form-dialog";
 import {Observable} from "rxjs";
 import {DeepPartial} from "@juulsgaard/ts-tools";
 import {AbstractControl} from "@angular/forms";
+import {ILoadingState} from "@juulsgaard/rxjs-tools";
 
 export interface FormDialogOptions<T> {
   /** The action to perform when submitting the form */
-  onSubmit: (data: T) => Promise<any> | Observable<any> | void;
+  onSubmit: (data: T) => Promise<any> | Observable<any> | ILoadingState | void;
   /** The title of the dialog */
   title: string;
   /** The description for the dialog */
