@@ -5,7 +5,8 @@ import {AutoComplete, FormError} from "../tools/form-types";
 import {deepEquals} from "@juulsgaard/ts-tools";
 import {parseFormErrors} from "../tools/errors";
 import {cache, persistentCache} from "@juulsgaard/rxjs-tools";
-import {computed, signal, Signal, WritableSignal} from "@angular/core";
+import {computed, Signal} from "@angular/core";
+import {subjectToSignal} from "../tools/signals";
 
 export enum FormNodeEvent {
   Focus = 'focus',
@@ -57,6 +58,11 @@ export interface AnonFormNode extends FormNodeOptions {
   /** An event emitted when the input resets */
   readonly reset$: Observable<void>;
 
+  /** An observable denoting the status of the input */
+  readonly status$: Observable<FormControlStatus>;
+  /** A signal denoting the status of the input */
+  readonly statusSignal: Signal<FormControlStatus>;
+
   /** An observable denoting when the input is disabled */
   readonly disabled$: Observable<boolean>;
   /** A Signal denoting when the input is disabled */
@@ -97,10 +103,13 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   public readonly reset$ = this._reset$.asObservable();
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
+  /** An observable denoting the status of the input */
+  public readonly status$: Observable<FormControlStatus>;
   /** An observable denoting when the input is disabled */
   public readonly disabled$: Observable<boolean>;
 
-  protected readonly _statusSignal: WritableSignal<FormControlStatus>;
+  /** A signal denoting the status of the input */
+  public readonly statusSignal: Signal<FormControlStatus>;
   /** A Signal denoting when the input is disabled */
   public readonly disabledSignal: Signal<boolean>;
 
@@ -112,7 +121,6 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   /** An observable containing the computed raw value of the input */
   public readonly rawValue$: Observable<TInput>
 
-  private readonly _valueSignal: WritableSignal<TInput>;
   /** A signal containing the value of the input */
   public readonly valueSignal: Signal<TInput>;
   /** A signal containing the computed raw value of the input */
@@ -185,13 +193,13 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
     //<editor-fold desc="Status">
     this._status$ = new BehaviorSubject(this.status);
     this.statusChanges.subscribe(this._status$);
+    this.status$ = this._status$.asObservable();
     this.disabled$ = this._status$.pipe(
       map(x => x === 'DISABLED')
     );
 
-    this._statusSignal = signal(this.status);
-    this.statusChanges.subscribe(status => this._statusSignal.set(status));
-    this.disabledSignal = computed(() => this._statusSignal() === 'DISABLED');
+    this.statusSignal = subjectToSignal(this._status$);
+    this.disabledSignal = computed(() => this.statusSignal() === 'DISABLED');
     //</editor-fold>
 
 
@@ -209,9 +217,8 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
       cache()
     );
 
-    this._valueSignal = signal(this.value);
-    this.valueChanges.subscribe(value => this._valueSignal.set(value));
-    this.valueSignal = this._valueSignal.asReadonly();
+
+    this.valueSignal = subjectToSignal(this._value$);
     this.rawValueSignal = computed(() => this.generateRawValue(this.disabledSignal(), this.valueSignal));
     //</editor-fold>
 
@@ -245,7 +252,7 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
 
     this.errorSignal = computed(() => {
       // Status signal first, since dirty isn't available as a signal
-      if (this._statusSignal() !== 'INVALID') return undefined;
+      if (this.statusSignal() !== 'INVALID') return undefined;
       if (!this.dirty) return undefined;
       const errors = parseFormErrors(this.errors);
       return errors.at(0);

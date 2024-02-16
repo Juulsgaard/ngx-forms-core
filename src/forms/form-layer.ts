@@ -5,13 +5,20 @@ import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFo
 import {DeepPartial, mapObj, SimpleObject} from "@juulsgaard/ts-tools";
 import {AnonFormNode, FormNode} from "./form-node";
 import {cache} from "@juulsgaard/rxjs-tools";
-import {computed, signal, Signal, WritableSignal} from "@angular/core";
+import {computed, Signal} from "@angular/core";
+import {subjectToSignal} from "../tools/signals";
 
 export interface AnonFormLayer {
+
+  /** An observable denoting the status of the layer */
+  readonly status$: Observable<FormControlStatus>;
+  /** A signal denoting the status of the layer */
+  readonly statusSignal: Signal<FormControlStatus>;
+
   /** An observable denoting when the layer is disabled */
   readonly disabled$: Observable<boolean>;
   /** A signal denoting when the layer is disabled */
-  readonly disabledSignal: Observable<boolean>;
+  readonly disabledSignal: Signal<boolean>;
   /** An observable containing all the current errors of the Layer */
   readonly errors$: Observable<FormError[]>;
 
@@ -21,14 +28,17 @@ export interface AnonFormLayer {
   readonly inputList: FormNode<any>[];
 }
 
-export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormGroup {
+export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormGroup implements AnonFormLayer {
 
   protected readonly _status$: BehaviorSubject<FormControlStatus>;
+  /** An observable denoting the status of the layer */
+  public readonly status$: Observable<FormControlStatus>;
   /** An observable denoting when the layer is disabled */
   public readonly disabled$: Observable<boolean>;
 
-  protected readonly _statusSignal: WritableSignal<FormControlStatus>;
-  /** A Signal denoting when the layer is disabled */
+  /** A signal denoting the status of the layer */
+  public readonly statusSignal: Signal<FormControlStatus>;
+  /** A signal denoting when the layer is disabled */
   public readonly disabledSignal: Signal<boolean>;
 
   /** An observable containing all the current errors of the Layer */
@@ -42,7 +52,6 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   /** A throttled observable containing the raw value of the layer */
   public rawValue$: Observable<TRaw>;
 
-  private _valueSignal: WritableSignal<TValue>;
   /** A signal containing the current value */
   public readonly valueSignal: Signal<TValue>;
   /** A signal containing the computed raw value */
@@ -56,7 +65,6 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   /** An observable containing the current controls in the layer */
   public readonly controls$: Observable<TControls>;
 
-  private readonly _controlsSignal: WritableSignal<TControls>;
   /** A signal containing the current controls in the layer */
   public readonly controlsSignal: Signal<TControls>;
 
@@ -74,8 +82,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
     this._controls$ = new BehaviorSubject(this.controls);
     this.controls$ = this._controls$.asObservable();
 
-    this._controlsSignal = signal(this.controls);
-    this.controlsSignal = this._controlsSignal.asReadonly();
+    this.controlsSignal = subjectToSignal(this._controls$);
 
     this._inputList$ = new BehaviorSubject(Object.values(this.controls).filter(x => x instanceof FormNode) as FormNode<any>[]);
     this.controls$.pipe(
@@ -88,13 +95,13 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
     //<editor-fold desc="Status">
     this._status$ = new BehaviorSubject(this.status);
     this.statusChanges.subscribe(this._status$);
+    this.status$ = this._status$.asObservable();
     this.disabled$ = this._status$.pipe(
       map(x => x === 'DISABLED')
     );
 
-    this._statusSignal = signal(this.status);
-    this.statusChanges.subscribe(status => this._statusSignal.set(status));
-    this.disabledSignal = computed(() => this._statusSignal() === 'DISABLED');
+    this.statusSignal = subjectToSignal(this._status$);
+    this.disabledSignal = computed(() => this.statusSignal() === 'DISABLED');
     //</editor-fold>
 
     //<editor-fold desc="Value">
@@ -114,9 +121,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
       cache()
     );
 
-    this._valueSignal = signal(this.value);
-    this.valueChanges.subscribe(value => this._valueSignal.set(value));
-    this.valueSignal = this._valueSignal.asReadonly();
+    this.valueSignal = subjectToSignal(this._value$);
     this.rawValueSignal = computed(() => {
       const controls = this.controlsSignal();
       const out: Record<string, any> = {};
@@ -210,7 +215,6 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
 
   private updatedControls() {
     this._controls$.next(this.controls);
-    this._controlsSignal.set(this.controls);
   }
 }
 
