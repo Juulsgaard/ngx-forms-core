@@ -214,7 +214,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   }
 
   private updatedControls() {
-    this._controls$.next(this.controls);
+    this._controls$.next({...this.controls});
   }
 }
 

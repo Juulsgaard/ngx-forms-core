@@ -191,7 +191,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   //<editor-fold desc="Helpers">
 
   private updateControls() {
-    this._controls$.next(this.controls);
+    this._controls$.next([...this.controls]);
   }
 
   private scaleToSize(size: number): boolean {
