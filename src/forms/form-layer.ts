@@ -1,12 +1,13 @@
 import {FormControlStatus, FormGroup} from "@angular/forms";
-import {asyncScheduler, BehaviorSubject, combineLatest, mergeWith, Observable, skip, Subject} from "rxjs";
+import {asyncScheduler, BehaviorSubject, combineLatest, mergeWith, Observable, Subject} from "rxjs";
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
 import {DeepPartial, mapObj, SimpleObject} from "@juulsgaard/ts-tools";
-import {AnonFormNode, FormNode} from "./form-node";
+import {AnonFormNode} from "./form-node";
 import {cache} from "@juulsgaard/rxjs-tools";
 import {computed, Signal} from "@angular/core";
 import {subjectToSignal} from "../tools/signals";
+import {isFormNode} from "../tools/type-predicates";
 
 export interface AnonFormLayer {
 
@@ -25,7 +26,7 @@ export interface AnonFormLayer {
   /** An observable containing a list of all the Form Nodes in the layer */
   readonly inputList$: Observable<AnonFormNode[]>;
   /** A list of all the Form Nodes in the layer */
-  readonly inputList: FormNode<any>[];
+  readonly inputList: Signal<AnonFormNode[]>;
 }
 
 export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormGroup implements AnonFormLayer {
@@ -68,11 +69,10 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   /** A signal containing the current controls in the layer */
   public readonly controlsSignal: Signal<TControls>;
 
-  private readonly _inputList$: BehaviorSubject<FormNode<any>[]>;
   /** An observable containing a list of all the Form Nodes in the layer */
-  public readonly inputList$: Observable<FormNode<any>[]>;
+  public readonly inputList$: Observable<AnonFormNode[]>;
   /** A list of all the Form Nodes in the layer */
-  get inputList(): FormNode<any>[] {return this._inputList$.value}
+  public readonly inputList: Signal<AnonFormNode[]>;
 
 
   constructor(controls: TControls) {
@@ -82,14 +82,16 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
     this._controls$ = new BehaviorSubject(this.controls);
     this.controls$ = this._controls$.asObservable();
 
+    this.inputList$ = this.controls$.pipe(
+      map(controls => Object.values(controls).filter(isFormNode) as AnonFormNode[]),
+      cache()
+    );
+
     this.controlsSignal = subjectToSignal(this._controls$);
 
-    this._inputList$ = new BehaviorSubject(Object.values(this.controls).filter(x => x instanceof FormNode) as FormNode<any>[]);
-    this.controls$.pipe(
-      skip(1),
-      map(controls => Object.values(controls).filter(x => x instanceof FormNode) as FormNode<any>[])
-    ).subscribe(this._inputList$);
-    this.inputList$ = this._inputList$.asObservable();
+    this.inputList = computed(
+      () => Object.values(this.controlsSignal()).filter(isFormNode) as AnonFormNode[]
+    );
     //</editor-fold>
 
     //<editor-fold desc="Status">
