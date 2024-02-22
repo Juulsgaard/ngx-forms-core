@@ -5,19 +5,10 @@ import {computed, inject, Signal} from "@angular/core";
 import {FormGroupControls} from "../tools/form-types";
 import {formUpdated} from "../tools/form-population";
 import {FormRootConstructors, ModelFormRoot} from "../forms/form-root";
-import {FormPageFactory} from "./form-page-factory";
 import {FormConfirmService} from "./form-confirm.service";
 import {FormPageAction, FormPageOptions, WarningDialog} from "./form-page-config";
 
 export class FormPage<TVal extends SimpleObject> {
-
-  public static Edit<T extends Record<string, any>>(): FormPageFactory<T> {
-    return new FormPageFactory<T>('update');
-  }
-
-  public static Create<T extends Record<string, any>>(): FormPageFactory<T> {
-    return new FormPageFactory<T>('create');
-  }
 
   readonly form: ModelFormRoot<TVal>;
   get controls(): FormGroupControls<TVal> {return this.form.controls};

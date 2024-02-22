@@ -17,7 +17,9 @@ export {FormNode, InputTypes, FormNodeEvent, AnonFormNode} from "./forms/form-no
 export {SingleSelectNode, MultiSelectNode} from "./forms/form-select-node";
 
 export * from "./form-dialog/form-dialog";
+export * from "./form-dialog/form-dialog-constructors";
 
 export * from "./form-page/form-page";
+export * from "./form-page/form-page-constructors";
 export * from "./form-page/form-confirm.service";
 

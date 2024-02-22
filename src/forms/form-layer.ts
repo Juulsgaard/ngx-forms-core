@@ -3,11 +3,10 @@ import {asyncScheduler, BehaviorSubject, combineLatest, mergeWith, Observable, S
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
 import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
 import {DeepPartial, mapObj, SimpleObject} from "@juulsgaard/ts-tools";
-import {AnonFormNode} from "./form-node";
+import {AnonFormNode, FormNode} from "./form-node";
 import {cache} from "@juulsgaard/rxjs-tools";
 import {computed, Signal} from "@angular/core";
 import {subjectToSignal} from "../tools/signals";
-import {isFormNode} from "../tools/type-predicates";
 
 export interface AnonFormLayer {
 
@@ -83,14 +82,14 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
     this.controls$ = this._controls$.asObservable();
 
     this.inputList$ = this.controls$.pipe(
-      map(controls => Object.values(controls).filter(isFormNode) as AnonFormNode[]),
+      map(controls => Object.values(controls).filter(x => x instanceof FormNode) as AnonFormNode[]),
       cache()
     );
 
     this.controlsSignal = subjectToSignal(this._controls$);
 
     this.inputList = computed(
-      () => Object.values(this.controlsSignal()).filter(isFormNode) as AnonFormNode[]
+      () => Object.values(this.controlsSignal()).filter(x => x instanceof FormNode) as AnonFormNode[]
     );
     //</editor-fold>
 

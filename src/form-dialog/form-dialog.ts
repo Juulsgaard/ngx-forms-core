@@ -4,30 +4,11 @@ import {DeepPartial} from "@juulsgaard/ts-tools";
 import {ILoadingState, persistentCache} from "@juulsgaard/rxjs-tools";
 import {FormGroupControls} from "../tools/form-types";
 import {FormRootConstructors, ModelFormRoot} from "../forms/form-root";
-import {FormDialogFactory} from "./form-dialog-factory";
 import {FormDialogOptions} from "./form-dialog-config";
 import {subjectToSignal} from "../tools/signals";
 import {computed, Signal} from "@angular/core";
 
 export class FormDialog<TValue extends Record<string, any>> {
-
-  /**
-   * Create a new creation Form Dialog.
-   * Use this when the dialog is used for creating something.
-   * @constructor
-   */
-  static Create<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
-    return new FormDialogFactory('create');
-  }
-
-  /**
-   * Create a new update Form Dialog.
-   * Use this when the dialog is modifying data.
-   * @constructor
-   */
-  static Update<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
-    return new FormDialogFactory('update');
-  }
 
   private readonly _form: ModelFormRoot<TValue>;
   /** The form of the dialog */
