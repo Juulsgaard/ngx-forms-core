@@ -129,7 +129,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
       for (let key in controls) {
         const control = controls[key];
         if (!control) continue;
-        out[key] = control.getRawValue();
+        out[key] = control.rawValueSignal();
       }
       return out as TRaw;
     });

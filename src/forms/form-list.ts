@@ -161,7 +161,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
     this.valueSignal = subjectToSignal(this._value$);
     this.rawValueSignal = computed(() => {
       const controls = this.controlsSignal();
-      return controls.map(x => x.getRawValue());
+      return controls.map(x => x.rawValueSignal());
     });
     //</editor-fold>
 
