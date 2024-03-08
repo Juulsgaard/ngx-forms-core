@@ -128,6 +128,7 @@ export class FormDialog<TValue extends Record<string, any>> {
 
       if (result instanceof ILoadingState) {
         await result;
+        this._show$.next(false);
         return;
       }
 
