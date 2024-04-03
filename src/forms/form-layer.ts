@@ -1,12 +1,15 @@
 import {FormControlStatus, FormGroup} from "@angular/forms";
 import {asyncScheduler, BehaviorSubject, combineLatest, mergeWith, Observable, Subject} from "rxjs";
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
-import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
+import {
+  FormGroupControls, FormGroupValue, FormGroupValueRaw, FormValidationData, SmartFormUnion
+} from "../tools/form-types";
 import {DeepPartial, mapObj, SimpleObject} from "@juulsgaard/ts-tools";
-import {AnonFormNode, FormNode} from "./form-node";
+import {FormNode} from "./form-node";
 import {cache} from "@juulsgaard/rxjs-tools";
 import {computed, Signal} from "@angular/core";
 import {subjectToSignal} from "../tools/signals";
+import {AnonFormNode} from "./anon-form-node";
 
 export interface AnonFormLayer {
 
@@ -20,7 +23,7 @@ export interface AnonFormLayer {
   /** A signal denoting when the layer is disabled */
   readonly disabledSignal: Signal<boolean>;
   /** An observable containing all the current errors of the Layer */
-  readonly errors$: Observable<FormError[]>;
+  readonly errors$: Observable<FormValidationData[]>;
 
   /** An observable containing a list of all the Form Nodes in the layer */
   readonly inputList$: Observable<AnonFormNode[]>;
@@ -42,7 +45,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
   public readonly disabledSignal: Signal<boolean>;
 
   /** An observable containing all the current errors of the Layer */
-  public readonly errors$: Observable<FormError[]>;
+  public readonly errors$: Observable<FormValidationData[]>;
 
   private readonly _value$: BehaviorSubject<TValue>;
   /** An observable containing the current value */
@@ -144,7 +147,7 @@ export class FormLayer<TControls extends Record<string, SmartFormUnion>, TValue 
       ));
     this.errors$ = combineLatest(errorLists).pipe(
       throttleTime(100, asyncScheduler, {leading: true, trailing: true}),
-      map(arr => ([] as FormError[]).concat(...arr)),
+      map(arr => ([] as FormValidationData[]).concat(...arr)),
       cache()
     );
     //</editor-fold>

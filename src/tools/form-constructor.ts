@@ -1,8 +1,6 @@
 import {Validators} from "@angular/forms";
-import {FormNodeConfig, InputTypes} from "../forms/form-node";
 import {Observable} from "rxjs";
 import {Constrain, MapFunc} from "@juulsgaard/ts-tools";
-import {FormSelectNodeConfig, MultiSelectNodeConfig, SingleSelectNodeConfig} from "../forms/form-select-node";
 import {FormLayer, FormLayerConstructors, ModelFormLayer} from "../forms/form-layer";
 import {
   FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValue, FormGroupValueRaw, PartialTemplate,
@@ -13,6 +11,22 @@ import {NodeValidators} from "./validation";
 import {FormList, FormListConstructors} from "../forms/form-list";
 import {formTemplateToControls, formTemplateToValueControls} from "./templates";
 import {FormConstants} from "./constants";
+import {InputTypes} from "../forms/anon-form-node";
+import {FormNodeConfig} from "../forms/form-node-config";
+import {FormSelectNodeConfig} from "../forms/form-select-node-config";
+
+interface FormNodeCtorOptions<T> {
+  fallback?: T;
+  disabledFallback?: T|undefined;
+}
+
+function parseOptions<T>(initial: T, options: FormNodeCtorOptions<T>): {fallback: T|undefined, disabled: T|undefined};
+function parseOptions<T>(initial: T|undefined, options: FormNodeCtorOptions<T>, defaultFallback: T): {fallback: T, disabled: T|undefined};
+function parseOptions<T>(initial: T|undefined, options: FormNodeCtorOptions<T>, defaultFallback?: T): {fallback: T|undefined, disabled: T|undefined} {
+  const fallback = 'fallback' in options ? options.fallback : initial;
+  const disabled = 'disabledFallback' in options ? options.disabledFallback : fallback;
+  return { fallback: fallback ?? defaultFallback, disabled };
+}
 
 export module Form {
 
@@ -21,143 +35,151 @@ export module Form {
   /**
    * Create a generic input with no type
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function generic<T>(initialValue: T, defaultValue?: T) {
-    return new FormNodeConfig<T>(InputTypes.Generic, defaultValue ?? initialValue, initialValue);
+  export function generic<T>(
+    initialValue: T, options: FormNodeCtorOptions<T> = {}
+  ): FormNodeConfig<T> {
+    const {fallback, disabled} = parseOptions(initialValue, options, initialValue);
+    return new FormNodeConfig<T>(InputTypes.Generic, false, fallback, initialValue, disabled);
   }
 
   //<editor-fold desc="String Inputs">
   /**
    * Create a readonly input for storing Ids
    */
-  export function id(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(InputTypes.Text, defaultValue ?? initialValue ?? '', initialValue).withLabel('Id').asReadonly();
+  export function id(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.Text, false, fallback, initialValue, disabled)
+      .withLabel('Id').asReadonly();
   }
 
   /**
    * Create a text input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function text(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(InputTypes.Text, defaultValue ?? initialValue ?? '', initialValue);
+  export function text(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.Text, false, fallback, initialValue, disabled);
   }
 
   /**
    * Create a GUID input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function guid(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(
-      InputTypes.Text,
-      defaultValue ?? initialValue ?? FormConstants.NULL_GUID,
-      initialValue
-    );
+  export function guid(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, FormConstants.NULL_GUID);
+    return new FormNodeConfig<string>(InputTypes.Text, false, fallback, initialValue, disabled);
   }
 
   /**
    * Create a URL input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function url(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(InputTypes.Url, defaultValue ?? initialValue ?? '', initialValue).withValidators(
-      NodeValidators.url);
+  export function url(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.Url, false, fallback, initialValue, disabled)
+      .withValidators(NodeValidators.url);
   }
 
   /**
    * Create a password input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function password(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(InputTypes.Password, defaultValue ?? initialValue ?? '', initialValue);
+  export function password(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.Password, false, fallback, initialValue, disabled);
   }
 
   /**
    * Create a color input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function color(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(InputTypes.Color, defaultValue ?? initialValue ?? '', initialValue);
+  export function color(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.Color, false, fallback, initialValue, disabled);
   }
 
   /**
    * Create a hex color input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function hexColor(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(
-      InputTypes.Color,
-      defaultValue ?? initialValue ?? '',
-      initialValue
-    ).withValidators(NodeValidators.hexColor);
+  export function hexColor(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.Color, false, fallback, initialValue, disabled)
+      .withValidators(NodeValidators.hexColor);
   }
 
   /**
    * Create an email input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function email(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(
-      InputTypes.Email,
-      defaultValue ?? initialValue ?? '',
-      initialValue
-    ).withValidators(Validators.email);
+  export function email(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.Email, false, fallback, initialValue, disabled)
+      .withValidators(Validators.email);
   }
 
   /**
    * Create a phone number input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function phone(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(InputTypes.Phone, defaultValue ?? initialValue ?? '', initialValue);
+  export function phone(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.Phone, false, fallback, initialValue, disabled);
   }
 
   /**
    * Create a textfield input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function longText(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(InputTypes.LongText, defaultValue ?? initialValue ?? '', initialValue);
+  export function longText(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.LongText, false, fallback, initialValue, disabled);
   }
 
   /**
    * Create an HTML input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function html(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(InputTypes.HTML, defaultValue ?? initialValue ?? '', initialValue);
+  export function html(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.HTML, false, fallback, initialValue, disabled);
   }
 
   /**
    * Create a search input
    * @param initialValue - The starting value
-   * @param defaultValue - The value to use when empty
+   * @param options - Additional configuration
    */
-  export function search(initialValue?: string, defaultValue?: string) {
-    return new FormNodeConfig<string>(InputTypes.Search, defaultValue ?? initialValue ?? '', initialValue);
+  export function search(initialValue?: string, options: FormNodeCtorOptions<string> = {}) {
+    const {fallback, disabled} = parseOptions(initialValue, options, '');
+    return new FormNodeConfig<string>(InputTypes.Search, false, fallback, initialValue, disabled);
   }
 
   //</editor-fold>
 
   //<editor-fold desc="Misc Inputs">
 
+  // TODO: Start here
+
   /**
    * Create a number input
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  export function number(initialValue?: number, defaultValue?: number) {
-    return new FormNodeConfig<number>(InputTypes.Number, defaultValue ?? initialValue ?? 0, initialValue);
+  export function number(initialValue?: number, {fallback, disabledFallback}: FormNodeCtorOptions<number> = {}) {
+    return new FormNodeConfig<number>(InputTypes.Number, false, fallback ?? initialValue ?? 0, initialValue, disabledFallback);
   }
 
   /**
@@ -165,8 +187,15 @@ export module Form {
    * @param initialValue - The starting value
    * @param defaultValue - The value to use when empty
    */
-  export function bool(initialValue?: boolean, defaultValue?: boolean) {
-    return new FormNodeConfig<boolean>(InputTypes.Bool, defaultValue ?? initialValue ?? false, initialValue);
+  export function bool(initialValue?: boolean, {fallback, disabledFallback}: FormNodeCtorOptions<boolean> = {}) {
+    return new FormNodeConfig<boolean>(InputTypes.Bool, false, fallback ?? initialValue ?? false, initialValue, disabledFallback);
+  }
+
+  /**
+   * Create a file input
+   */
+  export function file() {
+    return new FormNodeConfig<File>(InputTypes.File, false, FormConstants.NULL_FILE);
   }
 
   //</editor-fold>
@@ -275,7 +304,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     generic<T = any>(initialValue?: T, disabledDefault?: T) {
-      return new FormNodeConfig<T | undefined>(InputTypes.Generic, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<T | undefined>(
+        InputTypes.Generic,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     //<editor-fold desc="Text Inputs">
@@ -286,7 +322,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     id(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Text, undefined, initialValue, true, undefined, disabledDefault).withLabel('Id')
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Text,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      ).withLabel('Id')
         .asReadonly();
     },
 
@@ -296,7 +339,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     text(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Text, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Text,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -305,7 +355,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     guid(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Text, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Text,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -314,7 +371,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     url(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Url, undefined, initialValue, true, undefined, disabledDefault).withValidators(
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Url,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      ).withValidators(
         NodeValidators.url);
     },
 
@@ -324,7 +388,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     password(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Password, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Password,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -333,7 +404,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     color(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Color, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Color,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -342,7 +420,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     hexColor(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Color, undefined, initialValue, true, undefined, disabledDefault).withValidators(
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Color,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      ).withValidators(
         NodeValidators.hexColor);
     },
 
@@ -352,7 +437,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     email(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Email, undefined, initialValue, true, undefined, disabledDefault).withValidators(
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Email,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      ).withValidators(
         Validators.email);
     },
 
@@ -362,7 +454,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     phone(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Phone, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Phone,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -371,7 +470,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     longText(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.LongText, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.LongText,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -380,7 +486,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     html(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.HTML, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.HTML,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -389,7 +502,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     search(initialValue?: string, disabledDefault?: string) {
-      return new FormNodeConfig<string | undefined>(InputTypes.Search, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<string | undefined>(
+        InputTypes.Search,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
     //</editor-fold>
 
@@ -401,7 +521,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     number(initialValue?: number, disabledDefault?: number) {
-      return new FormNodeConfig<number | undefined>(InputTypes.Number, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<number | undefined>(
+        InputTypes.Number,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -421,7 +548,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     date(initialValue?: Date, disabledDefault?: Date) {
-      return new FormNodeConfig<Date | undefined>(InputTypes.Date, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<Date | undefined>(
+        InputTypes.Date,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -430,7 +564,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     datetime(initialValue?: Date, disabledDefault?: Date) {
-      return new FormNodeConfig<Date | undefined>(InputTypes.DateTime, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<Date | undefined>(
+        InputTypes.DateTime,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
 
     /**
@@ -439,7 +580,14 @@ export module Form {
      * @param disabledDefault - A default value to use when the input is disabled
      */
     time(initialValue?: Date, disabledDefault?: Date) {
-      return new FormNodeConfig<Date | undefined>(InputTypes.Time, undefined, initialValue, true, undefined, disabledDefault);
+      return new FormNodeConfig<Date | undefined>(
+        InputTypes.Time,
+        undefined,
+        initialValue,
+        true,
+        undefined,
+        disabledDefault
+      );
     },
     //</editor-fold>
   }

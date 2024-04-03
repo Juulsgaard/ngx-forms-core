@@ -1,10 +1,12 @@
 import {AnyControlFormList, ControlFormList, FormList, ModelFormList} from "../forms/form-list";
 import {AnyControlFormLayer, ControlFormLayer, FormLayer, ModelFormLayer} from "../forms/form-layer";
-import {AnonFormNode, FormNode, FormNodeConfig} from "../forms/form-node";
+import {FormNode} from "../forms/form-node";
 import {AbstractControl} from "@angular/forms";
 import {DeepPartial} from "@juulsgaard/ts-tools";
+import {AnonFormNode} from "../forms/anon-form-node";
+import {FormNodeConfig} from "../forms/form-node-config";
 
-export type FormError = { path: string[], error: string };
+export type FormValidationData = { path: string[], message: string };
 
 export type SmartFormUnion = FormNode<any> | FormLayer<any, any, any> | FormList<any, any, any>;
 

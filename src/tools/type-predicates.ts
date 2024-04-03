@@ -1,11 +1,14 @@
-import {AnonFormNode, FormNode, FormNodeConfig, InputTypes} from "../forms/form-node";
-import {FormSelectNode, FormSelectNodeConfig} from "../forms/form-select-node";
+import {FormNode} from "../forms/form-node";
+import {FormSelectNode} from "../forms/form-select-node";
 import {AnonFormLayer, ControlFormLayer, FormLayer, ModelFormLayer} from "../forms/form-layer";
 import {AnonFormList, FormList} from "../forms/form-list";
 import {AnonFormRoot, ControlFormRoot, FormRoot, ModelFormRoot} from "../forms/form-root";
 import {SmartFormUnion} from "./form-types";
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormControl} from "@angular/forms";
+import {AnonFormNode, InputTypes} from "../forms/anon-form-node";
+import {FormNodeConfig} from "../forms/form-node-config";
+import {FormSelectNodeConfig} from "../forms/form-select-node-config";
 
 export function isFormNode<T>(data: FormNode<T>): data is FormNode<T>;
 export function isFormNode<T>(data: FormControl<T>): data is FormNode<T>;

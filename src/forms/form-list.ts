@@ -1,4 +1,6 @@
-import {FormError, FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
+import {
+  FormGroupControls, FormGroupValue, FormGroupValueRaw, FormValidationData, SmartFormUnion
+} from "../tools/form-types";
 import {AnonFormLayer, FormLayer} from "./form-layer";
 import {asyncScheduler, BehaviorSubject, combineLatest, Observable, of, Subject, switchMap} from "rxjs";
 import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
@@ -21,7 +23,7 @@ export interface AnonFormList {
   readonly disabledSignal: Signal<boolean>;
 
   /** Observable containing all the current errors of the list */
-  readonly errors$: Observable<FormError[]>;
+  readonly errors$: Observable<FormValidationData[]>;
 
   /** A list of all the Form Layers making up the list */
   readonly controls: AnonFormLayer[];
@@ -59,7 +61,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
   public readonly disabledSignal: Signal<boolean>;
 
   /** Observable containing all the current errors of the list */
-  public readonly errors$: Observable<FormError[]>;
+  public readonly errors$: Observable<FormValidationData[]>;
 
   /** @inheritDoc */
   declare readonly value: TValue[];
@@ -173,14 +175,14 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
         const errorLists = controls.map(
           (x, i) => x.errors$.pipe(
             map(errors => errors.map(
-              ({error, path}) => ({path: [`[${i}]`, ...path], error})
+              ({message, path}) => ({path: [`[${i}]`, ...path], message: message})
             ))
           )
         );
 
         return combineLatest(errorLists).pipe(
           throttleTime(100, asyncScheduler, {leading: true, trailing: true}),
-          map(arr => ([] as FormError[]).concat(...arr)),
+          map(arr => ([] as FormValidationData[]).concat(...arr)),
           cache()
         );
       })

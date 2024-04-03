@@ -13,7 +13,7 @@ export {FormConstants} from "./tools/constants";
 export {FormRootConstructors as FormRoot, ControlFormRoot, ModelFormRoot, AnyControlFormRoot, AnonFormRoot} from "./forms/form-root";
 export {FormLayerConstructors as FormLayer, ModelFormLayer, ControlFormLayer, AnyControlFormLayer, AnonFormLayer} from "./forms/form-layer";
 export {FormListConstructors as FormList, ControlFormList, ModelFormList, AnyControlFormList, AnonFormList} from "./forms/form-list";
-export {FormNode, InputTypes, FormNodeEvent, AnonFormNode} from "./forms/form-node";
+export {FormNode} from "./forms/form-node";
 export {SingleSelectNode, MultiSelectNode} from "./forms/form-select-node";
 
 export * from "./form-dialog/form-dialog";
@@ -22,4 +22,7 @@ export * from "./form-dialog/form-dialog-constructors";
 export * from "./form-page/form-page";
 export * from "./form-page/form-page-constructors";
 export * from "./form-page/form-confirm.service";
+export {AnonFormNode} from "./forms/anon-form-node";
+export {InputTypes} from "./forms/anon-form-node";
+export {FormNodeEvent} from "./forms/anon-form-node";
 

@@ -1,156 +1,31 @@
-import {FormControl, FormControlStatus, ValidatorFn, Validators} from '@angular/forms';
-import {asyncScheduler, BehaviorSubject, combineLatest, delay, Observable, Subject} from 'rxjs';
-import {distinctUntilChanged, map, throttleTime} from 'rxjs/operators';
-import {AutoComplete, FormError} from "../tools/form-types";
-import {deepEquals} from "@juulsgaard/ts-tools";
-import {parseFormErrors} from "../tools/errors";
-import {cache, persistentCache} from "@juulsgaard/rxjs-tools";
-import {computed, Signal} from "@angular/core";
-import {subjectToSignal} from "../tools/signals";
+import {computed, signal, Signal, WritableSignal} from "@angular/core";
+import {FormValidator, processFormValidators} from "./validators";
+import {AnonFormNode, FormNodeOptions, InputTypes} from "./anon-form-node";
+import {FormValidationData} from '../tools/form-types';
+import {compareLists, compareValues} from "../tools/helpers";
 
-export enum FormNodeEvent {
-  Focus = 'focus',
-  Select = 'select',
-}
+export class FormNode<T> extends AnonFormNode {
 
-export enum InputTypes {
-  Generic = 'generic',
-  Text = 'text',
-  Url = 'url',
-  Number = 'number',
-  Password = 'password',
-  Bool = 'boolean',
-  Date = 'text-date',
-  DateTime = 'datetime-local',
-  Time = 'time',
-  Color = 'color',
-  Email = 'email',
-  Phone = 'tel',
-  LongText = 'textarea',
-  HTML = 'html',
-  Select = 'select',
-  SelectMany = 'multipleSelect',
-  Search = 'search',
-  File = 'file'
-}
+  override readonly errors: Signal<string[]>;
+  override readonly errorState: Signal<FormValidationData[]>;
 
-export interface FormNodeOptions {
+  override readonly warnings: Signal<string[]>;
+  override readonly warningState: Signal<FormValidationData[]>;
 
-  readonly label?: string;
-  readonly autocomplete?: string;
-  readonly tooltip?: string;
-  readonly readonly?: boolean;
-  readonly autoFocus?: boolean;
-  readonly showDisabledField?: boolean;
-}
+  override readonly changed: Signal<boolean>;
 
-export interface AnonFormNode extends FormNodeOptions {
+  private readonly _touched = signal(false);
+  override readonly touched: Signal<boolean> = this._touched.asReadonly();
 
-  /** The type of the input */
-  readonly type: InputTypes,
+  protected readonly _state: WritableSignal<T|undefined>;
+  override readonly state: Signal<T|undefined>;
+  override readonly rawValue: Signal<T|undefined>;
+  override readonly value: Signal<T>;
+  protected readonly resetValue: WritableSignal<T>;
 
-  /** Indicates if the value can be null */
-  readonly nullable: boolean;
-
-  /** An observable emitting input actions */
-  readonly actions$: Observable<FormNodeEvent>;
-
-  /** An event emitted when the input resets */
-  readonly reset$: Observable<void>;
-
-  /** An observable denoting the status of the input */
-  readonly status$: Observable<FormControlStatus>;
-  /** A signal denoting the status of the input */
-  readonly statusSignal: Signal<FormControlStatus>;
-
-  /** An observable denoting when the input is disabled */
-  readonly disabled$: Observable<boolean>;
-  /** A Signal denoting when the input is disabled */
-  readonly disabledSignal: Signal<boolean>;
-
-  /** An observable denoting if the input has an error */
-  readonly hasError$: Observable<boolean>;
-  /** An observable denoting all the current errors for the input */
-  readonly errors$: Observable<FormError[]>;
-  /** An observable containing the current error state represented as a display string */
-  readonly error$: Observable<string|undefined>;
-  /** A signal that contains the current error if one is present */
-  readonly errorSignal: Signal<string|undefined>;
-
-  /**
-   * Focus the input
-   * @param selectValue - If true the contents of the input will be selected
-   */
-  focus(selectValue?: true): void;
-
-  /** Toggle the input value if boolean */
-  toggle(): void;
-}
-
-export class FormNode<TInput> extends FormControl implements FormControl<TInput>, AnonFormNode {
-
-  /** The current value of the input */
-  declare readonly value: TInput;
-  /** @inheritDoc */
-  declare readonly valueChanges: Observable<TInput>;
-
-  private readonly _actions$ = new Subject<FormNodeEvent>()
-  /** An observable emitting input actions */
-  public readonly actions$ = this._actions$.asObservable();
-
-  private readonly _reset$ = new Subject<void>();
-  /** An event emitted when the input resets */
-  public readonly reset$ = this._reset$.asObservable();
-
-  protected readonly _status$: BehaviorSubject<FormControlStatus>;
-  /** An observable denoting the status of the input */
-  public readonly status$: Observable<FormControlStatus>;
-  /** An observable denoting when the input is disabled */
-  public readonly disabled$: Observable<boolean>;
-
-  /** A signal denoting the status of the input */
-  public readonly statusSignal: Signal<FormControlStatus>;
-  /** A Signal denoting when the input is disabled */
-  public readonly disabledSignal: Signal<boolean>;
-
-  private readonly _value$: BehaviorSubject<TInput>;
-  /** An observable for the current value of the input */
-  public readonly value$: Observable<TInput>;
-  /** A throttled observable containing the value with a rolling delay */
-  public readonly throttledValue$: Observable<TInput>;
-  /** An observable containing the computed raw value of the input */
-  public readonly rawValue$: Observable<TInput>
-
-  /** A signal containing the value of the input */
-  public readonly valueSignal: Signal<TInput>;
-  /** A signal containing the computed raw value of the input */
-  public readonly rawValueSignal: Signal<TInput>;
-
-  private readonly _valueReset$: Subject<TInput> = new Subject();
-  /** Emits the current value every time the node is reset */
-  public readonly valueReset$: Observable<TInput> = this._valueReset$.asObservable();
-
-  /** An observable denoting if the input has an error */
-  public readonly hasError$: Observable<boolean>;
-  /** An observable denoting all the current errors for the input */
-  public readonly errors$: Observable<FormError[]>;
-  /** An observable containing the current error state represented as a display string */
-  public readonly error$: Observable<string|undefined>;
-  /** A signal that contains the current error if one is present */
-  public readonly errorSignal: Signal<string|undefined>;
-
-  /** The input label */
-  readonly label?: string;
-  /** The type of browser auto-compelte to use, if any */
-  readonly autocomplete?: string;
-  /** An optional tooltip for the input */
-  readonly tooltip?: string;
-  /** Whether or not the input is read-only */
-  readonly readonly?: boolean;
-  /** Determines if the input should auto focus */
-  readonly autoFocus?: boolean;
-  /** Show the input even when disabled */
-  readonly showDisabledField?: boolean;
+  declare readonly nullable: undefined extends T ? boolean : false;
+  declare readonly defaultValue: T;
+  declare readonly initialValue: T;
 
   /**
    * Create a Form Node manually.
@@ -162,160 +37,48 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
    * This is used for initial setup and resetting the input.
    * Defaults to defaultValue.
    * @param nullable - Whether the input is nullable
-   * @param rawDefault - Define a distinct default value for getting the raw value
-   * @param disabledDefault - Define a distinct default raw value for when the input is disabled
-   * @param validators - Add validators
+   * @param disabledDefault - A default value for when the input is disabled
+   * @param errorValidators - Error validators
+   * @param warningValidators - Warning validators
    * @param options - Additional options
    */
   constructor(
-    /** The type of the input */
-    public readonly type: InputTypes,
-    /** The default value of the input*/
-    public override readonly defaultValue: TInput,
-    protected readonly initialValue: TInput = defaultValue,
-    public readonly nullable: boolean = false,
-    protected readonly rawDefault?: TInput,
-    protected readonly disabledDefault?: TInput,
-    protected readonly validators?: ValidatorFn[],
-    options?: FormNodeOptions
+    type: InputTypes,
+    nullable: undefined extends T ? boolean : false,
+    defaultValue: T,
+    initialValue?: T,
+    readonly disabledDefault?: T,
+    protected readonly errorValidators: FormValidator<T>[] = [],
+    protected readonly warningValidators: FormValidator<T>[] = [],
+    options: FormNodeOptions = {}
   ) {
-    super(initialValue, {nonNullable: !nullable, validators: validators});
+    super(type, defaultValue, initialValue, nullable, options);
 
-    //<editor-fold desc="Options">
-    this.label = options?.label;
-    this.autocomplete = options?.autocomplete;
-    this.tooltip = options?.tooltip;
-    this.readonly = options?.readonly;
-    this.autoFocus = options?.autoFocus;
-    this.showDisabledField = options?.showDisabledField;
-    //</editor-fold>
+    this._state = signal(initialValue);
+    this.state = this._state.asReadonly();
+    this.rawValue = computed(() => this.getRawValue());
+    this.value = computed(() => this.getValue());
+    this.resetValue = signal(this.value());
 
-    //<editor-fold desc="Status">
-    this._status$ = new BehaviorSubject(this.status);
-    this.statusChanges.subscribe(this._status$);
-    this.status$ = this._status$.asObservable();
-    this.disabled$ = this._status$.pipe(
-      map(x => x === 'DISABLED')
-    );
+    this.changed = computed(() => compareValues(this.resetValue(), this.value()));
 
-    this.statusSignal = subjectToSignal(this._status$);
-    this.disabledSignal = computed(() => this.statusSignal() === 'DISABLED');
-    //</editor-fold>
+    this.errors = computed(() => this.getErrors(), {equal: compareLists<string>});
+    this.errorState = computed(() => this.errors().map(x => ({message: x, path: []})));
 
-
-    //<editor-fold desc="Value">
-    this._value$ = new BehaviorSubject(this.value);
-    this.valueChanges.subscribe(this._value$);
-    this.value$ = this._value$.asObservable();
-
-    this.throttledValue$ = this.value$.pipe(
-      throttleTime(200, asyncScheduler, {trailing: true})
-    );
-
-    this.rawValue$ = combineLatest([this.value$, this.disabled$]).pipe(
-      map(([val, disabled]) => this.generateRawValue(disabled, () => val)),
-      cache()
-    );
-
-
-    this.valueSignal = subjectToSignal(this._value$);
-    this.rawValueSignal = computed(() => this.generateRawValue(this.disabledSignal(), this.valueSignal));
-    //</editor-fold>
-
-    //<editor-fold desc="Errors">
-    const errors$ = this.statusChanges.pipe(
-      throttleTime(200, asyncScheduler, {leading: true, trailing: true}),
-      map(x => x === 'INVALID' ? this.errors : null),
-      distinctUntilChanged(deepEquals),
-      persistentCache()
-    );
-
-    this.errors$ = errors$.pipe(
-      map(x => parseFormErrors(x).map(error => ({path: [], error}))),
-      cache()
-    );
-
-    this.error$ = this.errors$.pipe(
-      map(x => x[0]?.error),
-      cache()
-    );
-
-    this.hasError$ = errors$.pipe(
-      delay(0),
-      map(errors => {
-        if (!errors) return false;
-        if (!this.dirty) return false;
-        return !!Object.keys(errors).length
-      }),
-      cache()
-    );
-
-    this.errorSignal = computed(() => {
-      // Status signal first, since dirty isn't available as a signal
-      if (this.statusSignal() !== 'INVALID') return undefined;
-      if (!this.dirty) return undefined;
-      const errors = parseFormErrors(this.errors);
-      return errors.at(0);
-    });
-    //</editor-fold>
+    this.warnings = computed(() => this.getWarnings(), {equal: compareLists<string>});
+    this.warningState = computed(() => this.warnings().map(x => ({message: x, path: []})));
   }
-
-  //<editor-fold desc="Implementation">
-  private getValueOrDefault(value: TInput|undefined): TInput {
-    if (this.nullable) return value as TInput;
-    return value ?? this.defaultValue;
-  }
-
-  private getValueOrInitial(value: TInput|undefined): TInput {
-    if (this.nullable) return value as TInput;
-    return value ?? this.initialValue;
-  }
-
-  /** @inheritDoc */
-  override setValue(value: TInput|undefined) {
-    super.setValue(this.getValueOrDefault(value));
-  }
-
-  /** @inheritDoc */
-  override patchValue(value: TInput|undefined) {
-    super.patchValue(this.getValueOrDefault(value));
-  }
-
-  /** @inheritDoc */
-  override reset(value?: TInput) {
-    super.reset(this.getValueOrInitial(value));
-    this._reset$.next();
-    this._valueReset$.next(this.value);
-  }
-
-  /** @inheritDoc */
-  override getRawValue(): TInput {
-    return this.generateRawValue(this.disabled, () => this.value);
-  }
-
-  private generateRawValue(disabled: boolean, getVal: () => TInput) {
-    if (disabled) return this.disabledDefault ?? this.rawDefault ?? this.defaultValue;
-    const value = getVal();
-    if (this.rawDefault !== undefined) return value ?? this.rawDefault;
-    if (this.nullable) return value;
-    return value ?? this.defaultValue;
-  }
-  //</editor-fold>
 
   //<editor-fold desc="Actions">
-  /**
-   * Focus the input
-   * @param selectValue - If true the contents of the input will be selected
-   */
-  focus(selectValue?: true) {
-    setTimeout(() => {
-      this._actions$.next(FormNodeEvent.Focus);
-      if (selectValue) this._actions$.next(FormNodeEvent.Select);
-    }, 0);
+  public override markAsTouched(): void {
+    this._touched.set(true);
   }
 
-  /** Toggle the input value if boolean */
-  toggle() {
+  public override markAsUntouched(): void {
+    this._touched.set(false);
+  }
+
+  public override toggle() {
     if (this.type !== InputTypes.Bool) {
       console.error('You cannot toggle a non boolean value');
       return;
@@ -325,190 +88,92 @@ export class FormNode<TInput> extends FormControl implements FormControl<TInput>
   }
   //</editor-fold>
 
+  //<editor-fold desc="Processing">
+  private getRawValue() {
+    if (this.disabled()) return this.defaultValue;
+    return this.state();
+  }
+
+  private getValue(): T {
+    const value = this.rawValue();
+    if (value != null) return value;
+    if (this.nullable) return value as T;
+    return this.defaultValue;
+  }
+
+  private getErrors(): string[] {
+    if (this.disabled()) return [];
+    const value = this.rawValue();
+
+    if (value == null) {
+      if (this.required) return ['This field is required'];
+      // If no value is present, don't process validators
+      if (!this.nullable) return [];
+    }
+
+    return processFormValidators(this.errorValidators, value as T);
+  }
+
+  private getWarnings(): string[] {
+    const value = this.rawValue();
+
+    // If no value is present, don't process validators
+    if (value == null && !this.nullable) return [];
+
+    return processFormValidators(this.errorValidators, value as T);
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="Implementation">
+  private getValueOrDefault(value: T|undefined): T {
+    if (this.nullable) return value as T;
+    return value ?? this.defaultValue;
+  }
+
+  private getValueOrInitial(value: T|undefined): T {
+    if (this.nullable) return value as T;
+    return value ?? this.initialValue;
+  }
+
+  /**
+   * Update the value of the Node
+   * @param value - The new value of the node
+   */
+  setValue(value: T|undefined) {
+    this._state.set(value);
+  }
+
+  /**
+   * Reset the node
+   * @param value - An optional reset value
+   */
+  override reset(value?: T) {
+    super.reset();
+    this._state.set(value ?? this.initialValue);
+    this.resetValue.set(this.value());
+  }
+
+  override clear() {
+    this.setValue(this.initialValue);
+  }
+
+  //</editor-fold>
+
   /**
    * Clone the input
    * This creates a duplicate of the configuration
    * It does not clone the value
    */
-  clone(): FormNode<TInput> {
-    const node = new FormNodeConfig<TInput>(
+  clone(): FormNode<T> {
+    return new FormNode<T>(
       this.type,
-      this.initialValue,
-      this.defaultValue,
       this.nullable,
-      this.rawDefault,
-      this.disabledDefault,
-      this.validators
-    );
-    node.from(this);
-    return node.done();
-  }
-}
-
-export class FormNodeConfig<TInput> {
-
-  protected label?: string;
-  protected autocomplete?: string;
-  protected tooltip?: string;
-  protected readonly?: boolean;
-  protected autoFocus?: boolean;
-  protected showDisabledField?: boolean;
-
-  /**
-   * Manually create a Node Config.
-   * It is recommended to use the `Form.xxx` for creating a configuration.
-   * @param type - The type of the input
-   * @param defaultValue - The default value of the input.
-   * This input is used as a fallback for missing values.
-   * @param initialValue - The initial value of the input.
-   * This is used for initial setup and resetting the input.
-   * Defaults to defaultValue.
-   * @param nullable - Whether the input is nullable
-   * @param rawDefault - Define a distinct default value for getting the raw value
-   * @param disabledDefault - Define a distinct default raw value for when the input is disabled
-   * @param validators - Add validators
-   */
-  constructor(
-    protected type: InputTypes,
-    protected defaultValue: TInput,
-    protected initialValue: TInput = defaultValue,
-    protected nullable: boolean = false,
-    protected rawDefault?: TInput,
-    protected disabledDefault?: TInput,
-    protected validators: ValidatorFn[] = []
-  ) {
-
-  }
-
-  /**
-   * Mark the input as required
-   */
-  public required(): this {
-    this.withValidators(Validators.required);
-    return this;
-  }
-
-  /**
-   * Add a label to the input
-   * @param label
-   */
-  public withLabel(label: string): this {
-    this.label = label;
-    return this;
-  }
-
-  /**
-   * Add HTML autocompletion to the input
-   * @param autocomplete - The type of autocomplete
-   */
-  public autocompleteAs(autocomplete: AutoComplete): this {
-    this.autocomplete = autocomplete;
-    return this;
-  }
-
-  /**
-   * Add validators to the input
-   * @param validators
-   */
-  public withValidators(...validators: ValidatorFn[]): this {
-    this.validators.push(...validators);
-    return this;
-  }
-
-  /**
-   * Add a tooltip to the input.
-   * This can be used to explain details about the input and it's use.
-   * @param tooltip - The tooltip to show
-   */
-  public withTooltip(tooltip: string): this {
-    this.tooltip = tooltip;
-    return this;
-  }
-
-  /**
-   * Show the input even when disabled.
-   * By default, disabled inputs are hidden.
-   */
-  public showDisabled(): this {
-    this.showDisabledField = true;
-    return this;
-  }
-
-  /**
-   * Mark the input as read-only
-   */
-  public asReadonly(): this {
-    this.readonly = true;
-    return this;
-  }
-
-  /**
-   * Autofocus on the input
-   */
-  public withFocus(): this {
-    this.autoFocus = true;
-    return this;
-  }
-
-  /**
-   * Set a default value for raw value
-   * @param rawDefault
-   * @internal
-   */
-  withRawDefault(rawDefault: TInput): this {
-    this.rawDefault = rawDefault;
-    return this;
-  }
-
-  /**
-   * Set a default value for raw value when input is disabled
-   * @param disabledDefault
-   * @internal
-   */
-  withDisabledDefault(disabledDefault: TInput): this {
-    this.disabledDefault = disabledDefault;
-    return this;
-  }
-
-  /**
-   * Populate this configuration based on a Node
-   * @param options - The options from an existing Node
-   */
-  public from(options: FormNodeOptions): this {
-    this.label = options.label;
-    this.autocomplete = options.autocomplete;
-    this.tooltip = options.tooltip;
-    this.readonly = options.readonly;
-    this.showDisabledField = options.showDisabledField;
-    this.autoFocus = options.autoFocus;
-    return this;
-  }
-
-  protected getOptions(): FormNodeOptions {
-    return {
-      label: this.label,
-      readonly: this.readonly,
-      autocomplete: this.autocomplete,
-      autoFocus: this.autoFocus,
-      showDisabledField: this.showDisabledField,
-      tooltip: this.tooltip
-    };
-  }
-
-  /**
-   * Finalise the config and produce the input
-   */
-  done(): FormNode<TInput> {
-    return new FormNode<TInput>(
-      this.type,
       this.defaultValue,
       this.initialValue,
-      this.nullable,
-      this.rawDefault,
       this.disabledDefault,
-      this.validators,
-      this.getOptions()
+      this.errorValidators,
+      this.warningValidators,
+      {...this.options}
     )
   }
-
 }
