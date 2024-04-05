@@ -2,10 +2,10 @@ import {
   FormControls, FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormTemplate, TemplateGroupUnion
 } from "./form-types";
 import {isObject} from "@juulsgaard/ts-tools";
-import {isFormNode, isFormNodeConfig} from "./type-predicates";
-import {FormLayerConstructors} from "../forms/form-layer";
-import {FormListConstructors} from "../forms/form-list";
+import {isFormLayer, isFormList, isFormNode, isFormNodeConfig} from "./type-predicates";
 import {FormNode} from "../forms/form-node";
+import {FormListConstructors} from "../constructors/form-list-constructors";
+import {formLayer} from "../constructors/form-layer-constructors";
 
 export function formTemplateToControls<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): FormGroupControls<TValue> {
 
@@ -36,16 +36,17 @@ function templateToControl<TValue>(template: FormTemplate<TValue>): FormControls
 
   if (isFormNodeConfig(template)) return template.done() as FormControls<TValue>;
   if (isFormNode(template)) return template as FormNode<TValue> as FormControls<TValue>;
+  if (isFormLayer(template)) return template as unknown as FormControls<TValue>;
+  if (isFormList(template)) return template as unknown as FormControls<TValue>;
 
   if (Array.isArray(template)) {
     const tmp = template as [FormGroupTemplate<any>, number?];
     const subTemplate = tmp[0];
-    const length = tmp[1];
-    return FormListConstructors.Model(formTemplateToControls(subTemplate), length) as unknown as FormControls<TValue>;
+    return FormListConstructors.Model(formTemplateToControls(subTemplate), false) as unknown as FormControls<TValue>;
   }
 
   if (isObject(template)) {
-    return FormLayerConstructors.Model(formTemplateToControls(template as FormGroupTemplate<any>)) as unknown as FormControls<TValue>;
+    return formLayer().model(formTemplateToControls(template as FormGroupTemplate<any>)) as unknown as FormControls<TValue>;
   }
 
   return template as FormControls<TValue>;

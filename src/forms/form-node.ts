@@ -1,6 +1,6 @@
 import {computed, signal, Signal, WritableSignal} from "@angular/core";
-import {FormValidator, processFormValidators} from "./validators";
-import {AnonFormNode, FormNodeOptions, InputTypes} from "./anon-form-node";
+import {FormValidator, processFormValidators} from "../tools/form-validation";
+import {AnonFormNode, FormNodeOptions, FormNodeType, InputTypes} from "./anon-form-node";
 import {FormValidationData} from '../tools/form-types';
 import {compareLists, compareValues} from "../tools/helpers";
 
@@ -16,6 +16,8 @@ export class FormNode<T> extends AnonFormNode {
 
   private readonly _touched = signal(false);
   override readonly touched: Signal<boolean> = this._touched.asReadonly();
+
+  override readonly valid = computed(() => !this.hasError());
 
   protected readonly _state: WritableSignal<T|undefined>;
   override readonly state: Signal<T|undefined>;
@@ -43,7 +45,7 @@ export class FormNode<T> extends AnonFormNode {
    * @param options - Additional options
    */
   constructor(
-    type: InputTypes,
+    type: FormNodeType,
     nullable: undefined extends T ? boolean : false,
     defaultValue: T,
     initialValue?: T,
@@ -101,6 +103,13 @@ export class FormNode<T> extends AnonFormNode {
     return this.defaultValue;
   }
 
+  override getDisabledValue(): T {
+    const value = this.disabledDefault;
+    if (value != null) return value;
+    if (this.nullable) return value as T;
+    return this.defaultValue;
+  }
+
   private getErrors(): string[] {
     if (this.disabled()) return [];
     const value = this.rawValue();
@@ -148,8 +157,8 @@ export class FormNode<T> extends AnonFormNode {
    * @param value - An optional reset value
    */
   override reset(value?: T) {
-    super.reset();
     this._state.set(value ?? this.initialValue);
+    super.reset();
     this.resetValue.set(this.value());
   }
 
@@ -164,7 +173,7 @@ export class FormNode<T> extends AnonFormNode {
    * This creates a duplicate of the configuration
    * It does not clone the value
    */
-  clone(): FormNode<T> {
+  override clone(): FormNode<T> {
     return new FormNode<T>(
       this.type,
       this.nullable,
@@ -175,5 +184,9 @@ export class FormNode<T> extends AnonFormNode {
       this.warningValidators,
       {...this.options}
     )
+  }
+
+  override rollback() {
+    this.setValue(this.resetValue());
   }
 }

@@ -1,221 +1,134 @@
-import {
-  FormGroupControls, FormGroupValue, FormGroupValueRaw, FormValidationData, SmartFormUnion
-} from "../tools/form-types";
-import {AnonFormLayer, FormLayer} from "./form-layer";
-import {asyncScheduler, BehaviorSubject, combineLatest, Observable, of, Subject, switchMap} from "rxjs";
-import {distinctUntilChanged, map, throttleTime} from "rxjs/operators";
-import {AbstractControl, FormArray, FormControlStatus} from "@angular/forms";
+import {FormGroupControls, FormGroupValue, FormValidationData} from "../tools/form-types";
+import {FormLayer} from "./form-layer";
 import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
-import {cache} from "@juulsgaard/rxjs-tools";
-import {computed, Signal} from "@angular/core";
-import {subjectToSignal} from "../tools/signals";
+import {computed, signal, Signal, WritableSignal} from "@angular/core";
+import {FormUnit} from "./form-unit";
+import {FormValidator, processFormValidators} from "../tools/form-validation";
+import {AnonFormList} from "./anon-form-list";
+import {compareLists} from "../tools/helpers";
+import {AnonFormLayer} from "./anon-form-layer";
 
-export interface AnonFormList {
+export class FormList<TControls extends Record<string, FormUnit>, TValue extends SimpleObject, TNullable extends boolean> extends AnonFormList {
 
-  /** An observable denoting the status of the list */
-  readonly status$: Observable<FormControlStatus>;
-  /** A signal denoting the status of the list */
-  readonly statusSignal: Signal<FormControlStatus>;
+  readonly rawValue: Signal<DeepPartial<TValue>[] | undefined>;
+  readonly value: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>;
 
-  /** Observable denoting when the list is disabled */
-  readonly disabled$: Observable<boolean>;
-  /** Signal denoting when the list is disabled */
-  readonly disabledSignal: Signal<boolean>;
+  readonly touched: Signal<boolean>;
+  readonly changed: Signal<boolean>;
 
-  /** Observable containing all the current errors of the list */
-  readonly errors$: Observable<FormValidationData[]>;
+  override readonly valid = computed(() => !this.hasError() && this.controls().every(x => x.valid()));
 
-  /** A list of all the Form Layers making up the list */
-  readonly controls: AnonFormLayer[];
-  /** An observable containing the current controls of the list */
-  readonly controls$: Observable<AnonFormLayer[]>;
-  /** A signal containing the current controls of the list */
-  readonly controlsSignal: Signal<AnonFormLayer[]>;
+  readonly errorState: Signal<FormValidationData[]>;
+  readonly errors: Signal<string[]>;
 
-  /** The current amount of controls */
-  readonly length: number;
-  /** An observable containing the current amount of controls */
-  readonly length$: Observable<number>;
-  /** A signal containing the current amount of controls */
-  readonly lengthSignal: Signal<number>;
+  readonly warningState: Signal<FormValidationData[]>;
+  readonly warnings: Signal<string[]>;
 
-  /** True if the list has no controls */
-  readonly empty: boolean;
-  /** An observable indicating if there are no controls in the list */
-  readonly empty$: Observable<boolean>;
-  /** A signal indicating if there are no controls in the list */
-  readonly emptySignal: Signal<boolean>;
-}
+  private readonly _controls: WritableSignal<FormLayer<TControls, TValue>[]>;
+  override readonly controls: Signal<FormLayer<TControls, TValue>[]>;
 
-export class FormList<TControls extends Record<string, SmartFormUnion>, TValue extends SimpleObject, TRaw extends SimpleObject> extends FormArray implements AnonFormList {
+  private templateLayer: FormLayer<TControls, TValue>;
 
-  protected readonly _status$: BehaviorSubject<FormControlStatus>;
-  /** An observable denoting the status of the list */
-  readonly status$: Observable<FormControlStatus>;
-  /** A signal denoting the status of the list */
-  readonly statusSignal: Signal<FormControlStatus>;
-
-  /** Observable denoting when the list is disabled */
-  public readonly disabled$: Observable<boolean>;
-  /** Signal denoting when the list is disabled */
-  public readonly disabledSignal: Signal<boolean>;
-
-  /** Observable containing all the current errors of the list */
-  public readonly errors$: Observable<FormValidationData[]>;
-
-  /** @inheritDoc */
-  declare readonly value: TValue[];
-  /** @inheritDoc */
-  declare readonly valueChanges: Observable<TValue[]>;
-  private readonly _value$: BehaviorSubject<TValue[]>;
-  public readonly value$: Observable<TValue[]>;
-  public readonly throttledValue$: Observable<TValue[]>;
-  /** An observable containing the computed raw values of the list */
-  public rawValue$: Observable<TRaw[]>;
-
-  public readonly valueSignal: Signal<TValue[]>;
-  /** A signal containing the computed raw values of the list */
-  public rawValueSignal: Signal<TRaw[]>;
-
-  private readonly _valueReset$: Subject<TValue[]> = new Subject();
-  /** Emits the current value every time the list is reset */
-  public readonly valueReset$: Observable<TValue[]> = this._valueReset$.asObservable();
-
-  private readonly _controlsReset$: Subject<FormLayer<TControls, TValue, TRaw>[]> = new Subject();
-  /** Emits the current controls every time the list is reset */
-  public readonly controlsReset$: Observable<FormLayer<TControls, TValue, TRaw>[]> = this._controlsReset$.asObservable();
-
-  /** A list of all the Form Layers making up the list */
-  declare public controls: FormLayer<TControls, TValue, TRaw>[];
-
-  private readonly _controls$: BehaviorSubject<FormLayer<TControls, TValue, TRaw>[]>;
-  /** An observable containing the current controls of the list */
-  readonly controls$: Observable<FormLayer<TControls, TValue, TRaw>[]>;
-  /** A signal containing the current controls of the list */
-  readonly controlsSignal: Signal<FormLayer<TControls, TValue, TRaw>[]>;
-
-  public override get length() {return this.controls.length}
-  /** An observable containing the current amount of controls */
-  readonly length$: Observable<number>;
-  /** A signal containing the current amount of controls */
-  readonly lengthSignal: Signal<number>;
-
-
-  public get empty() {return this.controls.length < 1}
-  /** An observable indicating if there are no controls in the list */
-  readonly empty$: Observable<boolean>;
-  /** A signal indicating if there are no controls in the list */
-  readonly emptySignal: Signal<boolean>;
-
-  private templateLayer: FormLayer<TControls, TValue, TRaw>;
+  declare readonly nullable: TNullable;
 
   constructor(
-    private template: TControls,
-    private startLength = 0
+    template: TControls,
+    nullable: TNullable,
+    private startLength = 0,
+    readonly disabledDefaultValue?: TValue[],
+    protected readonly disabledByDefault = false,
+    protected readonly errorValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [],
+    protected readonly warningValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [],
   ) {
-    super([]);
+    super(nullable, disabledByDefault);
 
-    this.templateLayer = new FormLayer<TControls, TValue, TRaw>(template);
+    this.templateLayer = new FormLayer<TControls, TValue>(template);
 
-    for (let i = 0; i < startLength; i++) {
-      super.push(this.templateLayer.clone());
-    }
+    const initialControls = Array.from(Array(startLength)).map(() => this.templateLayer.clone());
+    this._controls = signal(initialControls);
+    this.controls = this._controls.asReadonly();
 
-    //<editor-fold desc="Controls">
-    this._controls$ = new BehaviorSubject(this.controls);
-    this.controls$ = this._controls$.asObservable();
-    this.controlsSignal = subjectToSignal(this._controls$);
-
-    this.length$ = this.controls$.pipe(map(x => x.length));
-    this.empty$ = this.controls$.pipe(map(x => x.length < 1));
-
-    this.lengthSignal = computed(() => this.controlsSignal().length)
-    this.emptySignal = computed(() => this.controlsSignal().length <= 0)
-    //</editor-fold>
-
-    //<editor-fold desc="Status">
-    this._status$ = new BehaviorSubject(this.status);
-    this.statusChanges.subscribe(this._status$);
-    this.status$ = this._status$.asObservable();
-    this.disabled$ = this._status$.pipe(
-      map(x => x === 'DISABLED')
-    );
-
-    this.statusSignal = subjectToSignal(this._status$);
-    this.disabledSignal = computed(() => this.statusSignal() === 'DISABLED');
-    //</editor-fold>
-
-    //<editor-fold desc="Values">
-    this._value$ = new BehaviorSubject(this.value);
-    this.valueChanges.subscribe(this._value$);
-    this.value$ = this._value$.asObservable();
-
-    this.throttledValue$ = this.value$.pipe(
-      throttleTime(200, asyncScheduler, {trailing: true}),
-      cache()
-    );
-
-    this.rawValue$ = this.throttledValue$.pipe(
-      map(() => this.getRawValue()),
-      cache()
-    );
-
-    this.valueSignal = subjectToSignal(this._value$);
-    this.rawValueSignal = computed(() => {
-      const controls = this.controlsSignal();
-      return controls.map(x => x.rawValueSignal());
+    this.rawValue = computed(() => {
+      if (this.disabled()) return this.disabledDefaultValue as DeepPartial<TValue>[] | undefined;
+      return this.controls().map(x => x.rawValue() as DeepPartial<TValue>);
     });
-    //</editor-fold>
 
-    //<editor-fold desc="Errors">
-    this.errors$ = this.controls$.pipe(
-      distinctUntilChanged(),
-      switchMap(controls => {
-        if (!controls.length) return of([]);
-        const errorLists = controls.map(
-          (x, i) => x.errors$.pipe(
-            map(errors => errors.map(
-              ({message, path}) => ({path: [`[${i}]`, ...path], message: message})
-            ))
-          )
+    this.value = computed(() => {
+      if (this.disabled()) return this.getDisabledValue();
+      return this.controls().map(x => x.value());
+    });
+
+    this.touched = computed(() => this.controls().some(x => x.touched()));
+    this.changed = computed(() => this.controls().some(x => x.changed()));
+
+    this.errors = computed(() => this.getErrors(), {equal: compareLists<string>});
+    this.errorState = computed(() => {
+      const result = this.controls()
+        .flatMap((control, i) => control.errorState()
+          .map(x => (
+            {path: [`[${i}]`, ...x.path], message: x.message}
+          ))
         );
 
-        return combineLatest(errorLists).pipe(
-          throttleTime(100, asyncScheduler, {leading: true, trailing: true}),
-          map(arr => ([] as FormValidationData[]).concat(...arr)),
-          cache()
+      result.push(...this.errors()
+        .map(msg => (
+          {path: [], message: msg}
+        )));
+
+      return result;
+    });
+
+    this.warnings = computed(() => this.getWarnings(), {equal: compareLists<string>});
+    this.warningState = computed(() => {
+      const result = this.controls()
+        .flatMap((control, i) => control.warningState()
+          .map(x => (
+            {path: [`[${i}]`, ...x.path], message: x.message}
+          ))
         );
-      })
-    );
-    //</editor-fold>
+
+      result.push(...this.warnings()
+        .map(msg => (
+          {path: [], message: msg}
+        )));
+
+      return result;
+    });
+  }
+
+  private getErrors(): string[] {
+    if (this.disabled()) return [];
+    return processFormValidators(this.errorValidators, this.value());
+  }
+
+  private getWarnings(): string[] {
+    if (this.disabled()) return [];
+    return processFormValidators(this.warningValidators, this.value());
   }
 
   //<editor-fold desc="Helpers">
 
-  private updateControls() {
-    this._controls$.next([...this.controls]);
-  }
-
   private scaleToSize(size: number): boolean {
     size = Math.max(0, size);
+    const controls = this.controls();
 
-    if (this.controls.length === size) return false;
+    if (controls.length === size) return false;
+
     if (size === 0) {
-      super.clear();
+      return this.clear();
+    }
+
+    if (size < controls.length) {
+      this._controls.set(controls.slice(0, size));
       return true;
     }
 
-    if (size < this.controls.length) {
-      while (size < this.controls.length) {
-        super.removeAt(this.controls.length - 1);
-      }
-      return true;
-    }
-
-    if (size > this.controls.length) {
-      while (size > this.controls.length) {
-        super.push(this.templateLayer.clone());
-      }
+    if (size > controls.length) {
+      const diff = size - controls.length;
+      this._controls.set([
+        ...controls,
+        ...Array.from(Array(diff)).map(() => this.templateLayer.clone())
+      ]);
       return true;
     }
 
@@ -224,55 +137,63 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
 
   //</editor-fold>
 
-  /** @inheritDoc */
   override clear() {
-    super.clear();
-    this.updateControls();
+    if (this.controls().length <= 0) return false;
+    this._controls.set([]);
+    return true;
   }
 
-  /** @inheritDoc */
-  override reset(values: TValue[] = []) {
-    const changed = this.scaleToSize(values.length);
-    super.reset(values);
-    if (changed) this.updateControls();
-    this._valueReset$.next(this.value);
-    this._controlsReset$.next(this.controls);
+  override reset(values?: TValue[]) {
+    if (values == null) {
+      this.clear();
+      super.reset();
+      return;
+    }
+
+    this.scaleToSize(values.length);
+    const controls = this.controls();
+
+    for (let i = 0; i < controls.length && i < values.length; i++) {
+      controls[i]?.reset(values[i]);
+    }
+
+    super.reset();
   }
 
-  /** @inheritDoc */
-  override patchValue(values: TValue[] = []) {
-    const changed = this.scaleToSize(values.length);
-    super.patchValue(values);
-    if (changed) this.updateControls();
+  patchValue(values: (DeepPartial<TValue> | TValue)[] | undefined) {
+    if (values == null) return;
+
+    this.scaleToSize(values.length);
+    const controls = this.controls();
+
+    for (let i = 0; i < controls.length && i < values.length; i++) {
+      controls[i]?.patchValue(values[i]);
+    }
   }
 
-  /** @inheritDoc */
-  override setValue(values: TRaw[]) {
-    const changed = this.scaleToSize(values.length);
-    super.setValue(values);
-    if (changed) this.updateControls();
+  setValue(values: TValue[]) {
+    this.scaleToSize(values.length);
+    const controls = this.controls();
+
+    for (let i = 0; i < controls.length && i < values.length; i++) {
+      controls[i]?.patchValue(values[i]);
+    }
   }
 
   //<editor-fold desc="Mutations">
 
   /**
    * Add a form layer to the end of the list
-   * @param control - The layer
+   * @param layers - The layers to add
    */
-  override push(control: FormLayer<TControls, TValue, TRaw>) {
-    super.push(control);
-    this.updateControls();
+  addLayers(...layers: FormLayer<TControls, TValue>[]) {
+    this._controls.update(x => [...x, ...layers]);
+    return layers;
   }
 
-  append(...controls: FormLayer<TControls, TValue, TRaw>[]) {
-    controls.forEach(c => super.push(c));
-    this.updateControls();
-  }
-
-  setControls(controls: FormLayer<TControls, TValue, TRaw>[]) {
-    super.clear();
-    controls.forEach(c => super.push(c));
-    this.updateControls();
+  setLayers(layers: FormLayer<TControls, TValue>[]) {
+    this._controls.set([...layers]);
+    return layers;
   }
 
   /**
@@ -282,9 +203,23 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
    */
   addElement(value?: TValue) {
     const layer = this.templateLayer.clone();
-    if (value) layer.reset(value);
-    this.push(layer);
+    layer.reset(value);
+    this.addLayers(layer);
     return layer;
+  }
+
+  /**
+   * Add a value to the end of the list.
+   * The value is converted to a Form Layer and appended.
+   * @param values - The values to add
+   */
+  appendElements(...values: TValue[]) {
+    const layers = this.addLayers(...values.map(x => {
+      const layer = this.templateLayer.clone();
+      layer.reset(x);
+      return layer;
+    }));
+    return layers;
   }
 
   /**
@@ -294,7 +229,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
    * @param value - The value to update with
    */
   setElement(filter: (x: TValue) => boolean, value: TValue) {
-    const control = this.controls.find(x => filter(x.value));
+    const control = this.controls().find(x => filter(x.value()));
     if (!control) return this.addElement(value);
     control.patchValue(value);
     return control;
@@ -306,7 +241,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
    * @param value - The value to update with
    */
   updateElement(filter: (x: TValue) => boolean, value: TValue) {
-    const control = this.controls.find(x => filter(x.value));
+    const control = this.controls().find(x => filter(x.value()));
     if (!control) return null;
     control.patchValue(value);
     return control;
@@ -329,34 +264,35 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
    * Remove the first item matching the predicate
    * @param filter - The match predicate
    */
-  removeElement(filter: (x: TValue) => boolean) {
-    const index = this.controls.findIndex(x => filter(x.value));
-    if (index < 0) return false;
-
-    this.removeAt(index);
-    return true;
+  removeElement(filter: (x: TValue) => boolean): FormLayer<TControls, TValue>|undefined {
+    const index = this.controls().findIndex(x => filter(x.value()));
+    return this.removeAt(index);
   }
 
   /**
    * Remove the given form layer
    * @param layer - The layer to remove
    */
-  remove(layer: AbstractControl) {
-    const index = this.controls.findIndex(x => x === layer);
-    if (index < 0) return false;
-
-    this.removeAt(index);
-    return true;
+  remove(layer: AnonFormLayer): FormLayer<TControls, TValue> | undefined {
+    const index = this.controls().findIndex(x => x === layer);
+    return this.removeAt(index);
   }
 
   /**
    * Remove a layer at a specified index
    * @param index - The index at which to remove the item
    */
-  override removeAt(index: number) {
-    super.removeAt(index);
-    this.updateControls();
+  removeAt(index: number): FormLayer<TControls, TValue> | undefined {
+    if (index < 0) return undefined;
+    let controls = this.controls();
+    if (index >= controls.length) return undefined;
+
+    controls = [...controls];
+    const removed = controls.splice(index, 1);
+    this._controls.set(controls);
+    return removed[0];
   }
+
   //</editor-fold>
 
   //<editor-fold desc="Move Actions">
@@ -365,7 +301,7 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
    * Move an item the list based on the Material CDK payload
    * @param data - The CDK move data
    */
-  moveCdkElement(data: {previousIndex: number, currentIndex: number}) {
+  moveCdkElement(data: { previousIndex: number, currentIndex: number }) {
     this.moveElement(data.previousIndex, data.currentIndex);
   }
 
@@ -375,54 +311,57 @@ export class FormList<TControls extends Record<string, SmartFormUnion>, TValue e
    * @param newIndex - The target index for the element
    */
   moveElement(oldIndex: number, newIndex: number) {
-    const control = this.controls[oldIndex];
-    super.removeAt(oldIndex);
-    super.insert(newIndex, control);
-    this.updateControls();
+    if (newIndex < 0) return false;
+
+    const controls = [...this.controls()];
+    if (newIndex >= controls.length) return false;
+
+    const removed = controls.splice(oldIndex, 1);
+    if (removed.length <= 0) return false;
+
+    controls.splice(newIndex, 0, ...removed);
+
+    this._controls.set(controls);
+    return true;
   }
 
   //</editor-fold>
-
-  /** @inheritDoc */
-  override getRawValue(): TRaw[] {
-    return super.getRawValue();
-  }
 
   /**
    * Clone the list based on its configuration.
    * No values are moved over.
    */
-  clone(): FormList<TControls, TValue, TRaw> {
-    return new FormList<TControls, TValue, TRaw>(
-      this.templateLayer.clone().controls,
-      this.startLength
+  override clone(): FormList<TControls, TValue, TNullable> {
+    return new FormList<TControls, TValue, TNullable>(
+      this.templateLayer.clone().controls(),
+      this.nullable,
+      this.startLength,
+      this.disabledDefaultValue,
+      this.disabledByDefault,
+      this.errorValidators,
+      this.warningValidators,
     );
   }
-}
 
-export module FormListConstructors {
-
-  /**
-   * Create a Form List based on controls
-   * @param controls - The controls to use
-   * @param startLength - The initial length of the list
-   * @constructor
-   */
-  export function Controls<TControls extends Record<string, SmartFormUnion>>(controls: TControls, startLength?: number): ControlFormList<TControls> {
-    return new FormList(controls, startLength);
+  override getDisabledValue(): TNullable extends true ? TValue[] | undefined : TValue[] {
+    const value = this.disabledDefaultValue;
+    if (value != null) return value;
+    if (this.nullable) return value as TNullable extends true ? TValue[] | undefined : TValue[];
+    return this.controls().map(x => x.getDisabledValue());
   }
 
-  /**
-   * Create a Form List based on an element type
-   * @param controls - The controls to use
-   * @param startLength - The initial length of the list
-   * @constructor
-   */
-  export function Model<TModel extends Record<string, any>>(controls: FormGroupControls<TModel>, startLength?: number): ModelFormList<TModel> {
-    return new FormList(controls);
+  override markAsTouched(): void {
+    this.controls().forEach(x => x.markAsTouched());
+  }
+
+  override markAsUntouched(): void {
+    this.controls().forEach(x => x.markAsUntouched());
+  }
+
+  override rollback() {
+    this.controls().forEach(x => x.rollback());
   }
 }
 
-export type ModelFormList<TModel extends Record<string, any>> = FormList<FormGroupControls<TModel>, DeepPartial<TModel>, TModel>;
-export type ControlFormList<TControls extends Record<string, SmartFormUnion>> = FormList<TControls, FormGroupValue<TControls>, FormGroupValueRaw<TControls>>;
-export type AnyControlFormList<TControls extends Record<string, SmartFormUnion>> = FormList<TControls, any, any>;
+export type ModelFormList<TModel extends Record<string, unknown>, TNullable extends boolean = false> = FormList<FormGroupControls<TModel>, DeepPartial<TModel>, TNullable>;
+export type ControlFormList<TControls extends Record<string, FormUnit>, TNullable extends boolean = false> = FormList<TControls, FormGroupValue<TControls>, TNullable>;

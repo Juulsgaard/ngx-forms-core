@@ -32,7 +32,7 @@ export abstract class FormUnit {
   /** A single error for the unit. undefined if no errors are present */
   readonly error: Signal<string | undefined> = computed(() => this.errors().at(0));
   /** Indicates that the unit is valid */
-  readonly valid: Signal<boolean> = computed(() => !this.hasError());
+  abstract readonly valid: Signal<boolean>;
 
   /** True if the value has changed since last reset */
   readonly abstract changed: Signal<boolean>;
@@ -55,7 +55,12 @@ export abstract class FormUnit {
   /** Clear the unit to the default value without resetting it */
   abstract clear(): void;
 
+  /** Roll back to the latest reset value */
+  abstract rollback(): void;
+
   public abstract clone(): FormUnit;
+
+  public abstract getDisabledValue(): unknown;
 
   //<editor-fold desc="Touched">
   public abstract markAsTouched(): void;

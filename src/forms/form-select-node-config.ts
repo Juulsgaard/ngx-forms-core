@@ -1,7 +1,7 @@
 import {FormNodeConfig} from "./form-node-config";
 import {MapFunc} from "@juulsgaard/ts-tools";
 import {InputTypes} from "./anon-form-node";
-import {FormValidator} from "./validators";
+import {FormValidator} from "../tools/form-validation";
 import {Observable} from "rxjs";
 import {FormMultiSelectNode, FormSelectNode, FormSelectNodeOptions, FormSingleSelectNode} from "./form-select-node";
 
@@ -24,7 +24,6 @@ export abstract class FormSelectNodeConfig<TValue, TItem, TMultiple extends bool
   /**
    * Create a FormSelect Config manually.
    * It is recommended to use the `Form.xxx` constructors for creating configurations.
-   * @param multiple
    * @param type - The type of the input
    * @param defaultValue - The default value of the input.
    * This input is used as a fallback for missing values.
@@ -39,7 +38,6 @@ export abstract class FormSelectNodeConfig<TValue, TItem, TMultiple extends bool
    * @param warningValidators - Warning validators
    */
   constructor(
-    readonly multiple: TMultiple,
     type: TMultiple extends true ? InputTypes.SelectMany : InputTypes.Select,
     nullable: undefined extends (TMultiple extends true ? TValue[] : TValue) ? boolean : false,
     defaultValue: TMultiple extends true ? TValue[] : TValue,

@@ -28,6 +28,8 @@ export enum InputTypes {
   File = 'file'
 }
 
+export type FormNodeType = InputTypes | string;
+
 export interface FormNodeOptions {
   readonly label?: string;
   readonly autocomplete?: string;
@@ -59,7 +61,7 @@ export abstract class AnonFormNode extends FormUnit {
 
   protected constructor(
     /** The type of the input */
-    readonly type: InputTypes,
+    readonly type: FormNodeType,
     readonly defaultValue: unknown,
     readonly initialValue: unknown,
     nullable: boolean,

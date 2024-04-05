@@ -1,17 +1,16 @@
 import {FormNode} from "../forms/form-node";
-import {FormSelectNode} from "../forms/form-select-node";
-import {AnonFormLayer, ControlFormLayer, FormLayer, ModelFormLayer} from "../forms/form-layer";
-import {AnonFormList, FormList} from "../forms/form-list";
-import {AnonFormRoot, ControlFormRoot, FormRoot, ModelFormRoot} from "../forms/form-root";
-import {SmartFormUnion} from "./form-types";
+import {FormMultiSelectNode, FormSelectNode, FormSingleSelectNode} from "../forms/form-select-node";
+import {ControlFormLayer, FormLayer, ModelFormLayer} from "../forms/form-layer";
+import {FormList} from "../forms/form-list";
+import {ControlFormRoot, FormRoot, ModelFormRoot} from "../forms/form-root";
 import {SimpleObject} from "@juulsgaard/ts-tools";
-import {FormControl} from "@angular/forms";
 import {AnonFormNode, InputTypes} from "../forms/anon-form-node";
 import {FormNodeConfig} from "../forms/form-node-config";
 import {FormSelectNodeConfig} from "../forms/form-select-node-config";
+import {AnonFormLayer, AnonFormList, AnonFormRoot} from "../forms";
+import {FormUnit} from "../forms/form-unit";
 
 export function isFormNode<T>(data: FormNode<T>): data is FormNode<T>;
-export function isFormNode<T>(data: FormControl<T>): data is FormNode<T>;
 export function isFormNode(data: unknown): data is AnonFormNode;
 export function isFormNode(data: unknown): boolean {
   return data instanceof FormNode;
@@ -23,51 +22,62 @@ export function isFormNodeConfig(data: unknown): boolean {
   return data instanceof FormNodeConfig;
 }
 
-export function isFormSelectNode<TVal, TUnit, TItem>(node: FormSelectNode<TVal, TUnit, TItem>): node is FormSelectNode<TVal, TUnit, TItem>;
-export function isFormSelectNode<TVal>(node: FormNode<TVal>): node is FormSelectNode<TVal, unknown, unknown>;
-export function isFormSelectNode<TVal>(node: FormControl<TVal>): node is FormSelectNode<TVal, unknown, unknown>;
-export function isFormSelectNode(data: unknown): data is FormSelectNode<unknown, unknown, unknown>;
+export function isFormSelectNode<TVal, TItem, TMultiple extends boolean>(node: FormSelectNode<TVal, TItem, TMultiple>): node is FormSelectNode<TVal, TItem, TMultiple>;
+export function isFormSelectNode(data: unknown): data is FormSelectNode<unknown, unknown, boolean>;
 export function isFormSelectNode(data: unknown): boolean {
   return data instanceof FormSelectNode;
 }
 
-export function isFormSelectNodeConfig<TVal, TUnit, TItem>(
-  node: FormSelectNodeConfig<TVal, TUnit, TItem>
-): node is FormSelectNodeConfig<TVal, TUnit, TItem>;
-export function isFormSelectNodeConfig<TVal>(node: FormNodeConfig<TVal>): node is FormSelectNodeConfig<TVal, unknown, unknown>;
-export function isFormSelectNodeConfig(data: unknown): data is FormSelectNodeConfig<unknown, unknown, unknown>;
+export function isFormSingleSelectNode<TVal, TItem>(node: FormSingleSelectNode<TVal, TItem>): node is FormSingleSelectNode<TVal, TItem>;
+export function isFormSingleSelectNode<TVal, TItem>(node: FormSelectNode<TVal, TItem, false>): node is FormSingleSelectNode<TVal, TItem>;
+export function isFormSingleSelectNode<TVal>(node: FormNode<TVal>): node is FormSingleSelectNode<TVal, unknown>;
+export function isFormSingleSelectNode(data: unknown): data is FormSingleSelectNode<unknown, unknown>;
+export function isFormSingleSelectNode(data: unknown): boolean {
+  return data instanceof FormSingleSelectNode;
+}
+
+export function isFormMultiSelectNode<TVal, TItem>(node: FormMultiSelectNode<TVal, TItem>): node is FormMultiSelectNode<TVal, TItem>;
+export function isFormMultiSelectNode<TVal, TItem>(node: FormSelectNode<TVal, TItem, true>): node is FormMultiSelectNode<TVal, TItem>;
+export function isFormMultiSelectNode<TVal>(node: FormNode<TVal[]>): node is FormMultiSelectNode<TVal, unknown>;
+export function isFormMultiSelectNode(data: unknown): data is FormMultiSelectNode<unknown, unknown>;
+export function isFormMultiSelectNode(data: unknown): boolean {
+  return data instanceof FormMultiSelectNode;
+}
+
+export function isFormSelectNodeConfig<TVal, TItem, TMultiple extends boolean>(
+  node: FormSelectNodeConfig<TVal, TItem, TMultiple>
+): node is FormSelectNodeConfig<TVal, TItem, TMultiple>;
+export function isFormSelectNodeConfig(data: unknown): data is FormSelectNodeConfig<unknown, unknown, boolean>;
 export function isFormSelectNodeConfig(data: unknown): boolean {
   return data instanceof FormSelectNodeConfig;
 }
 
 export function isFormLayer<
-  TControls extends Record<string, SmartFormUnion>,
-  TVal extends SimpleObject,
-  TRaw extends SimpleObject
->(data: FormLayer<TControls, TVal, TRaw>): data is FormLayer<TControls, TVal, TRaw>;
+  TControls extends Record<string, FormUnit>,
+  TVal extends SimpleObject
+>(data: FormLayer<TControls, TVal>): data is FormLayer<TControls, TVal>;
 export function isFormLayer(data: unknown): data is AnonFormLayer;
 export function isFormLayer(data: unknown): boolean {
   return data instanceof FormLayer;
 }
 
 export function isFormList<
-  TControls extends Record<string, SmartFormUnion>,
+  TControls extends Record<string, FormUnit>,
   TVal extends SimpleObject,
-  TRaw extends SimpleObject
->(data: FormList<TControls, TVal, TRaw>): data is FormList<TControls, TVal, TRaw>;
+  TNullable extends boolean
+>(data: FormList<TControls, TVal, TNullable>): data is FormList<TControls, TVal, TNullable>;
 export function isFormList(data: unknown): data is AnonFormList;
 export function isFormList(data: unknown): boolean {
   return data instanceof FormList;
 }
 
 export function isFormRoot<
-  TControls extends Record<string, SmartFormUnion>,
-  TVal extends SimpleObject,
-  TRaw extends SimpleObject
->(layer: FormRoot<TControls, TVal, TRaw>): layer is FormRoot<TControls, TVal, TRaw>;
+  TControls extends Record<string, FormUnit>,
+  TVal extends SimpleObject
+>(layer: FormRoot<TControls, TVal>): layer is FormRoot<TControls, TVal>;
 export function isFormRoot<T extends Record<string, any>>(layer: ModelFormLayer<T>): layer is ModelFormRoot<T>;
-export function isFormRoot<T extends Record<string, SmartFormUnion>>(layer: ControlFormLayer<T>): layer is ControlFormRoot<T>;
-export function isFormRoot(data: unknown): data is AnonFormRoot;
+export function isFormRoot<T extends Record<string, FormUnit>>(layer: ControlFormLayer<T>): layer is ControlFormRoot<T>;
+export function isFormRoot(data: unknown): data is AnonFormLayer&AnonFormRoot;
 export function isFormRoot(data: unknown): boolean {
   return data instanceof FormRoot;
 }

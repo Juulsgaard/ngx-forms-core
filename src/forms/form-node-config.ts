@@ -1,7 +1,7 @@
-import {FormNodeOptions, InputTypes} from "./anon-form-node";
+import {FormNodeOptions, FormNodeType} from "./anon-form-node";
 import {AutoComplete} from "../tools/form-types";
 import {FormNode} from "./form-node";
-import {FormValidator} from "./validators";
+import {FormValidator} from "../tools/form-validation";
 
 export class FormNodeConfig<T> {
 
@@ -29,7 +29,7 @@ export class FormNodeConfig<T> {
    * @param warningValidators - Warning validators
    */
   constructor(
-    protected readonly type: InputTypes,
+    protected readonly type: FormNodeType,
     protected readonly nullable: undefined extends T ? boolean : false,
     protected readonly defaultValue: T,
     protected readonly initialValue?: T,
