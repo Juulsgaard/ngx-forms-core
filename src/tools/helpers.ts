@@ -32,3 +32,9 @@ export function compareValues(prev: unknown | undefined, next: unknown | undefin
 
   return false;
 }
+
+export function toList<T>(data: T|T[]|undefined): T[] {
+  if (data == null) return [];
+  if (Array.isArray(data)) return data;
+  return [data];
+}

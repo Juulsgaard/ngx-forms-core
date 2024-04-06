@@ -161,7 +161,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
 
   setValue(value: NonNullable<TValue>) {
     this.iterateControls((control, prop) => {
-      const val = (value as Record<string, unknown>)[prop];
+      const val = (value as SimpleObject)[prop];
 
       if (control instanceof FormNode) {
         control.setValue(val);
@@ -185,7 +185,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
     if (value == null) return;
     this.iterateControls((control, prop) => {
       if (!value.hasOwnProperty(prop)) return;
-      const val = (value as Record<string, unknown>)[prop];
+      const val = (value as SimpleObject)[prop];
 
       if (control instanceof FormNode) {
         control.setValue(val);
@@ -207,7 +207,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
 
   override reset(value?: DeepPartial<TValue>|TValue) {
     this.iterateControls((control, prop) => {
-      const val = (value as Record<string, unknown>)[prop];
+      const val = (value as SimpleObject)[prop];
 
       if (control instanceof FormNode) {
         control.reset(val);
@@ -263,7 +263,8 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
   }
 }
 
-export type ModelFormLayer<TModel extends Record<string, unknown>|undefined> = FormLayer<FormGroupControls<NonNullable<TModel>>, TModel>;
+export type ModelFormLayer<TModel extends SimpleObject|undefined> = FormLayer<FormGroupControls<NonNullable<TModel>>, TModel>;
 export type ControlFormLayer<TControl extends Record<string, FormUnit>> = FormLayer<TControl, FormGroupValue<TControl>>;
+export type NullableControlFormLayer<TControl extends Record<string, FormUnit>> = FormLayer<TControl, FormGroupValue<TControl>|undefined>;
 
 

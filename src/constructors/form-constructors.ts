@@ -1,22 +1,18 @@
 import {Observable} from "rxjs";
-import {Constrain} from "@juulsgaard/ts-tools";
-import {FormLayer, ModelFormLayer} from "../forms/form-layer";
+import {Constrain, SimpleObject} from "@juulsgaard/ts-tools";
 import {
-  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValue, PartialTemplate, TemplateGuide
+  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, PartialTemplate, TemplateGuide
 } from "../tools/form-types";
-import {FormRoot, ModelFormRoot} from "../forms/form-root";
-import {FormList} from "../forms/form-list";
 import {formTemplateToControls, formTemplateToValueControls} from "../tools/templates";
 import {FormConstants} from "../tools/constants";
 import {InputTypes} from "../forms/anon-form-node";
 import {FormNodeConfig} from "../forms/form-node-config";
 import {FormSelectBuilder} from "./form-select-builder";
-import {FormNodeCtorOptions, parseOptions} from "./cosntructor-tools";
+import {FormNodeCtorOptions, parseOptions} from "./constructor-tools";
 import {Validators} from "../tools/validators";
-import {FormListConstructors} from "./form-list-constructors";
-import {FormRootConstructors} from "./form-root-constructors";
-import {formLayer} from "./form-layer-constructors";
-import {FormUnit} from "../forms/form-unit";
+import {FormLayerConfig} from "../forms/form-layer-config";
+import {FormListConfig} from "../forms/form-list-config";
+import {FormRootConfig} from "../forms/form-root-config";
 
 export class FormConstructors {
 
@@ -72,7 +68,7 @@ export class FormConstructors {
   url(initialValue?: string, options: FormNodeCtorOptions<string> = {}): FormNodeConfig<string> {
     const {fallback, disabled} = parseOptions(initialValue, options, '');
     return new FormNodeConfig<string>(InputTypes.Url, false, fallback, initialValue, disabled)
-      .withValidators(Validators.url);
+      .withErrors(Validators.url);
   }
 
   /**
@@ -103,7 +99,7 @@ export class FormConstructors {
   hexColor(initialValue?: string, options: FormNodeCtorOptions<string> = {}): FormNodeConfig<string> {
     const {fallback, disabled} = parseOptions(initialValue, options, '');
     return new FormNodeConfig<string>(InputTypes.Color, false, fallback, initialValue, disabled)
-      .withValidators(Validators.hexColor());
+      .withErrors(Validators.hexColor());
   }
 
   /**
@@ -114,7 +110,7 @@ export class FormConstructors {
   email(initialValue?: string, options: FormNodeCtorOptions<string> = {}): FormNodeConfig<string> {
     const {fallback, disabled} = parseOptions(initialValue, options, '');
     return new FormNodeConfig<string>(InputTypes.Email, false, fallback, initialValue, disabled)
-      .withValidators(Validators.email());
+      .withErrors(Validators.email());
   }
 
   /**
@@ -232,6 +228,25 @@ export class FormConstructors {
     return new FormSelectBuilder<TItem>(items);
   }
 
+  layer<T extends SimpleObject>(template: FormGroupTemplate<T>): FormLayerConfig<T> {
+    const controls = formTemplateToControls(template);
+    return new FormLayerConfig(controls, false);
+  }
+
+  list<T extends SimpleObject>(template: FormGroupTemplate<T>): FormListConfig<T, false> {
+    const controls = formTemplateToControls(template);
+    return new FormListConfig(controls, false);
+  }
+
+  root<T extends SimpleObject>(template: FormGroupTemplate<T>): FormLayerConfig<T> {
+    const controls = formTemplateToControls(template);
+    return new FormRootConfig(controls);
+  }
+
+  guide<T extends SimpleObject>(): FormGuideConstructors<T> {
+    return new FormGuideConstructors<T>();
+  }
+
 }
 
 export class FormNullableConstructors {
@@ -286,7 +301,7 @@ export class FormNullableConstructors {
   url(initialValue?: string, options: FormNodeCtorOptions<string> = {}): FormNodeConfig<string|undefined> {
     const {fallback, disabled} = parseOptions(initialValue, options);
     return new FormNodeConfig<string|undefined>(InputTypes.Url, true, fallback, initialValue, disabled)
-      .withValidators(Validators.url);
+      .withErrors(Validators.url);
   }
 
   /**
@@ -317,7 +332,7 @@ export class FormNullableConstructors {
   hexColor(initialValue?: string, options: FormNodeCtorOptions<string> = {}): FormNodeConfig<string|undefined> {
     const {fallback, disabled} = parseOptions(initialValue, options);
     return new FormNodeConfig<string|undefined>(InputTypes.Color, true, fallback, initialValue, disabled)
-      .withValidators(Validators.hexColor());
+      .withErrors(Validators.hexColor());
   }
 
   /**
@@ -328,7 +343,7 @@ export class FormNullableConstructors {
   email(initialValue?: string, options: FormNodeCtorOptions<string> = {}): FormNodeConfig<string|undefined> {
     const {fallback, disabled} = parseOptions(initialValue, options);
     return new FormNodeConfig<string|undefined>(InputTypes.Email, true, fallback, initialValue, disabled)
-      .withValidators(Validators.email());
+      .withErrors(Validators.email());
   }
 
   /**
@@ -438,91 +453,23 @@ export class FormNullableConstructors {
 
   //</editor-fold>
 
-}
-
-export const Form = new FormConstructors();
-
-// TODO: Move to new structure
-export module Temp {
-
-  /**
-   * Create a Form Layer
-   * @param controls - The controls of the group
-   */
-  export function group<TControls extends Record<string, FormUnit>>(controls: TControls): FormLayer<TControls, FormGroupValue<TControls>> {
-    return formLayer().controls(controls);
-  }
-
-  /**
-   * Create a Form
-   * @param controls - The controls of the form
-   */
-  export function root<TControls extends Record<string, FormUnit>>(controls: TControls): FormRoot<TControls, FormGroupValue<TControls>> {
-    return FormRootConstructors.Controls(controls);
-  }
-
-  /**
-   * Create a Form List
-   * @param controls - The control to populate the list with
-   * @param nullable
-   * @param startLength - The starting length of the list
-   */
-  export function list<TControls extends Record<string, FormUnit>, TNullable extends boolean>(
-    controls: TControls,
-    nullable: TNullable,
-    startLength?: number
-  ): FormList<TControls, FormGroupValue<TControls>, TNullable> {
-    return FormListConstructors.Controls(controls, nullable, startLength);
-  }
-
-  /**
-   * Create a form using a type based template
-   * @param template - The form template to create the form from
-   */
-  export function template<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormRoot<TValue> {
-    return FormRootConstructors.Model<TValue>(formTemplateToControls(template));
-  }
-
-  /**
-   * Create a Form Layer using a type based template
-   * @param template - The form template to create the layer from
-   */
-  export function groupTemplate<TValue extends Record<string, any>>(template: FormGroupTemplate<TValue>): ModelFormLayer<TValue> {
-    return formLayer().model<TValue>(formTemplateToControls(template));
-  }
-
-  /**
-   * Create a Form using a type based guide
-   */
-  export function guide<TGuide extends Record<string, any>>(): FormGuideFactory<TGuide> {
-    return new FormGuideFactory<TGuide>();
+  layer<T extends SimpleObject>(controls: FormGroupControls<T>): FormLayerConfig<T|undefined> {
+    return new FormLayerConfig<T|undefined>(controls, true);
   }
 }
 
-
-//</editor-fold>
-
-class FormGuideFactory<TGuide extends Record<string, any>> {
-
-  /**
-   * Define the form using a strict template
-   * @param template - The template
-   */
-  withForm(template: FormGroupTemplate<TGuide>): ModelFormRoot<TGuide> {
-    return FormRootConstructors.Model<TGuide>(
-      formTemplateToControls(template)
-    );
-  }
+class FormGuideConstructors<TGuide extends SimpleObject> {
 
   /**
    * Define the form using subset of the guide template.
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): ModelFormRoot<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
-    return FormRootConstructors.Model<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(
-      formTemplateToValueControls(template)
-    );
+  partial<TTemplate extends FormGroupTemplate<any>>(
+    template: TTemplate & PartialTemplate<TGuide>
+  ): FormRootConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
+    const controls = formTemplateToValueControls(template);
+    return new FormRootConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(controls);
   }
 
   /**
@@ -530,18 +477,12 @@ class FormGuideFactory<TGuide extends Record<string, any>> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withAltForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & TemplateGuide<TGuide>): ModelFormRoot<FormGroupTemplateValue<TTemplate>> {
-    return FormRootConstructors.Model<FormGroupTemplateValue<TTemplate>>(
-      formTemplateToValueControls(template)
-    );
+  modified<TTemplate extends FormGroupTemplate<any>>(
+    template: TTemplate & TemplateGuide<TGuide>
+  ): FormRootConfig<FormGroupTemplateValue<TTemplate>> {
+    const controls = formTemplateToValueControls(template);
+    return new FormRootConfig<FormGroupTemplateValue<TTemplate>>(controls);
   }
-
-  /**
-   * Define the form controls strictly based on the type
-   * @param controls - The controls
-   */
-  withControls(controls: FormGroupControls<TGuide>): ModelFormRoot<TGuide> {
-    return FormRootConstructors.Model<TGuide>(controls);
-  }
-
 }
+
+export const Form = new FormConstructors();

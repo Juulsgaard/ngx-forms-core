@@ -1,8 +1,17 @@
-import {FormGroupControls, FormGroupValue, FormGroupValueRaw, SmartFormUnion} from "../tools/form-types";
-import {DeepPartial} from "@juulsgaard/ts-tools";
+import {FormGroupControls, FormGroupValue} from "../tools/form-types";
 import {ControlFormRoot, FormRoot, ModelFormRoot} from "../forms/form-root";
+import {FormValidator} from "../tools/form-validation";
+import {FormUnit} from "../forms/form-unit";
+import {toList} from "../tools/helpers";
 
-export module FormRootConstructors {
+interface FormRootOptions<T> {
+  disabled?: boolean;
+  disabledFallback?: T;
+  errors?: FormValidator<T> | FormValidator<T>[];
+  warnings?: FormValidator<T> | FormValidator<T>[];
+}
+
+export class FormRootConstructors {
 
   /**
    * Create an anonymously typed form
@@ -10,11 +19,17 @@ export module FormRootConstructors {
    * @param options - Options
    * @constructor
    */
-  export function Controls<TControls extends Record<string, SmartFormUnion>>(
+  controls<TControls extends Record<string, FormUnit>>(
     controls: TControls,
     options?: FormRootOptions<FormGroupValue<TControls>>
   ): ControlFormRoot<TControls> {
-    return new FormRoot<TControls, FormGroupValue<TControls>, FormGroupValueRaw<TControls>>(controls);
+    return new FormRoot(
+      controls,
+      options?.disabledFallback,
+      options?.disabled,
+      toList(options?.errors),
+      toList(options?.warnings),
+    );
   }
 
   /**
@@ -23,10 +38,20 @@ export module FormRootConstructors {
    * @param options - Options
    * @constructor
    */
-  export function Model<TModel extends Record<string, any>>(
+  model<TModel extends SimpleObject>(
     controls: FormGroupControls<TModel>,
-    options?: FormRootOptions<DeepPartial<TModel>>
+    options?: FormRootOptions<TModel>
   ): ModelFormRoot<TModel> {
-    return new FormRoot<FormGroupControls<TModel>, DeepPartial<TModel>, TModel>(controls, options);
+    return new FormRoot(
+      controls,
+      options?.disabledFallback,
+      options?.disabled,
+      toList(options?.errors),
+      toList(options?.warnings),
+    );
   }
+}
+
+export function formRoot(): FormRootConstructors {
+  return new FormRootConstructors();
 }

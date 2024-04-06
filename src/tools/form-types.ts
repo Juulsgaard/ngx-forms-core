@@ -5,6 +5,7 @@ import {AnonFormNode} from "../forms/anon-form-node";
 import {FormNodeConfig} from "../forms/form-node-config";
 import {FormUnit} from "../forms/form-unit";
 import {AnonFormLayer, AnonFormList} from "../forms";
+import {SimpleObject} from "@juulsgaard/ts-tools";
 
 export type FormValidationData = { path: string[], message: string };
 
@@ -12,31 +13,31 @@ export type FormValidationData = { path: string[], message: string };
 
 type NullableFormListControls<T> = NonNullable<T> extends string ? FormNode<T[]|undefined> :
   NonNullable<T> extends number ? FormNode<T[]|undefined> :
-    NonNullable<T> extends Record<string, unknown> ? ModelFormList<NonNullable<T>, true> :
+    NonNullable<T> extends SimpleObject ? ModelFormList<NonNullable<T>, true> :
       FormNode<T[]|undefined>;
 
 type NonNullFormListControls<T> = NonNullable<T> extends string ? FormNode<T[]> :
   NonNullable<T> extends number ? FormNode<T[]> :
-    NonNullable<T> extends Record<string, unknown> ? ModelFormList<NonNullable<T>> :
+    NonNullable<T> extends SimpleObject ? ModelFormList<NonNullable<T>> :
       FormNode<T[]>;
 
 type NullableFormControls<T> = T extends string ? FormNode<string | undefined>
     : T extends boolean ? FormNode<boolean | undefined>
       : T extends File | Date ? FormNode<T | undefined>
         : T extends (infer A)[] ? NullableFormListControls<A>
-          : T extends Record<string, unknown> ? ModelFormLayer<T|undefined>
+          : T extends SimpleObject ? ModelFormLayer<T|undefined>
             : FormNode<T | undefined>;
 
 type NonNullFormControls<T> = T extends string ? FormNode<string>
     : T extends boolean ? FormNode<boolean>
       : T extends File | Date ? FormNode<Date>
         : T extends (infer A)[] ? NonNullFormListControls<A>
-          : T extends Record<string, unknown> ? ModelFormLayer<T>
+          : T extends SimpleObject ? ModelFormLayer<T>
             : FormNode<T>;
 
 export type FormControls<T> = undefined extends T ? NullableFormControls<NonNullable<T>> : NonNullFormControls<NonNullable<T>>;
 
-export type FormGroupControls<T extends Record<string, unknown>> = { [K in keyof T]-?: FormControls<T[K]> };
+export type FormGroupControls<T extends SimpleObject> = { [K in keyof T]-?: FormControls<T[K]> };
 //</editor-fold>
 
 export type TemplateListUnion<T extends TemplateGroupUnion> = [T];
@@ -49,12 +50,12 @@ export type TemplateUnion = AnonFormNode | FormNodeConfig<any>
 
 type NullableFormListTemplate<A> = NonNullable<A> extends string ? FormNode<A[]|undefined> | FormNodeConfig<A[]|undefined> :
   NonNullable<A> extends number ? FormNode<A[]|undefined> | FormNodeConfig<A[]|undefined> :
-    NonNullable<A> extends Record<string, unknown> ? [FormGroupTemplate<NonNullable<A>>] | ModelFormList<NonNullable<A>, true> :
+    NonNullable<A> extends SimpleObject ? [FormGroupTemplate<NonNullable<A>>] | ModelFormList<NonNullable<A>, true> :
       FormNode<A[]|undefined> | FormNodeConfig<A[]|undefined>;
 
 type NonNullFormListTemplate<A> = NonNullable<A> extends string ? FormNode<A[]> | FormNodeConfig<A[]> :
   NonNullable<A> extends number ? FormNode<A[]> | FormNodeConfig<A[]> :
-    NonNullable<A> extends Record<string, unknown> ? [FormGroupTemplate<NonNullable<A>>] | ModelFormList<NonNullable<A>> :
+    NonNullable<A> extends SimpleObject ? [FormGroupTemplate<NonNullable<A>>] | ModelFormList<NonNullable<A>> :
       FormNode<A[]> | FormNodeConfig<A[]>;
 
 type NullableFormTemplate<T> = T extends undefined | null ? never
@@ -62,7 +63,7 @@ type NullableFormTemplate<T> = T extends undefined | null ? never
     : T extends boolean ? FormNode<boolean | undefined> | FormNodeConfig<boolean | undefined>
       : T extends File | Date ? FormNode<T | undefined> | FormNodeConfig<T | undefined>
         : T extends (infer A)[] ? NullableFormListTemplate<A>
-          : T extends Record<string, unknown> ? FormGroupTemplate<T> | ModelFormLayer<T|undefined>
+          : T extends SimpleObject ? FormGroupTemplate<T> | ModelFormLayer<T|undefined>
             : FormNode<T | undefined> | FormNodeConfig<T | undefined>;
 
 type NonNullFormTemplate<T> = T extends undefined | null ? never
@@ -70,23 +71,23 @@ type NonNullFormTemplate<T> = T extends undefined | null ? never
     : T extends boolean ? FormNode<boolean> | FormNodeConfig<boolean>
       : T extends File | Date ? FormNode<T> | FormNodeConfig<T>
         : T extends (infer A)[] ? NonNullFormListTemplate<A>
-          : T extends Record<string, unknown> ? FormGroupTemplate<T> | ModelFormLayer<T>
+          : T extends SimpleObject ? FormGroupTemplate<T> | ModelFormLayer<T>
             : FormNode<T> | FormNodeConfig<T>;
 
 export type FormTemplate<T> = undefined extends T ? NullableFormTemplate<T> : NonNullFormTemplate<T>;
 
-export type FormGroupTemplate<T extends Record<string, unknown>> = { [K in keyof T]-?: FormTemplate<T[K]> };
+export type FormGroupTemplate<T extends SimpleObject> = { [K in keyof T]-?: FormTemplate<T[K]> };
 //</editor-fold>
 
 //<editor-fold desc="Controls to Value">
 export type FormValue<T extends FormUnit> =
-  T extends FormList<Record<string, FormUnit>, infer X, true> ? X[] | undefined
-    : T extends FormList<Record<string, FormUnit>, infer X, false> ? X[]
-      : T extends FormLayer<Record<string, FormUnit>, infer X> ? X
+  T extends FormList<any, infer X, true> ? X[] | undefined
+    : T extends FormList<any, infer X, false> ? X[]
+      : T extends FormLayer<any, infer X> ? X
         : T extends FormNode<infer X> ? X
           : never;
 
-export type FormGroupValue<T extends Record<string, FormUnit>> = { [K in keyof T]?: FormValue<T[K]> };
+export type FormGroupValue<T extends Record<string, FormUnit>> = { [K in keyof T]: FormValue<T[K]> };
 //</editor-fold>
 
 //<editor-fold desc="Template to Value">

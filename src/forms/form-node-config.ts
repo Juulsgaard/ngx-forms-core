@@ -12,7 +12,10 @@ export class FormNodeConfig<T> {
   protected autoFocus?: boolean;
   protected showDisabledField?: boolean;
   protected isRequired?: boolean;
-  protected disabled?: boolean;
+  protected disabledByDefault?: boolean;
+
+  protected errorValidators: FormValidator<T>[] = [];
+  protected warningValidators: FormValidator<T>[] = [];
 
   /**
    * Create a Form Node manually.
@@ -25,17 +28,13 @@ export class FormNodeConfig<T> {
    * Defaults to defaultValue.
    * @param nullable - Whether the input is nullable
    * @param disabledDefault - A default value for when the input is disabled
-   * @param errorValidators - Error validators
-   * @param warningValidators - Warning validators
    */
   constructor(
     protected readonly type: FormNodeType,
     protected readonly nullable: undefined extends T ? boolean : false,
     protected readonly defaultValue: T,
     protected readonly initialValue?: T,
-    protected disabledDefault?: T,
-    protected errorValidators: FormValidator<T>[] = [],
-    protected warningValidators: FormValidator<T>[] = []
+    protected disabledDefault?: T
   ) {
 
   }
@@ -70,7 +69,7 @@ export class FormNodeConfig<T> {
    * Add validators to the input
    * @param validators
    */
-  public withValidators(...validators: FormValidator<T>[]): this {
+  public withErrors(...validators: FormValidator<T>[]): this {
     this.errorValidators = [...this.errorValidators, ...validators];
     return this;
   }
@@ -79,7 +78,7 @@ export class FormNodeConfig<T> {
    * Add warning validators to the input
    * @param validators
    */
-  public withWarningValidators(...validators: FormValidator<T>[]): this {
+  public withWarnings(...validators: FormValidator<T>[]): this {
     this.warningValidators = [...this.warningValidators, ...validators];
     return this;
   }
@@ -120,12 +119,17 @@ export class FormNodeConfig<T> {
   }
 
   /**
-   * Set a default value for raw value when input is disabled
-   * @param disabledDefault
-   * @internal
+   * Set a fallback value used when the input is disabled
+   * @param disabledDefault - The fallback to use
    */
   withDisabledDefault(disabledDefault: T): this {
     this.disabledDefault = disabledDefault;
+    return this;
+  }
+
+  /** Set the node as disabled by default */
+  disabled(): this {
+    this.disabledByDefault = true;
     return this;
   }
 
@@ -137,7 +141,7 @@ export class FormNodeConfig<T> {
       autoFocus: this.autoFocus,
       showDisabledField: this.showDisabledField,
       tooltip: this.tooltip,
-      disabled: this.disabled,
+      disabled: this.disabledByDefault,
       required: this.isRequired
     };
   }

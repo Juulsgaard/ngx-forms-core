@@ -4,7 +4,7 @@ import {MapFunc} from "@juulsgaard/ts-tools";
 import {FormMultiSelectNodeConfig, FormSingleSelectNodeConfig} from "../forms/form-select-node-config";
 import {InputTypes} from "../forms/anon-form-node";
 import {FormConstants} from "../tools/constants";
-import {FormNodeCtorOptions, parseOptions} from "./cosntructor-tools";
+import {FormNodeCtorOptions, parseOptions} from "./constructor-tools";
 
 export class FormSelectBuilder<TItem> {
   constructor(private items: TItem[] | Observable<TItem[]>) {
