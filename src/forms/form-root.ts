@@ -1,10 +1,10 @@
 import {FormLayer} from "./form-layer";
-import {FormGroupControls, FormGroupValue} from "../tools/form-types";
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {computed} from "@angular/core";
 import {FormUnit} from "./form-unit";
 import {AnonFormRoot} from "./anon-form-root";
 import {FormValidator} from "../tools/form-validation";
+import {FormGroupControls, FormGroupValue} from "../types/controls";
 
 export class FormRoot<TControls extends Record<string, FormUnit>, TValue extends SimpleObject> extends FormLayer<TControls, TValue> implements AnonFormRoot {
 

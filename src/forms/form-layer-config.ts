@@ -1,7 +1,7 @@
 import {FormLayer} from "./form-layer";
 import {SimpleObject} from "@juulsgaard/ts-tools";
-import {FormGroupControls} from "../tools/form-types";
 import {FormValidator} from "../tools/form-validation";
+import {FormGroupControls} from "../types/controls";
 
 export class FormLayerConfig<TValue extends SimpleObject|undefined> {
 

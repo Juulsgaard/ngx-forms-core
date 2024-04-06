@@ -1,15 +1,18 @@
-import {FormGroupControls, FormGroupValue} from "../tools/form-types";
 import {ControlFormList, FormList, ModelFormList} from "../forms/form-list";
 import {FormUnit} from "../forms/form-unit";
 import {FormValidator} from "../tools/form-validation";
 import {toList} from "../tools/helpers";
+import {FormGroupControls, FormGroupValue} from "../types/controls";
+import {SimpleObject} from "@juulsgaard/ts-tools";
+import {formLayer, FormLayerOptions} from "./form-layer-constructors";
 
-interface FormListOptions<T> {
+interface FormListOptions<T, TLayer> {
   length?: number;
   disabled?: boolean;
   disabledFallback?: T;
   errors?: FormValidator<T> | FormValidator<T>[];
   warnings?: FormValidator<T> | FormValidator<T>[];
+  layer?: FormLayerOptions<TLayer>;
 }
 
 export class FormListConstructors {
@@ -24,10 +27,10 @@ export class FormListConstructors {
    */
   controls<TControls extends Record<string, FormUnit>>(
     controls: TControls,
-    options?: FormListOptions<FormGroupValue<TControls>[]>
+    options?: FormListOptions<FormGroupValue<TControls>[], FormGroupValue<TControls>>
   ): ControlFormList<TControls> {
     return new FormList(
-      controls,
+      formLayer().controls(controls, options?.layer),
       false,
       options?.length,
       options?.disabledFallback,
@@ -45,10 +48,10 @@ export class FormListConstructors {
    */
   model<TModel extends SimpleObject>(
     controls: FormGroupControls<TModel>,
-    options?: FormListOptions<TModel[]>
+    options?: FormListOptions<TModel[], TModel>
   ): ModelFormList<TModel> {
     return new FormList(
-      controls,
+      formLayer().controls(controls, options?.layer),
       false,
       options?.length,
       options?.disabledFallback,
@@ -69,10 +72,10 @@ export class FormListNullableConstructors {
    */
   controls<TControls extends Record<string, FormUnit>>(
     controls: TControls,
-    options?: FormListOptions<FormGroupValue<TControls>[]|undefined>
+    options?: FormListOptions<FormGroupValue<TControls>[]|undefined, FormGroupValue<TControls>>
   ): ControlFormList<TControls, true> {
     return new FormList(
-      controls,
+      formLayer().controls(controls, options?.layer),
       true,
       options?.length,
       options?.disabledFallback,
@@ -90,10 +93,10 @@ export class FormListNullableConstructors {
    */
   model<TModel extends SimpleObject>(
     controls: FormGroupControls<TModel>,
-    options?: FormListOptions<TModel[]|undefined>
+    options?: FormListOptions<TModel[]|undefined, TModel>
   ): ModelFormList<TModel, true> {
     return new FormList(
-      controls,
+      formLayer().controls(controls, options?.layer),
       true,
       options?.length,
       options?.disabledFallback,

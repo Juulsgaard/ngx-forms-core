@@ -1,8 +1,8 @@
-import {FormGroupControls, FormGroupValue} from "../tools/form-types";
 import {ControlFormRoot, FormRoot, ModelFormRoot} from "../forms/form-root";
 import {FormValidator} from "../tools/form-validation";
 import {FormUnit} from "../forms/form-unit";
 import {toList} from "../tools/helpers";
+import {FormGroupControls, FormGroupValue} from "../types/controls";
 
 interface FormRootOptions<T> {
   disabled?: boolean;

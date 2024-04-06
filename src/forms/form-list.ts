@@ -1,4 +1,3 @@
-import {FormGroupControls, FormGroupValue, FormValidationData} from "../tools/form-types";
 import {FormLayer} from "./form-layer";
 import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
 import {computed, signal, Signal, WritableSignal} from "@angular/core";
@@ -7,6 +6,8 @@ import {FormValidator, processFormValidators} from "../tools/form-validation";
 import {AnonFormList} from "./anon-form-list";
 import {compareLists} from "../tools/helpers";
 import {AnonFormLayer} from "./anon-form-layer";
+import {FormGroupControls, FormGroupValue} from "../types/controls";
+import {FormValidationData} from "../types";
 
 export class FormList<TControls extends Record<string, FormUnit>, TValue extends SimpleObject, TNullable extends boolean> extends AnonFormList {
 
@@ -27,12 +28,10 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
   private readonly _controls: WritableSignal<FormLayer<TControls, TValue>[]>;
   override readonly controls: Signal<FormLayer<TControls, TValue>[]>;
 
-  private templateLayer: FormLayer<TControls, TValue>;
-
   declare readonly nullable: TNullable;
 
   constructor(
-    template: TControls,
+    private template: FormLayer<TControls, TValue>,
     nullable: TNullable,
     private startLength = 0,
     readonly disabledDefaultValue?: TValue[],
@@ -42,9 +41,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
   ) {
     super(nullable, disabledByDefault);
 
-    this.templateLayer = new FormLayer<TControls, TValue>(template);
-
-    const initialControls = Array.from(Array(startLength)).map(() => this.templateLayer.clone());
+    const initialControls = Array.from(Array(startLength)).map(() => this.template.clone());
     this._controls = signal(initialControls);
     this.controls = this._controls.asReadonly();
 
@@ -127,7 +124,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
       const diff = size - controls.length;
       this._controls.set([
         ...controls,
-        ...Array.from(Array(diff)).map(() => this.templateLayer.clone())
+        ...Array.from(Array(diff)).map(() => this.template.clone())
       ]);
       return true;
     }
@@ -202,7 +199,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
    * @param value - The value to add
    */
   addElement(value?: TValue) {
-    const layer = this.templateLayer.clone();
+    const layer = this.template.clone();
     layer.reset(value);
     this.addLayers(layer);
     return layer;
@@ -215,7 +212,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
    */
   appendElements(...values: TValue[]) {
     const layers = this.addLayers(...values.map(x => {
-      const layer = this.templateLayer.clone();
+      const layer = this.template.clone();
       layer.reset(x);
       return layer;
     }));
@@ -333,7 +330,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
    */
   override clone(): FormList<TControls, TValue, TNullable> {
     return new FormList<TControls, TValue, TNullable>(
-      this.templateLayer.clone().controls(),
+      this.template.clone(),
       this.nullable,
       this.startLength,
       this.disabledDefaultValue,

@@ -1,11 +1,10 @@
-import {
-  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormGroupValueRaw, PartialControls, PartialTemplate,
-  TemplateGuide
-} from "../tools/form-types";
+import {FormGroupValueRaw, PartialControls, PartialTemplate, TemplateGuide} from "../tools/form-types";
 import {FormDialogConfig} from "./form-dialog-config";
 import {formTemplateToControls, formTemplateToValueControls} from "../tools/templates";
 import {AbstractControl} from "@angular/forms";
 import {Constrain} from "@juulsgaard/ts-tools";
+import {FormGroupControls} from "../types/controls";
+import {FormGroupTemplate, FormGroupTemplateValue} from "../types/templates";
 
 export class FormDialogFactory<TGuide extends Record<string, any>> {
 

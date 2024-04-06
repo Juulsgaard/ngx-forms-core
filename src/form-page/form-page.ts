@@ -2,12 +2,12 @@ import {DeepPartial, isObject, SimpleObject} from "@juulsgaard/ts-tools";
 import {BehaviorSubject, distinctUntilChanged, Observable, of, Subscribable, switchMap} from "rxjs";
 import {ILoadingState, latestValueFromOrDefault, Loading} from "@juulsgaard/rxjs-tools";
 import {computed, inject, Signal} from "@angular/core";
-import {FormGroupControls} from "../tools/form-types";
 import {formUpdated} from "../tools/form-population";
 import {ModelFormRoot} from "../forms/form-root";
 import {FormConfirmService} from "./form-confirm.service";
 import {FormPageAction, FormPageOptions, WarningDialog} from "./form-page-config";
 import {FormRootConstructors} from "../constructors/form-root-constructors";
+import {FormGroupControls} from "../types/controls";
 
 export class FormPage<TVal extends SimpleObject> {
 

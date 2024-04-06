@@ -2,12 +2,12 @@ import {BehaviorSubject, firstValueFrom, lastValueFrom, Observable, of, switchMa
 import {map} from "rxjs/operators";
 import {DeepPartial} from "@juulsgaard/ts-tools";
 import {ILoadingState, persistentCache} from "@juulsgaard/rxjs-tools";
-import {FormGroupControls} from "../tools/form-types";
 import {ModelFormRoot} from "../forms/form-root";
 import {FormDialogOptions} from "./form-dialog-config";
 import {subjectToSignal} from "../tools/signals";
 import {computed, Signal} from "@angular/core";
 import {FormRootConstructors} from "../constructors/form-root-constructors";
+import {FormGroupControls} from "../types/controls";
 
 export class FormDialog<TValue extends Record<string, any>> {
 

@@ -1,7 +1,8 @@
-import {FormGroupControls} from "../tools/form-types";
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormValidator} from "../tools/form-validation";
 import {FormList} from "./form-list";
+import {FormGroupControls} from "../types/controls";
+import {FormLayerConfig} from "./form-layer-config";
 
 export class FormListConfig<TValue extends SimpleObject, TNullable extends boolean> {
 
@@ -11,10 +12,13 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
   protected errorValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [];
   protected warningValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [];
 
+  protected layerConfig: FormLayerConfig<NonNullable<TValue>>;
+
   constructor(
     protected readonly controls: FormGroupControls<TValue>,
     protected readonly nullable: TNullable
   ) {
+    this.layerConfig = new FormLayerConfig<NonNullable<TValue>>(controls, false);
   }
 
   /**
@@ -59,9 +63,18 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
     return this;
   }
 
+  /**
+   * Configure the underlying layer control for the list
+   * @param configure
+   */
+  layer(configure: (config: FormLayerConfig<NonNullable<TValue>>) => void): this {
+    configure(this.layerConfig);
+    return this;
+  }
+
   done(): FormList<FormGroupControls<TValue>, TValue, TNullable> {
     return new FormList(
-      this.controls,
+      this.layerConfig.done(),
       this.nullable,
       this.startLength,
       this.disabledDefault,

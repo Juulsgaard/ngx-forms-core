@@ -1,6 +1,4 @@
-import {formLayer} from "../constructors/form-layer-constructors";
-import {Form} from "../constructors";
-import {formList} from "../constructors/form-list-constructors";
+import {Form, formLayer, formList} from "../constructors";
 
 interface Item {
   id: string;
@@ -50,5 +48,16 @@ test('Constructors', () => {
   });
 
   const value = controlLayer.value().list.at(0)?.value;
+
+  const template = Form.root<FormData>({
+    str: Form.text(),
+    layer: Form.nullable.layer({
+      value: Form.text()
+    }),
+    nullable: Form.nullable.text(),
+    select: Form.select(items).single(x => x.id).nullable(),
+    num: Form.number(),
+    list: [{value: Form.text()}]
+  }).done();
 
 });

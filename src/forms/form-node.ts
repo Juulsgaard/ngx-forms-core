@@ -1,8 +1,8 @@
 import {computed, signal, Signal, WritableSignal} from "@angular/core";
 import {FormValidator, processFormValidators} from "../tools/form-validation";
 import {AnonFormNode, FormNodeOptions, FormNodeType, InputTypes} from "./anon-form-node";
-import {FormValidationData} from '../tools/form-types';
 import {compareLists, compareValues} from "../tools/helpers";
+import {FormValidationData} from "../types";
 
 export class FormNode<T> extends AnonFormNode {
 

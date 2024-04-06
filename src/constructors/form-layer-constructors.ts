@@ -1,12 +1,12 @@
-import {FormGroupControls, FormGroupValue} from "../tools/form-types";
 import {ControlFormLayer, ModelFormLayer} from "../forms";
 import {FormLayer, NullableControlFormLayer} from "../forms/form-layer";
 import {FormUnit} from "../forms/form-unit";
 import {FormValidator} from "../tools/form-validation";
 import {toList} from "../tools/helpers";
 import {SimpleObject} from "@juulsgaard/ts-tools";
+import {FormGroupControls, FormGroupValue} from "../types/controls";
 
-interface FormLayerOptions<T> {
+export interface FormLayerOptions<T> {
   disabled?: boolean;
   disabledFallback?: T;
   errors?: FormValidator<T>|FormValidator<T>[];

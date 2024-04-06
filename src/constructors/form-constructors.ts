@@ -1,18 +1,12 @@
 import {Observable} from "rxjs";
 import {Constrain, SimpleObject} from "@juulsgaard/ts-tools";
-import {
-  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, PartialTemplate, TemplateGuide
-} from "../tools/form-types";
 import {formTemplateToControls, formTemplateToValueControls} from "../tools/templates";
-import {FormConstants} from "../tools/constants";
-import {InputTypes} from "../forms/anon-form-node";
-import {FormNodeConfig} from "../forms/form-node-config";
+import {FormConstants, Validators} from "../tools";
+import {FormLayerConfig, FormListConfig, FormNodeConfig, FormRootConfig, InputTypes} from "../forms";
 import {FormSelectBuilder} from "./form-select-builder";
 import {FormNodeCtorOptions, parseOptions} from "./constructor-tools";
-import {Validators} from "../tools/validators";
-import {FormLayerConfig} from "../forms/form-layer-config";
-import {FormListConfig} from "../forms/form-list-config";
-import {FormRootConfig} from "../forms/form-root-config";
+import {FormTemplateGuide, PartialFormTemplate} from "../types";
+import {FormGroupTemplate, FormGroupTemplateValue, TemplateLayerPrimitive} from "../types/templates";
 
 export class FormConstructors {
 
@@ -453,8 +447,14 @@ export class FormNullableConstructors {
 
   //</editor-fold>
 
-  layer<T extends SimpleObject>(controls: FormGroupControls<T>): FormLayerConfig<T|undefined> {
+  layer<T extends SimpleObject>(template: FormGroupTemplate<T>): FormLayerConfig<T|undefined> {
+    const controls = formTemplateToControls(template);
     return new FormLayerConfig<T|undefined>(controls, true);
+  }
+
+  list<T extends SimpleObject>(template: FormGroupTemplate<T>): FormListConfig<T, true> {
+    const controls = formTemplateToControls(template);
+    return new FormListConfig(controls, true);
   }
 }
 
@@ -465,10 +465,10 @@ class FormGuideConstructors<TGuide extends SimpleObject> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  partial<TTemplate extends FormGroupTemplate<any>>(
-    template: TTemplate & PartialTemplate<TGuide>
+  partial<TTemplate extends TemplateLayerPrimitive>(
+    template: TTemplate & PartialFormTemplate<TGuide>
   ): FormRootConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
-    const controls = formTemplateToValueControls(template);
+    const controls = formTemplateToValueControls<TTemplate>(template);
     return new FormRootConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(controls);
   }
 
@@ -477,10 +477,10 @@ class FormGuideConstructors<TGuide extends SimpleObject> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  modified<TTemplate extends FormGroupTemplate<any>>(
-    template: TTemplate & TemplateGuide<TGuide>
+  modified<TTemplate extends TemplateLayerPrimitive>(
+    template: TTemplate & FormTemplateGuide<TGuide>
   ): FormRootConfig<FormGroupTemplateValue<TTemplate>> {
-    const controls = formTemplateToValueControls(template);
+    const controls = formTemplateToValueControls<TTemplate>(template);
     return new FormRootConfig<FormGroupTemplateValue<TTemplate>>(controls);
   }
 }

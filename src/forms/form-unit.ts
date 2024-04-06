@@ -1,6 +1,7 @@
 import {computed, signal, Signal, WritableSignal} from "@angular/core";
 import {Observable, Subject} from "rxjs";
-import {FormValidationData} from "../tools/form-types";
+
+import {FormValidationData} from "../types";
 
 export abstract class FormUnit {
 

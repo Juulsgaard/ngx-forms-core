@@ -1,9 +1,9 @@
 import {Constrain, SimpleObject} from "@juulsgaard/ts-tools";
-import {
-  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, PartialTemplate, TemplateGuide
-} from "../tools/form-types";
+import {PartialTemplate, TemplateGuide} from "../tools/form-types";
 import {formTemplateToControls, formTemplateToValueControls} from "../tools/templates";
 import {FormPageConfig} from "./form-page-config";
+import {FormGroupControls} from "../types/controls";
+import {FormGroupTemplate, FormGroupTemplateValue} from "../types/templates";
 
 export class FormPageFactory<TGuide extends SimpleObject> {
 

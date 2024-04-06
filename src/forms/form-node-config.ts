@@ -1,7 +1,7 @@
 import {FormNodeOptions, FormNodeType} from "./anon-form-node";
-import {AutoComplete} from "../tools/form-types";
 import {FormNode} from "./form-node";
 import {FormValidator} from "../tools/form-validation";
+import {AutoComplete} from "../types";
 
 export class FormNodeConfig<T> {
 

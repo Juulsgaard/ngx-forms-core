@@ -1,9 +1,10 @@
-import {FormGroupControls, FormGroupValueRaw} from "../tools/form-types";
+import {FormGroupValueRaw} from "../tools/form-types";
 import {FormDialog} from "./form-dialog";
 import {Observable} from "rxjs";
 import {DeepPartial} from "@juulsgaard/ts-tools";
 import {AbstractControl} from "@angular/forms";
 import {ILoadingState} from "@juulsgaard/rxjs-tools";
+import {FormGroupControls} from "../types/controls";
 
 export interface FormDialogOptions<T> {
   /** The action to perform when submitting the form */

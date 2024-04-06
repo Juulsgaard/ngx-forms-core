@@ -1,4 +1,3 @@
-import {FormGroupControls, FormGroupValue, FormValidationData} from "../tools/form-types";
 import {DeepPartial, mapObj, objToArr, SimpleObject} from "@juulsgaard/ts-tools";
 import {FormNode} from "./form-node";
 import {computed, signal, Signal, WritableSignal} from "@angular/core";
@@ -7,6 +6,8 @@ import {compareLists} from "../tools/helpers";
 import {FormValidator, processFormValidators} from "../tools/form-validation";
 import {FormList} from "./form-list";
 import {AnonFormLayer} from "./anon-form-layer";
+import {FormGroupControls, FormGroupValue} from "../types/controls";
+import {FormValidationData} from "../types";
 
 export class FormLayer<TControls extends Record<string, FormUnit>, TValue extends SimpleObject|undefined> extends AnonFormLayer {
 

@@ -1,7 +1,7 @@
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormLayerConfig} from "./form-layer-config";
-import {FormGroupControls} from "../tools/form-types";
 import {FormRoot} from "./form-root";
+import {FormGroupControls} from "../types/controls";
 
 export class FormRootConfig<TValue extends SimpleObject> extends FormLayerConfig<TValue> {
 
