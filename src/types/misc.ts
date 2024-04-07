@@ -1,6 +1,3 @@
-
-export type FormValidationData = { path: string[], message: string };
-
 //<editor-fold desc="Config Values">
 export type AutoComplete =
   'on'

@@ -1,16 +1,17 @@
 import {computed, signal, Signal, WritableSignal} from "@angular/core";
-import {FormValidator, processFormValidators} from "../tools/form-validation";
+import {FormValidationContext, FormValidator, processFormValidators} from "../tools";
 import {AnonFormNode, FormNodeOptions, FormNodeType, InputTypes} from "./anon-form-node";
 import {compareLists, compareValues} from "../tools/helpers";
-import {FormValidationData} from "../types";
+import {asapScheduler, asyncScheduler, Subscription} from "rxjs";
+import {validationData} from "../tools/form-validation";
 
 export class FormNode<T> extends AnonFormNode {
 
   override readonly errors: Signal<string[]>;
-  override readonly errorState: Signal<FormValidationData[]>;
+  override readonly errorState: Signal<FormValidationContext[]>;
 
   override readonly warnings: Signal<string[]>;
-  override readonly warningState: Signal<FormValidationData[]>;
+  override readonly warningState: Signal<FormValidationContext[]>;
 
   override readonly changed: Signal<boolean>;
 
@@ -19,11 +20,16 @@ export class FormNode<T> extends AnonFormNode {
 
   override readonly valid = computed(() => !this.hasError());
 
-  protected readonly _state: WritableSignal<T|undefined>;
+  private readonly _state: WritableSignal<T|undefined>;
   override readonly state: Signal<T|undefined>;
   override readonly rawValue: Signal<T|undefined>;
   override readonly value: Signal<T>;
   protected readonly resetValue: WritableSignal<T>;
+
+  private readonly _debouncedState: WritableSignal<T|undefined>;
+  override readonly debouncedState: Signal<T|undefined>;
+  override readonly debouncedRawValue: Signal<T|undefined>;
+  override readonly debouncedValue: Signal<T>;
 
   declare readonly nullable: undefined extends T ? boolean : false;
   declare readonly defaultValue: T;
@@ -58,17 +64,22 @@ export class FormNode<T> extends AnonFormNode {
 
     this._state = signal(initialValue);
     this.state = this._state.asReadonly();
-    this.rawValue = computed(() => this.getRawValue());
-    this.value = computed(() => this.getValue());
+    this.rawValue = computed(() => this.getRawValue(this.state));
+    this.value = computed(() => this.getValue(this.rawValue));
     this.resetValue = signal(this.value());
+
+    this._debouncedState = signal(initialValue);
+    this.debouncedState = this._debouncedState.asReadonly();
+    this.debouncedRawValue = computed(() => this.getRawValue(this.debouncedState));
+    this.debouncedValue = computed(() => this.getValue(this.debouncedRawValue));
 
     this.changed = computed(() => compareValues(this.resetValue(), this.value()));
 
-    this.errors = computed(() => this.getErrors(), {equal: compareLists<string>});
-    this.errorState = computed(() => this.errors().map(x => ({message: x, path: []})));
+    this.errors = computed(() => Array.from(this.getErrors(this.debouncedRawValue)), {equal: compareLists<string>});
+    this.errorState = computed(() => this.errors().map(x => validationData(x, this)));
 
-    this.warnings = computed(() => this.getWarnings(), {equal: compareLists<string>});
-    this.warningState = computed(() => this.warnings().map(x => ({message: x, path: []})));
+    this.warnings = computed(() => Array.from(this.getWarnings(this.debouncedRawValue)), {equal: compareLists<string>});
+    this.warningState = computed(() => this.warnings().map(x => validationData(x, this)));
   }
 
   //<editor-fold desc="Actions">
@@ -91,13 +102,13 @@ export class FormNode<T> extends AnonFormNode {
   //</editor-fold>
 
   //<editor-fold desc="Processing">
-  private getRawValue() {
+  private getRawValue(state: Signal<T|undefined>) {
     if (this.disabled()) return this.defaultValue;
-    return this.state();
+    return state();
   }
 
-  private getValue(): T {
-    const value = this.rawValue();
+  private getValue(rawValue: Signal<T|undefined>): T {
+    const value = rawValue();
     if (value != null) return value;
     if (this.nullable) return value as T;
     return this.defaultValue;
@@ -110,46 +121,94 @@ export class FormNode<T> extends AnonFormNode {
     return this.defaultValue;
   }
 
-  private getErrors(): string[] {
+  private *getErrors(rawValue: Signal<T|undefined>): Generator<string> {
     if (this.disabled()) return [];
-    const value = this.rawValue();
+    const value = rawValue();
 
     if (value == null) {
-      if (this.required) return ['This field is required'];
+      if (this.required) return yield 'This field is required';
       // If no value is present, don't process validators
-      if (!this.nullable) return [];
+      if (!this.nullable) return;
     }
 
-    return processFormValidators(this.errorValidators, value as T);
+    yield* processFormValidators(this.errorValidators, value as T);
   }
 
-  private getWarnings(): string[] {
-    const value = this.rawValue();
+  private *getWarnings(rawValue: Signal<T|undefined>): Generator<string> {
+    const value = rawValue();
 
     // If no value is present, don't process validators
-    if (value == null && !this.nullable) return [];
+    if (value == null && !this.nullable) return;
 
-    return processFormValidators(this.errorValidators, value as T);
+    yield* processFormValidators(this.errorValidators, value as T);
   }
   //</editor-fold>
 
-  //<editor-fold desc="Implementation">
-  private getValueOrDefault(value: T|undefined): T {
-    if (this.nullable) return value as T;
-    return value ?? this.defaultValue;
+  //<editor-fold desc="State Update">
+  private static debounceTimeout = 200;
+  private _grace?: Subscription;
+  private _timeout?: Subscription;
+  private _pendingValue?: {value: T|undefined};
+
+  private resetTimeout() {
+    this._grace?.unsubscribe();
+    this._grace = undefined;
+    this._timeout?.unsubscribe();
+    this._timeout = undefined;
+    this._pendingValue = undefined;
   }
 
-  private getValueOrInitial(value: T|undefined): T {
-    if (this.nullable) return value as T;
-    return value ?? this.initialValue;
+  /** Update the internal state of the Node */
+  protected updateState(value: T|undefined, instant = false) {
+    this._state.set(value);
+
+    // If update is instant then update signal immediately and cancel timeouts
+    if (instant) {
+      this._debouncedState.set(value);
+      this.resetTimeout();
+      return;
+    }
+
+    // If timeout is active, store value and reset timer (debounce)
+    if (this._timeout) {
+      this._pendingValue = {value};
+      this.startTimeout();
+      return;
+    }
+
+    // If there is no timeout then update the state
+    this._debouncedState.set(value);
+    if (this._grace) return;
+
+    // If there is no active grace period (time for sync updates before the timeout starts), create one
+    this._grace = asapScheduler.schedule(() => {
+      this.startTimeout();
+      this._grace = undefined;
+    });
   }
+
+  private startTimeout() {
+    this._timeout?.unsubscribe();
+
+    this._timeout = asyncScheduler.schedule(() => {
+      this._timeout = undefined;
+
+      if (!this._pendingValue) return;
+      this._debouncedState.set(this._pendingValue.value);
+
+      this.startTimeout();
+    }, FormNode.debounceTimeout);
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="Mutation">
 
   /**
    * Update the value of the Node
    * @param value - The new value of the node
    */
   setValue(value: T|undefined) {
-    this._state.set(value);
+    this.updateState(value);
   }
 
   /**
@@ -157,13 +216,13 @@ export class FormNode<T> extends AnonFormNode {
    * @param value - An optional reset value
    */
   override reset(value?: T) {
-    this._state.set(value ?? this.initialValue);
+    this.updateState(value ?? this.initialValue, true);
     super.reset();
     this.resetValue.set(this.value());
   }
 
   override clear() {
-    this.setValue(this.initialValue);
+    this.updateState(this.initialValue, true);
   }
 
   //</editor-fold>
@@ -187,6 +246,22 @@ export class FormNode<T> extends AnonFormNode {
   }
 
   override rollback() {
-    this.setValue(this.resetValue());
+    this.updateState(this.resetValue(), true);
+  }
+
+  isValid(): boolean {
+    return this.getErrors(this.rawValue).next().done === true;
+  }
+
+  getValidValue(): T {
+    if (this.isValid()) throw Error('The value is invalid');
+    return this.value();
+  }
+
+  getValidValueOrDefault<TDefault>(defaultVal: TDefault): T | TDefault;
+  getValidValueOrDefault(): T | undefined;
+  getValidValueOrDefault<TDefault>(defaultVal?: TDefault): T | TDefault | undefined {
+    if (this.isValid()) return defaultVal;
+    return this.value();
   }
 }

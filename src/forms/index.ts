@@ -15,7 +15,7 @@ export {AnonFormList} from "./anon-form-list";
 
 export {FormNode} from "./form-node";
 export {FormNodeConfig} from "./form-node-config";
-export {FormNodeType, FormNodeEvent, FormNodeOptions, AnonFormNode, InputTypes} from "./anon-form-node";
+export {FormNodeType, InputEvents, FormNodeOptions, AnonFormNode, InputTypes} from "./anon-form-node";
 
 export {FormSelectNode, FormSingleSelectNode, FormMultiSelectNode, FormSelectNodeOptions} from "./form-select-node";
 export {FormSelectNodeConfig, FormMultiSelectNodeConfig, FormSingleSelectNodeConfig} from "./form-select-node-config";

@@ -1,12 +1,14 @@
 import {computed, signal, Signal, WritableSignal} from "@angular/core";
 import {Observable, Subject} from "rxjs";
-
-import {FormValidationData} from "../types";
+import {FormValidationContext} from "../tools";
 
 export abstract class FormUnit {
 
   abstract readonly rawValue: Signal<unknown | undefined>;
   abstract readonly value: Signal<unknown>;
+
+  abstract readonly debouncedRawValue: Signal<unknown | undefined>;
+  abstract readonly debouncedValue: Signal<unknown>;
 
   private readonly _reset$ = new Subject<void>();
   /** An event emitted when the input resets */
@@ -16,23 +18,23 @@ export abstract class FormUnit {
   /** A Signal denoting when the input is disabled */
   readonly disabled: Signal<boolean>;
 
-  /** A list of warnings */
+  /** A list of warnings (async) */
   abstract readonly warnings: Signal<string[]>;
-  /** The warning data for the unit */
-  abstract readonly warningState: Signal<FormValidationData[]>;
-  /** A single warning for the unit. undefined if no warnings are present */
+  /** The warning data for the unit (async) */
+  abstract readonly warningState: Signal<FormValidationContext[]>;
+  /** A single warning for the unit. undefined if no warnings are present (async) */
   readonly warning: Signal<string | undefined> = computed(() => this.warnings().at(0));
 
-  /** A list of errors */
+  /** A list of errors (async) */
   abstract readonly errors: Signal<string[]>;
-  /** The error data for the unit */
-  abstract readonly errorState: Signal<FormValidationData[]>;
+  /** The error data for the unit (async) */
+  abstract readonly errorState: Signal<FormValidationContext[]>;
 
-  /** A boolean indicating if the unit has an error */
+  /** A boolean indicating if the unit has an error (async) */
   readonly hasError: Signal<boolean> = computed(() => this.errors().length <= 0);
-  /** A single error for the unit. undefined if no errors are present */
+  /** A single error for the unit. undefined if no errors are present (async) */
   readonly error: Signal<string | undefined> = computed(() => this.errors().at(0));
-  /** Indicates that the unit is valid */
+  /** Indicates that the unit is valid (async) */
   abstract readonly valid: Signal<boolean>;
 
   /** True if the value has changed since last reset */
@@ -102,4 +104,14 @@ export abstract class FormUnit {
     return true;
   }
   //</editor-fold>
+
+  /** A synchronous validation check of the unit */
+  abstract isValid(): boolean;
+
+  /** Get the value of the unit if it's valid. Otherwise throw an error */
+  abstract getValidValue(): unknown;
+  /** Get the value of the unit if it's valid. Otherwise return default */
+  abstract getValidValueOrDefault<TDefault>(defaultVal: TDefault): unknown|TDefault;
+  /** Get the value of the unit if it's valid. Otherwise return undefined */
+  abstract getValidValueOrDefault(): unknown|undefined;
 }

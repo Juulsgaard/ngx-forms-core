@@ -2,9 +2,10 @@ import {FormUnit} from "./form-unit";
 import {Observable, Subject} from "rxjs";
 import {computed, Signal} from "@angular/core";
 
-export enum FormNodeEvent {
+export enum InputEvents {
   Focus = 'focus',
   Select = 'select',
+  ScrollTo = 'scroll-to',
 }
 
 export enum InputTypes {
@@ -28,6 +29,7 @@ export enum InputTypes {
   File = 'file'
 }
 
+export type FormNodeEvent = InputEvents | string;
 export type FormNodeType = InputTypes | string;
 
 export interface FormNodeOptions {
@@ -57,6 +59,8 @@ export abstract class AnonFormNode extends FormUnit {
   readonly actions$: Observable<FormNodeEvent> = this._actions$.asObservable();
 
   readonly abstract state: Signal<unknown|undefined>;
+  readonly abstract debouncedState: Signal<unknown|undefined>;
+
   readonly empty: Signal<boolean> = computed(() => this.state() == null);
 
   protected constructor(
@@ -85,9 +89,13 @@ export abstract class AnonFormNode extends FormUnit {
    */
   focus(selectValue?: true) {
     setTimeout(() => {
-      this._actions$.next(FormNodeEvent.Focus);
-      if (selectValue) this._actions$.next(FormNodeEvent.Select);
+      this._actions$.next(InputEvents.Focus);
+      if (selectValue) this._actions$.next(InputEvents.Select);
     }, 0);
+  }
+
+  scrollTo() {
+    this._actions$.next(InputEvents.ScrollTo);
   }
 
   /** Toggle the input value if boolean */

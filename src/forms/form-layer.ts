@@ -3,26 +3,30 @@ import {FormNode} from "./form-node";
 import {computed, signal, Signal, WritableSignal} from "@angular/core";
 import {FormUnit} from "./form-unit";
 import {compareLists} from "../tools/helpers";
-import {FormValidator, processFormValidators} from "../tools/form-validation";
+import {
+  FormValidationContext, FormValidator, prependValidationPath, processFormValidators, validationData
+} from "../tools/form-validation";
 import {FormList} from "./form-list";
 import {AnonFormLayer} from "./anon-form-layer";
 import {FormGroupControls, FormGroupValue} from "../types/controls";
-import {FormValidationData} from "../types";
 
 export class FormLayer<TControls extends Record<string, FormUnit>, TValue extends SimpleObject|undefined> extends AnonFormLayer {
 
   override readonly value: Signal<TValue>;
   override readonly rawValue: Signal<DeepPartial<TValue> | undefined>;
 
+  override readonly debouncedValue: Signal<TValue>;
+  override readonly debouncedRawValue: Signal<DeepPartial<TValue> | undefined>;
+
   override readonly changed: Signal<boolean>;
   override readonly touched: Signal<boolean>;
 
   override readonly valid = computed(() => !this.hasError() && Object.values(this.controls()).every(x => x.valid()));
 
-  override readonly errorState: Signal<FormValidationData[]>;
+  override readonly errorState: Signal<FormValidationContext[]>;
   override readonly errors: Signal<string[]>;
 
-  override readonly warningState: Signal<FormValidationData[]>;
+  override readonly warningState: Signal<FormValidationContext[]>;
   override readonly warnings: Signal<string[]>;
 
   private readonly _controls: WritableSignal<TControls>;
@@ -43,41 +47,37 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
     this._controls = signal(controls);
     this.controls = this._controls.asReadonly();
 
-    this.rawValue = computed(() => {
-      if (this.disabled()) return this.disabledDefaultValue as DeepPartial<TValue>|undefined;
-      return this.processControls(x => x.rawValue()) as DeepPartial<TValue>;
-    });
+    this.rawValue = computed(() => this.getRawValue(x => x.rawValue));
+    this.value = computed(() => this.getValue(x => x.value));
 
-    this.value = computed(() => {
-      if (this.disabled()) return this.getDisabledValue();
-      return this.processControls(x => x.value()) as TValue;
-    });
+    this.debouncedRawValue = computed(() => this.getRawValue(x => x.debouncedRawValue));
+    this.debouncedValue = computed(() => this.getValue(x => x.debouncedValue));
 
     this.changed = computed(() => Object.values(this.controls()).some(x => x.changed()));
     this.touched = computed(() => Object.values(this.controls()).some(x => x.touched()));
 
-    this.errors = computed(() => this.getErrors(), {equal: compareLists<string>});
+    this.errors = computed(() => Array.from(this.getErrors(this.debouncedValue)), {equal: compareLists<string>});
     this.errorState = computed(() => {
       const children = this.processControls(x => x.errorState());
       const result = objToArr(
         children,
-        (values, key) => values.map(x => ({path: [key, ...x.path], message: x.message}))
+        (values, key) => values.map(x => prependValidationPath(x, key))
       ).flatMap(x => x);
 
-      result.push(...this.errors().map(msg => ({path: [], message: msg})));
+      result.push(...this.errors().map(msg => validationData(msg, this)));
 
       return result;
     });
 
-    this.warnings = computed(() => this.getWarnings(), {equal: compareLists<string>});
+    this.warnings = computed(() => Array.from(this.getWarnings(this.debouncedValue)), {equal: compareLists<string>});
     this.warningState = computed(() => {
       const children = this.processControls(x => x.warningState());
       const result = objToArr(
         children,
-        (values, key) => values.map(x => ({path: [key, ...x.path], message: x.message}))
+        (values, key) => values.map(x => prependValidationPath(x, key))
       ).flatMap(x => x);
 
-      result.push(...this.warnings().map(msg => ({path: [], message: msg})));
+      result.push(...this.warnings().map(msg => validationData(msg, this)));
 
       return result;
     });
@@ -90,14 +90,24 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
     return this.processControls(x => x.getDisabledValue()) as TValue;
   }
 
-  private getErrors(): string[] {
-    if (this.disabled()) return [];
-    return processFormValidators(this.errorValidators, this.value());
+  private getRawValue(getVal: (unit: FormUnit) => Signal<unknown>): DeepPartial<TValue>|undefined {
+    if (this.disabled()) return this.disabledDefaultValue as DeepPartial<TValue>|undefined;
+    return this.processControls(x => getVal(x)()) as DeepPartial<TValue>;
   }
 
-  private getWarnings(): string[] {
+  private getValue(getVal: (unit: FormUnit) => Signal<unknown>): TValue {
+    if (this.disabled()) return this.getDisabledValue();
+    return this.processControls(x => getVal(x)()) as TValue;
+  }
+
+  private *getErrors(value: Signal<TValue>): Generator<string> {
     if (this.disabled()) return [];
-    return processFormValidators(this.warningValidators, this.value());
+    yield* processFormValidators(this.errorValidators, value());
+  }
+
+  private *getWarnings(value: Signal<TValue>): Generator<string> {
+    if (this.disabled()) return [];
+    yield* processFormValidators(this.warningValidators, value());
   }
 
   private processControls<T>(process: (unit: FormUnit) => T): Record<string, T> {
@@ -261,6 +271,29 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
 
   override rollback() {
     this.processControls(x => x.rollback());
+  }
+
+  isValid(): boolean {
+    const hasError = this.getErrors(this.value).next().done !== true;
+    if (hasError) return false;
+
+    for (let control of Object.values(this.controls())) {
+      if (!control.isValid()) return false;
+    }
+
+    return true;
+  }
+
+  getValidValue(): TValue {
+    if (this.isValid()) throw Error('The value is invalid');
+    return this.value();
+  }
+
+  getValidValueOrDefault<TDefault>(defaultVal: TDefault): TValue | TDefault;
+  getValidValueOrDefault(): TValue | undefined;
+  getValidValueOrDefault<TDefault>(defaultVal?: TDefault): TValue | TDefault | undefined {
+    if (this.isValid()) return defaultVal;
+    return this.value();
   }
 }
 
