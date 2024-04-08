@@ -468,7 +468,7 @@ class FormGuideConstructors<TGuide extends SimpleObject> {
   partial<TTemplate extends TemplateLayerPrimitive>(
     template: TTemplate & PartialFormTemplate<TGuide>
   ): FormRootConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
-    const controls = formTemplateToValueControls<TTemplate>(template);
+    const controls = formTemplateToValueControls<Constrain<TTemplate, TGuide>>(template);
     return new FormRootConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(controls);
   }
 

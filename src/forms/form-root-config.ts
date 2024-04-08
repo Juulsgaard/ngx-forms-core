@@ -5,7 +5,7 @@ import {FormGroupControls} from "../types/controls";
 
 export class FormRootConfig<TValue extends SimpleObject> extends FormLayerConfig<TValue> {
 
-  constructor(controls: FormGroupControls<NonNullable<TValue>>) {
+  constructor(controls: FormGroupControls<TValue>) {
     super(controls, false);
   }
 

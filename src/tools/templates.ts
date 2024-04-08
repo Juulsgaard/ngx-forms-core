@@ -47,7 +47,7 @@ function templateToControl<TValue>(template: TemplateUnion): FormControls<TValue
   if (isFormLayer(template)) return template as FormControls<TValue>;
 
   if (template instanceof FormListConfig) return template.done() as FormControls<TValue>;
-  if (isFormList(template)) return template as unknown as FormControls<TValue>;
+  if (isFormList(template)) return template as FormControls<TValue>;
 
   if (Array.isArray(template)) {
     const tmp = template as [TemplateLayerPrimitive];

@@ -31,7 +31,7 @@ export type FormControls<T> = undefined extends T
   ? NullableFormControls<NonNullable<T>>
   : NonNullFormControls<NonNullable<T>>;
 
-export type FormGroupControls<T extends SimpleObject> = { [K in keyof T]-?: FormControls<T[K]> };
+export type FormGroupControls<T extends SimpleObject|undefined> = T extends undefined ? never : { [K in keyof T]-?: FormControls<T[K]> };
 //</editor-fold>
 
 

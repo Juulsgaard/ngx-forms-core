@@ -2,6 +2,7 @@ import {FormLayer} from "./form-layer";
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormValidator} from "../tools/form-validation";
 import {FormGroupControls} from "../types/controls";
+import {RootLayerDisableConfig} from "../types/disable";
 
 export class FormLayerConfig<TValue extends SimpleObject|undefined> {
 
@@ -9,9 +10,10 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> {
   protected disabledByDefault?: boolean;
   protected errorValidators: FormValidator<TValue>[] = [];
   protected warningValidators: FormValidator<TValue>[] = [];
+  protected autoDisableSetup: ((config: RootLayerDisableConfig<TValue>) => void)[] = [];
 
   constructor(
-    protected readonly controls: FormGroupControls<NonNullable<TValue>>,
+    protected readonly controls: FormGroupControls<TValue>,
     protected readonly nullable: undefined extends TValue ? boolean : false
   ) {
   }
@@ -49,14 +51,21 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> {
     return this;
   }
 
-  done(): FormLayer<FormGroupControls<NonNullable<TValue>>, TValue> {
-    return new FormLayer<FormGroupControls<NonNullable<TValue>>, TValue>(
+  /** Pre-register auto disable configurations */
+  autoDisable(configure: (config: RootLayerDisableConfig<TValue>) => void): this {
+    this.autoDisableSetup.push(configure);
+    return this;
+  }
+
+  done(): FormLayer<FormGroupControls<TValue>, TValue> {
+    return new FormLayer<FormGroupControls<TValue>, TValue>(
       this.controls,
       this.nullable,
       this.disabledDefault,
       this.disabledByDefault,
       this.errorValidators,
       this.warningValidators,
+      this.autoDisableSetup
     );
   }
 

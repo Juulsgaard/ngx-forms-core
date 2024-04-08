@@ -9,8 +9,10 @@ import {AnonFormList} from "./anon-form-list";
 import {compareLists} from "../tools/helpers";
 import {AnonFormLayer} from "./anon-form-layer";
 import {FormGroupControls, FormGroupValue} from "../types";
+import {RootListDisableConfig} from "../types/disable";
+import {getAutoDisable} from "../tools/auto-disable";
 
-export class FormList<TControls extends Record<string, FormUnit>, TValue extends SimpleObject, TNullable extends boolean> extends AnonFormList {
+export class FormList<TControls extends Record<string, FormUnit>, TValue extends SimpleObject|undefined, TNullable extends boolean> extends AnonFormList {
 
   readonly rawValue: Signal<DeepPartial<TValue>[] | undefined>;
   readonly value: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>;
@@ -44,6 +46,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
     protected readonly disabledByDefault = false,
     protected readonly errorValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [],
     protected readonly warningValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [],
+    autoDisabled: ((config: RootListDisableConfig<TValue, TNullable>) => void)[] = []
   ) {
     super(nullable, disabledByDefault);
 
@@ -85,6 +88,11 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
 
       return result;
     });
+
+    if (autoDisabled.length > 0) {
+      const autoDisable = getAutoDisable(this);
+      autoDisabled.forEach(f => f(autoDisable));
+    }
   }
 
   private getRawValue(getVal: (unit: FormUnit) => Signal<unknown>): DeepPartial<TValue>[]|undefined {

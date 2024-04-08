@@ -50,7 +50,7 @@ export class FormListConstructors {
     options?: FormListOptions<TModel[], TModel>
   ): ModelFormList<TModel> {
     return new FormList(
-      formLayer.controls(controls, options?.layer),
+      formLayer.model(controls, options?.layer),
       false,
       options?.length,
       options?.disabledFallback,
@@ -95,7 +95,7 @@ export class FormListNullableConstructors {
     options?: FormListOptions<TModel[]|undefined, TModel>
   ): ModelFormList<TModel, true> {
     return new FormList(
-      formLayer.controls(controls, options?.layer),
+      formLayer.model(controls, options?.layer),
       true,
       options?.length,
       options?.disabledFallback,

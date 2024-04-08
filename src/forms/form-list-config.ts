@@ -3,6 +3,7 @@ import {FormValidator} from "../tools/form-validation";
 import {FormList} from "./form-list";
 import {FormGroupControls} from "../types/controls";
 import {FormLayerConfig} from "./form-layer-config";
+import {RootDisableConfig} from "../types/disable";
 
 export class FormListConfig<TValue extends SimpleObject, TNullable extends boolean> {
 
@@ -11,14 +12,15 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
   protected disabledByDefault?: boolean;
   protected errorValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [];
   protected warningValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [];
+  protected autoDisableSetup: ((config: RootDisableConfig<TNullable extends true ? TValue[] | undefined : TValue[]>) => void)[] = [];
 
-  protected layerConfig: FormLayerConfig<NonNullable<TValue>>;
+  protected layerConfig: FormLayerConfig<TValue>;
 
   constructor(
     protected readonly controls: FormGroupControls<TValue>,
     protected readonly nullable: TNullable
   ) {
-    this.layerConfig = new FormLayerConfig<NonNullable<TValue>>(controls, false);
+    this.layerConfig = new FormLayerConfig<TValue>(controls, false);
   }
 
   /**
@@ -67,8 +69,14 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
    * Configure the underlying layer control for the list
    * @param configure
    */
-  layer(configure: (config: FormLayerConfig<NonNullable<TValue>>) => void): this {
+  layer(configure: (config: FormLayerConfig<TValue>) => void): this {
     configure(this.layerConfig);
+    return this;
+  }
+
+  /** Pre-register auto disable configurations */
+  autoDisable(configure: (config: RootDisableConfig<TNullable extends true ? TValue[] | undefined : TValue[]>) => void): this {
+    this.autoDisableSetup.push(configure);
     return this;
   }
 

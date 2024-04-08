@@ -31,7 +31,7 @@ export class FormDialogFactory<TGuide extends SimpleObject> {
   ): FormDialogConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
     return new FormDialogConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(
       this.type,
-      formTemplateToValueControls(template)
+      formTemplateToValueControls<Constrain<TTemplate, TGuide>>(template)
     );
   }
 
@@ -45,7 +45,7 @@ export class FormDialogFactory<TGuide extends SimpleObject> {
   ): FormDialogConfig<FormGroupTemplateValue<TTemplate>> {
     return new FormDialogConfig<FormGroupTemplateValue<TTemplate>>(
       this.type,
-      formTemplateToValueControls(template)
+      formTemplateToValueControls<TTemplate>(template)
     );
   }
 

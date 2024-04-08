@@ -9,6 +9,8 @@ import {FormPageAction, FormPageOptions, WarningDialog} from "./form-page-config
 import {formRoot} from "../constructors";
 import {FormGroupControls} from "../types";
 import {toSignal} from "@angular/core/rxjs-interop";
+import {RootLayerDisableConfig} from "../types/disable";
+import {getAutoDisable} from "../tools/auto-disable";
 
 export class FormPage<TVal extends SimpleObject> {
 
@@ -16,13 +18,16 @@ export class FormPage<TVal extends SimpleObject> {
   readonly controls: Signal<FormGroupControls<TVal>>;
   readonly value: Signal<TVal>;
 
+  // TODO: Consider removing this from the FormPage class (complex type messes with TS indexing)
+  readonly autoDisable: RootLayerDisableConfig<TVal>;
+
   private readonly _submitting$ = new Subject<ILoadingState>();
   readonly submitting: Signal<boolean>;
-  readonly submitError: Signal<Error|undefined>;
+  readonly submitError: Signal<Error | undefined>;
 
   private readonly _deleting$ = new Subject<ILoadingState>();
   readonly deleting: Signal<boolean>;
-  readonly deleteError: Signal<Error|undefined>;
+  readonly deleteError: Signal<Error | undefined>;
 
   readonly hasSubmit: boolean;
   readonly showSubmit: Signal<boolean>;
@@ -43,11 +48,12 @@ export class FormPage<TVal extends SimpleObject> {
   private readonly warningService?: FormConfirmService;
   private readonly injector?: Injector;
 
-  private requireInjector(): Injector|undefined {
+  private requireInjector(): Injector | undefined {
     if (this.injector) return this.injector;
     assertInInjectionContext(FormPage);
     return undefined;
   }
+
   //</editor-fold>
 
   constructor(
@@ -66,6 +72,7 @@ export class FormPage<TVal extends SimpleObject> {
 
     this.controls = this.form.controls;
     this.value = this.form.value;
+    this.autoDisable = getAutoDisable(this.form);
 
     this.warningService = options.warningService;
 

@@ -9,6 +9,8 @@ import {
 import {FormNode} from "./form-node";
 import {FormList} from "./form-list";
 import {FormGroupControls, FormGroupValue} from "../types";
+import {RootLayerDisableConfig} from "../types/disable";
+import {getAutoDisable} from "../tools/auto-disable";
 
 
 export class FormLayer<TControls extends Record<string, FormUnit>, TValue extends SimpleObject|undefined> extends AnonFormLayer {
@@ -44,6 +46,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
     protected readonly disabledByDefault = false,
     protected readonly errorValidators: FormValidator<TValue>[] = [],
     protected readonly warningValidators: FormValidator<TValue>[] = [],
+    protected readonly autoDisabled: ((config: RootLayerDisableConfig<TValue>) => void)[] = []
   ) {
     super(nullable, disabledByDefault);
 
@@ -86,6 +89,11 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
 
       return result;
     });
+
+    if (autoDisabled.length > 0) {
+      const autoDisable = getAutoDisable(this);
+      autoDisabled.forEach(f => f(autoDisable));
+    }
   }
 
   override getDisabledValue(): TValue {
@@ -135,31 +143,31 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
   }
 
   //<editor-fold desc="Control Mutation">
-  /**
-   * Remove a nullable control from the layer
-   * @param name - The property key for the control
-   */
-  removeControl<K extends Extract<keyof TControls, string>>(name: K) {
-    const controls = {...this.controls()};
-    const existing = controls[name];
-    if (!existing) return;
-    if (!existing.nullable) throw new Error("You can only remove nullable controls");
-    delete controls[name];
-    this._controls.set(controls);
-  }
+  // /**
+  //  * Remove a nullable control from the layer
+  //  * @param name - The property key for the control
+  //  */
+  // removeControl<K extends Extract<keyof TControls, string>>(name: K) {
+  //   const controls = {...this.controls()};
+  //   const existing = controls[name];
+  //   if (!existing) return;
+  //   if (!existing.nullable) throw new Error("You can only remove nullable controls");
+  //   delete controls[name];
+  //   this._controls.set(controls);
+  // }
 
-  /**
-   * Add a control to the layer.
-   * Throws an exception if a control already exists
-   * @param name - The property key for the control
-   * @param control - The control to add
-   */
-  addControl<K extends Extract<keyof TControls, string>>(name: K, control: Required<TControls>[K]) {
-    const controls = {...this.controls()};
-    if (controls[name]) throw new Error(`A control with the name '${name}' already exists`);
-    controls[name] = control;
-    this._controls.set(controls);
-  }
+  // /**
+  //  * Add a control to the layer.
+  //  * Throws an exception if a control already exists
+  //  * @param name - The property key for the control
+  //  * @param control - The control to add
+  //  */
+  // addControl<K extends Extract<keyof TControls, string>>(name: K, control: Required<TControls>[K]) {
+  //   const controls = {...this.controls()};
+  //   if (controls[name]) throw new Error(`A control with the name '${name}' already exists`);
+  //   controls[name] = control;
+  //   this._controls.set(controls);
+  // }
 
   /**
    * Set a control in the layer (Will override existing)
@@ -259,6 +267,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
       this.disabledByDefault,
       this.errorValidators,
       this.warningValidators,
+      this.autoDisabled
     );
   }
 
@@ -306,7 +315,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
   }
 }
 
-export type ModelFormLayer<TModel extends SimpleObject|undefined> = FormLayer<FormGroupControls<NonNullable<TModel>>, TModel>;
+export type ModelFormLayer<TModel extends SimpleObject|undefined> = FormLayer<FormGroupControls<TModel>, TModel>;
 export type ControlFormLayer<TControl extends Record<string, FormUnit>> = FormLayer<TControl, FormGroupValue<TControl>>;
 export type NullableControlFormLayer<TControl extends Record<string, FormUnit>> = FormLayer<TControl, FormGroupValue<TControl>|undefined>;
 

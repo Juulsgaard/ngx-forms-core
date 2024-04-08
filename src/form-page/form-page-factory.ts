@@ -41,7 +41,7 @@ export class FormPageFactory<TGuide extends SimpleObject> {
   ): FormPageConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
     return new FormPageConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(
       this.type,
-      formTemplateToValueControls(template)
+      formTemplateToValueControls<Constrain<TTemplate, TGuide>>(template)
     );
   }
 
@@ -55,7 +55,7 @@ export class FormPageFactory<TGuide extends SimpleObject> {
   ): FormPageConfig<FormGroupTemplateValue<TTemplate>> {
     return new FormPageConfig<FormGroupTemplateValue<TTemplate>>(
       this.type,
-      formTemplateToValueControls(template)
+      formTemplateToValueControls<TTemplate>(template)
     );
   }
 
