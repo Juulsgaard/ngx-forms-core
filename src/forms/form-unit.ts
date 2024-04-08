@@ -6,6 +6,7 @@ export abstract class FormUnit {
 
   abstract readonly rawValue: Signal<unknown | undefined>;
   abstract readonly value: Signal<unknown>;
+  abstract readonly resetValue: Signal<unknown>;
 
   abstract readonly debouncedRawValue: Signal<unknown | undefined>;
   abstract readonly debouncedValue: Signal<unknown>;

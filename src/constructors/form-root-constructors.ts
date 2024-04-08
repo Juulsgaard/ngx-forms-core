@@ -1,8 +1,8 @@
-import {ControlFormRoot, FormRoot, ModelFormRoot} from "../forms/form-root";
-import {FormValidator} from "../tools/form-validation";
-import {FormUnit} from "../forms/form-unit";
+import {ControlFormRoot, FormRoot, FormUnit, ModelFormRoot} from "../forms";
+import {FormValidator} from "../tools";
 import {toList} from "../tools/helpers";
-import {FormGroupControls, FormGroupValue} from "../types/controls";
+import {FormGroupControls, FormGroupValue} from "../types";
+import {SimpleObject} from "@juulsgaard/ts-tools";
 
 interface FormRootOptions<T> {
   disabled?: boolean;
@@ -52,6 +52,4 @@ export class FormRootConstructors {
   }
 }
 
-export function formRoot(): FormRootConstructors {
-  return new FormRootConstructors();
-}
+export const formRoot: FormRootConstructors = new FormRootConstructors();

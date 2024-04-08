@@ -1,9 +1,10 @@
 import {Constrain, SimpleObject} from "@juulsgaard/ts-tools";
-import {PartialTemplate, TemplateGuide} from "../tools/form-types";
 import {formTemplateToControls, formTemplateToValueControls} from "../tools/templates";
 import {FormPageConfig} from "./form-page-config";
-import {FormGroupControls} from "../types/controls";
-import {FormGroupTemplate, FormGroupTemplateValue} from "../types/templates";
+import {
+  FormGroupControls, FormGroupTemplate, FormGroupTemplateValue, FormTemplateGuide, PartialFormTemplate
+} from "../types";
+import {TemplateLayerPrimitive} from "../types/templates";
 
 export class FormPageFactory<TGuide extends SimpleObject> {
 
@@ -12,18 +13,10 @@ export class FormPageFactory<TGuide extends SimpleObject> {
   }
 
   /**
-   * Define the page form using a strict template
-   * @param template - The template
-   */
-  withTemplate(template: FormGroupTemplate<TGuide>): FormPageConfig<TGuide> {
-    return new FormPageConfig(this.type, formTemplateToControls(template));
-  }
-
-  /**
    * Define the page form using a strict template with keys omitted
    * @param template - The template
    */
-  withModifiedTemplate<TOmit extends keyof TGuide>(template: FormGroupTemplate<Omit<TGuide, TOmit>>): FormPageConfig<Omit<TGuide, TOmit>> {
+  withOmitted<TOmit extends keyof TGuide>(template: FormGroupTemplate<Omit<TGuide, TOmit>>): FormPageConfig<Omit<TGuide, TOmit>> {
     return new FormPageConfig(this.type, formTemplateToControls(template));
   }
 
@@ -43,8 +36,8 @@ export class FormPageFactory<TGuide extends SimpleObject> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withPartialForm<TTemplate extends FormGroupTemplate<any>>(
-    template: TTemplate & PartialTemplate<TGuide>
+  withPartialForm<TTemplate extends TemplateLayerPrimitive>(
+    template: TTemplate & PartialFormTemplate<TGuide>
   ): FormPageConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
     return new FormPageConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(
       this.type,
@@ -57,8 +50,8 @@ export class FormPageFactory<TGuide extends SimpleObject> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withAltForm<TTemplate extends FormGroupTemplate<any>>(
-    template: TTemplate & TemplateGuide<TGuide>
+  withAltForm<TTemplate extends TemplateLayerPrimitive>(
+    template: TTemplate & FormTemplateGuide<TGuide>
   ): FormPageConfig<FormGroupTemplateValue<TTemplate>> {
     return new FormPageConfig<FormGroupTemplateValue<TTemplate>>(
       this.type,

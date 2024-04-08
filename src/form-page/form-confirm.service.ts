@@ -1,4 +1,5 @@
 import {Provider, Type} from "@angular/core";
+import {WarningDialog} from "./form-page-config";
 
 export abstract class FormConfirmService {
 
@@ -6,7 +7,6 @@ export abstract class FormConfirmService {
     return {provide: FormConfirmService, useClass: implementation};
   }
 
-  abstract confirmSubmit(title: string, text: string, btnText?: string): Promise<boolean>;
-
-  abstract confirmDelete(title: string, text: string, btnText?: string): Promise<boolean>;
+  abstract confirmSubmit(data: WarningDialog): Promise<boolean>;
+  abstract confirmDelete(data: WarningDialog): Promise<boolean>;
 }

@@ -1,40 +1,31 @@
-import {BehaviorSubject, firstValueFrom, lastValueFrom, Observable, of, switchMap} from "rxjs";
-import {map} from "rxjs/operators";
-import {DeepPartial} from "@juulsgaard/ts-tools";
-import {ILoadingState, persistentCache} from "@juulsgaard/rxjs-tools";
-import {ModelFormRoot} from "../forms/form-root";
+import {lastValueFrom, Observable} from "rxjs";
+import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
+import {ILoadingState} from "@juulsgaard/rxjs-tools";
+import {InputTypes, ModelFormRoot} from "../forms";
 import {FormDialogOptions} from "./form-dialog-config";
-import {subjectToSignal} from "../tools/signals";
-import {computed, Signal} from "@angular/core";
-import {FormRootConstructors} from "../constructors/form-root-constructors";
-import {FormGroupControls} from "../types/controls";
+import {signal, Signal} from "@angular/core";
+import {formRoot} from "../constructors";
+import {FormGroupControls} from "../types";
+import {FormValidator} from "../tools";
 
-export class FormDialog<TValue extends Record<string, any>> {
+export class FormDialog<TValue extends SimpleObject> {
 
-  private readonly _form: ModelFormRoot<TValue>;
   /** The form of the dialog */
-  get form(): ModelFormRoot<TValue> {return this._form}
+  readonly form: ModelFormRoot<TValue>;
 
   /** The value of the dialog form */
-  get value(): TValue {return this.form.getRawValue()}
+  readonly value: Signal<TValue>;
+
   /** The dialog form controls */
-  get controls(): FormGroupControls<TValue> {return this.form.controls};
+  readonly controls: Signal<FormGroupControls<TValue>>;
 
-  private _show$ = new BehaviorSubject(false);
-  /** An observable denoting when to show the dialog */
-  show$ = this._show$.asObservable();
-  /** A signal denoting when to show the dialog */
-  showSignal = subjectToSignal(this._show$);
+  private readonly _show = signal(false);
   /** Whether the dialog should be shown */
-  get show(): boolean {return this._show$.value}
+  readonly show: Signal<boolean> = this._show.asReadonly();
 
-  private _working$ = new BehaviorSubject(false);
-  /** An observable denoting that the submission is in progress */
-  working$ = this._working$.asObservable();
-  /** A signal denoting that the submission is in progress */
-  workingSignal = subjectToSignal(this._working$);
+  private readonly _working = signal(false);
   /** Whether the submission is currently in progress */
-  get working(): boolean {return this._working$.value}
+  readonly working: Signal<boolean> = this._working.asReadonly();
 
   private readonly onSubmit: (data: TValue) => Promise<any>|Observable<any>|ILoadingState|void;
   private readonly createForm: boolean;
@@ -48,52 +39,57 @@ export class FormDialog<TValue extends Record<string, any>> {
   /** Whether the form should submit when enter is hit */
   readonly submitOnEnter: boolean;
 
-  /** An observable containing a display string for the error state when errors are present */
-  error$: Observable<string|undefined>;
-  /** A signal containing a display string for the error state when errors are present */
-  errorSignal: Signal<string|undefined>;
-
-  /** An observable denoting when the form is valid for submission */
-  valid$: Observable<boolean>;
-  /** A signal denoting when the form is valid for submission */
-  validSignal: Signal<boolean>;
+  readonly valid: Signal<boolean>;
+  readonly canSubmit: Signal<boolean>;
 
 
   /**
    * Manually create a Form Dialog.
-   * It is recommended to the `FormDialog.Create<T>()` or `FormDialog.Update<T>()` when creating a Form Dialog.
-   * @param template - The Form Template
+   * It is recommended to the `formDialog.create<T>()` or `formDialog.update<T>()` when creating a Form Dialog.
+   * @param controls - The Form Template
    * @param type - The type of dialog
-   * @param settings - Settings
+   * @param options - Settings
+   * @param submitOnEnter
+   * @param buttonText
+   * @param errorValidators
+   * @param warningValidators
    */
-  constructor(template: FormGroupControls<TValue>, type: 'create'|'update', settings: FormDialogOptions<TValue>) {
-    this._form = FormRootConstructors.Model<TValue>(template);
+  constructor(
+    controls: FormGroupControls<TValue>,
+    type: 'create'|'update',
+    options: FormDialogOptions<TValue>,
+    submitOnEnter?: boolean,
+    buttonText?: string,
+    errorValidators: FormValidator<TValue>[] = [],
+    warningValidators: FormValidator<TValue>[] = [],
+  ) {
+
+    this.form = formRoot.model<TValue>(controls, {
+      errors: errorValidators,
+      warnings: warningValidators,
+    });
+
     this.createForm = type === 'create';
-    this.onSubmit = settings.onSubmit;
-    this.title = settings.title;
-    this.description = settings.description;
-    this.buttonText = settings.buttonText ?? (this.createForm ? 'Create' : 'Save');
-    this.submitOnEnter = settings.submitOnEnter ?? true;
+    this.onSubmit = options.onSubmit;
+    this.title = options.title;
+    this.description = options.description;
+    this.buttonText = buttonText ?? (this.createForm ? 'Create' : 'Save');
+    this.submitOnEnter = submitOnEnter ?? this.shouldSubmitOnEnter();
 
-    const error$ = settings.validate
-      ? this.form.throttledValue$.pipe(map(x => settings.validate!(x) ?? undefined))
-      : of(undefined);
-    this.error$ = error$.pipe(persistentCache());
+    this.controls = this.form.controls;
+    this.value = this.form.value;
+    this.valid = this.form.valid;
+    this.canSubmit = this.createForm ? this.form.canCreate : this.form.canUpdate;
+  }
 
-    this.valid$ = this.error$.pipe(
-      switchMap(error => error ? of(false) : this.createForm ? this.form.canCreate$ : this.form.canSubmit$),
-      persistentCache()
-    );
+  private shouldSubmitOnEnter() {
+    const count = this.form.nodes().length;
+    if (count <= 0) return true;
+    if (count > 1) return false;
 
-    this.errorSignal = computed(() => {
-      if(!settings.validate) return undefined;
-      return settings.validate(this.form.valueSignal()) ?? undefined;
-    });
-
-    this.validSignal = computed(() => {
-      if (this.errorSignal()) return false;
-      return this.createForm ? this.form.canCreateSignal() : this.form.canSubmitSignal();
-    });
+    const type = this.form.nodes().at(0)!.type;
+    if (type == InputTypes.LongText || type == InputTypes.HTML) return false;
+    return true;
   }
 
   /**
@@ -103,48 +99,41 @@ export class FormDialog<TValue extends Record<string, any>> {
    */
   start(reset?: DeepPartial<TValue>) {
     this.form.reset(reset);
-    this._show$.next(true);
+    this._show.set(true);
   }
 
   /**
    * Close the dialog
    */
   close() {
-    this._show$.next(false);
+    this._show.set(false);
   }
 
   /**
    * Submit the form Dialog with the current values
    */
   async submit() {
-    if (this.working) return;
-    const valid = await firstValueFrom(this.valid$);
-    if (!valid) return;
+    if (this.working()) return;
+    if (!this.form.isValid()) return;
 
-    this._working$.next(true);
+    this._working.set(true);
 
     try {
-
-      let result = this.onSubmit(this.form.getRawValue());
+      const value = this.form.getValidValue();
+      let result = this.onSubmit(value);
 
       if (result instanceof ILoadingState) {
         await result;
-        this._show$.next(false);
-        return;
-      }
-
-      if (result instanceof Observable) {
-        result = lastValueFrom(result);
-      }
-
-      if (result instanceof Promise) {
+      } else if (result instanceof Observable) {
+        await lastValueFrom(result);
+      } else if (result instanceof Promise) {
         await result;
       }
 
-      this._show$.next(false);
+      this._show.set(false);
 
     } finally {
-      this._working$.next(false);
+      this._working.set(false);
     }
 
   }

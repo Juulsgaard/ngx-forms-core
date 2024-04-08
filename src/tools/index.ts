@@ -1,7 +1,8 @@
 
 export {FormConstants} from './constants';
-export {formUpdated} from './form-population';
-export {FormValidator, processFormValidators, FormValidationData, FormValidationContext} from './form-validation';
+export {willAlterForm} from './form-population';
+export {processFormValidators} from './form-validation';
+export type {FormValidator, FormValidationData, FormValidationContext} from './form-validation';
 export {} from './helpers';
 export {} from './templates';
 export * from './type-predicates';

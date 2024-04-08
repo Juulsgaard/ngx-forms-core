@@ -1,7 +1,7 @@
 import {Observable, of} from "rxjs";
 import {MapFunc} from "@juulsgaard/ts-tools";
 import {FormNode} from "./form-node";
-import {FormNodeOptions, FormNodeType} from "./anon-form-node";
+import {FormNodeOptions, FormNodeType, InputTypes} from "./anon-form-node";
 import {FormValidator} from "../tools/form-validation";
 
 export interface FormSelectNodeOptions<TItem> {
@@ -52,7 +52,7 @@ export abstract class FormSelectNode<TValue, TItem, TMultiple extends boolean>
 
     this.bindLabel = options?.bindLabel;
     this.bindOption = options?.bindOption;
-    this.clearable = options?.clearable ?? (type === FormNodeType.SelectMany || nullable);
+    this.clearable = options?.clearable ?? (type === InputTypes.SelectMany || nullable);
     this.hideWhenEmpty = options?.hideWhenEmpty ?? false;
   }
 
@@ -65,7 +65,7 @@ export abstract class FormSelectNode<TValue, TItem, TMultiple extends boolean>
 }
 
 export class FormMultiSelectNode<TValue, TItem> extends FormSelectNode<TValue, TItem, true> {
-  declare readonly type: FormNodeType.SelectMany;
+  declare readonly type: InputTypes.SelectMany;
   override readonly multiple = true;
 
   override clone(): FormMultiSelectNode<TValue, TItem> {
@@ -85,7 +85,7 @@ export class FormMultiSelectNode<TValue, TItem> extends FormSelectNode<TValue, T
 }
 
 export class FormSingleSelectNode<TValue, TItem> extends FormSelectNode<TValue, TItem, false> {
-  declare readonly type: FormNodeType.Select;
+  declare readonly type: InputTypes.Select;
   override readonly multiple = false;
 
   override clone(): FormSingleSelectNode<TValue, TItem> {

@@ -6,7 +6,7 @@ class FormDialogConstructors {
    * Use this when the dialog is used for creating something.
    * @constructor
    */
-  Create<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
+  create<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
     return new FormDialogFactory('create');
   }
 
@@ -15,12 +15,10 @@ class FormDialogConstructors {
    * Use this when the dialog is modifying data.
    * @constructor
    */
-  Update<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
+  update<TForm extends Record<string, any>>(): FormDialogFactory<TForm> {
     return new FormDialogFactory('update');
   }
 }
 
 /** Get constructors for Form Dialogs */
-export function formDialog(): FormDialogConstructors {
-  return new FormDialogConstructors();
-}
+export const formDialog: FormDialogConstructors = new FormDialogConstructors();

@@ -1,12 +1,10 @@
-import {FormGroupValueRaw, PartialControls, PartialTemplate, TemplateGuide} from "../tools/form-types";
 import {FormDialogConfig} from "./form-dialog-config";
 import {formTemplateToControls, formTemplateToValueControls} from "../tools/templates";
-import {AbstractControl} from "@angular/forms";
-import {Constrain} from "@juulsgaard/ts-tools";
-import {FormGroupControls} from "../types/controls";
-import {FormGroupTemplate, FormGroupTemplateValue} from "../types/templates";
+import {Constrain, SimpleObject} from "@juulsgaard/ts-tools";
+import {FormGroupTemplate, FormGroupTemplateValue, TemplateLayerPrimitive} from "../types/templates";
+import {FormGroupControls, FormTemplateGuide, PartialFormTemplate} from "../types";
 
-export class FormDialogFactory<TGuide extends Record<string, any>> {
+export class FormDialogFactory<TGuide extends SimpleObject> {
 
   constructor(private type: 'create' | 'update') {
 
@@ -28,7 +26,9 @@ export class FormDialogFactory<TGuide extends Record<string, any>> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withPartialForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & PartialTemplate<TGuide>): FormDialogConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
+  withPartialForm<TTemplate extends TemplateLayerPrimitive>(
+    template: TTemplate & PartialFormTemplate<TGuide>
+  ): FormDialogConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>> {
     return new FormDialogConfig<FormGroupTemplateValue<Constrain<TTemplate, TGuide>>>(
       this.type,
       formTemplateToValueControls(template)
@@ -40,7 +40,9 @@ export class FormDialogFactory<TGuide extends Record<string, any>> {
    * This sacrifices type conciseness for flexibility.
    * @param template - The template
    */
-  withAltForm<TTemplate extends FormGroupTemplate<any>>(template: TTemplate & TemplateGuide<TGuide>): FormDialogConfig<FormGroupTemplateValue<TTemplate>> {
+  withAltForm<TTemplate extends TemplateLayerPrimitive>(
+    template: TTemplate & FormTemplateGuide<TGuide>
+  ): FormDialogConfig<FormGroupTemplateValue<TTemplate>> {
     return new FormDialogConfig<FormGroupTemplateValue<TTemplate>>(
       this.type,
       formTemplateToValueControls(template)
@@ -56,16 +58,5 @@ export class FormDialogFactory<TGuide extends Record<string, any>> {
       this.type,
       controls
     );
-  }
-
-  /**
-   * Define the form controls for the Dialog loosely based on the type.
-   * This sacrifices type conciseness for flexibility.
-   * @param controls - The controls
-   */
-  withPartialControls<TControls extends PartialControls<TGuide> & Record<string, AbstractControl>>(
-    controls: TControls
-  ): FormDialogConfig<FormGroupValueRaw<TControls>> {
-    return FormDialogConfig.FromControls(this.type, controls);
   }
 }

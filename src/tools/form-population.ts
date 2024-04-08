@@ -1,13 +1,16 @@
-import {deepEquals, DeepPartial} from "@juulsgaard/ts-tools";
-import {ModelFormRoot} from "../forms/form-root";
+import {deepEquals, DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
+import {ModelFormLayer} from "../forms";
 
 /**
  * Detects a new set of data would affect the form
  * @param form
  * @param newData
  */
-export function formUpdated<T extends Record<string, any>>(form: ModelFormRoot<T>, newData: DeepPartial<T>|undefined) {
-  const oldData = form.oldValue;
+export function willAlterForm<T extends SimpleObject>(
+  form: ModelFormLayer<T>,
+  newData: DeepPartial<T>|undefined
+) {
+  const oldData = form.resetValue();
   if (oldData == null) return newData != null;
   if (newData == null) return true;
 
@@ -17,7 +20,7 @@ export function formUpdated<T extends Record<string, any>>(form: ModelFormRoot<T
   }
 
   const copy = form.clone();
-  copy.reset(newData as DeepPartial<T>);
+  copy.reset(newData);
 
-  return !deepEquals(oldData, copy.getRawValue());
+  return !deepEquals(oldData, copy.resetValue());
 }

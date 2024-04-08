@@ -52,11 +52,11 @@ function templateToControl<TValue>(template: TemplateUnion): FormControls<TValue
   if (Array.isArray(template)) {
     const tmp = template as [TemplateLayerPrimitive];
     const subTemplate = tmp[0];
-    return formList().controls(templateLayerToControls(subTemplate)) as FormControls<TValue>;
+    return formList.controls(templateLayerToControls(subTemplate)) as FormControls<TValue>;
   }
 
   if (isObject(template)) {
-    return formLayer().model(templateLayerToControls(template)) as FormControls<TValue>;
+    return formLayer.model(templateLayerToControls(template)) as FormControls<TValue>;
   }
 
   return undefined;

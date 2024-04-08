@@ -1,9 +1,6 @@
-//<editor-fold desc="Selection Node Builder">
 import {Observable} from "rxjs";
 import {MapFunc} from "@juulsgaard/ts-tools";
-import {FormMultiSelectNodeConfig, FormSingleSelectNodeConfig} from "../forms/form-select-node-config";
-import {InputTypes} from "../forms/anon-form-node";
-import {FormConstants} from "../tools/constants";
+import {FormMultiSelectNodeConfig, FormSingleSelectNodeConfig, InputTypes} from "../forms";
 import {FormNodeCtorOptions, parseOptions} from "./constructor-tools";
 
 export class FormSelectBuilder<TItem> {
@@ -82,22 +79,6 @@ export class SingleFormSelectBuilder<TValue, TItem> {
       initialValue,
       disabled
     );
-  }
-
-  /**
-   * Make the input nullable but with a coalesced raw value
-   * @param type - The coalescing type
-   * @param initialValue - The starting value of the input
-   */
-  serverNull(type: ServerNullTypes<TValue>, initialValue?: TValue): FormSingleSelectNodeConfig<TValue | undefined, TItem> {
-
-    const serverNullValue = (
-      type == 'date' ? FormConstants.NULL_DATE :
-        type === 'text' ? FormConstants.NULL_STRING :
-          FormConstants.NULL_GUID
-    ) as unknown as TValue;
-
-    return this.nullable(initialValue, {fallback: serverNullValue, disabledFallback: undefined});
   }
 }
 

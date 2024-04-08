@@ -101,6 +101,5 @@ export class FormLayerNullableConstructors {
   }
 }
 
-export function formLayer(): FormLayerConstructors {
-  return new FormLayerConstructors();
-}
+export const formLayer: FormLayerConstructors = new FormLayerConstructors();
+

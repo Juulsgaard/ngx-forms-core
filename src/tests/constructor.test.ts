@@ -22,27 +22,27 @@ interface SubFormData {
 
 test('Constructors', () => {
 
-  const modelLayer = formLayer().model<FormData>({
+  const modelLayer = formLayer.model<FormData>({
     str: Form.text().done(),
     select: Form.select(items).single(x => x.id).nullable('').done(),
     nullable: Form.nullable.text().done(),
     num: Form.number().done(),
-    layer: formLayer().nullable.model({
+    layer: formLayer.nullable.model({
       value: Form.text().done()
     }),
-    list: formList().model({
+    list: formList.model({
       value: Form.text().done()
     })
   });
 
-  const controlLayer = formLayer().controls({
+  const controlLayer = formLayer.controls({
     str: Form.text().done(),
     nullable: Form.nullable.text().done(),
     num: Form.number().done(),
-    layer: formLayer().model({
+    layer: formLayer.controls({
       value: Form.text().done()
     }),
-    list: formList().model({
+    list: formList.controls({
       value: Form.text().done()
     })
   });

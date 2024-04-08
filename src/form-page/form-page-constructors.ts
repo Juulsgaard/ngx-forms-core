@@ -1,15 +1,16 @@
 import {FormPageFactory} from "./form-page-factory";
+import {SimpleObject} from "@juulsgaard/ts-tools";
 
 class FormPageConstructors {
-  Edit<T extends Record<string, any>>(): FormPageFactory<T> {
+
+  edit<T extends SimpleObject>(): FormPageFactory<T> {
     return new FormPageFactory<T>('update');
   }
 
-  Create<T extends Record<string, any>>(): FormPageFactory<T> {
+  create<T extends SimpleObject>(): FormPageFactory<T> {
     return new FormPageFactory<T>('create');
   }
+
 }
 
-export function formPage(): FormPageConstructors {
-  return new FormPageConstructors();
-}
+export const formPage: FormPageConstructors = new FormPageConstructors();

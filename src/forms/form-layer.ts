@@ -1,19 +1,22 @@
-import {DeepPartial, mapObj, objToArr, SimpleObject} from "@juulsgaard/ts-tools";
-import {FormNode} from "./form-node";
-import {computed, signal, Signal, WritableSignal} from "@angular/core";
 import {FormUnit} from "./form-unit";
+import {DeepPartial, mapObj, objToArr, SimpleObject} from "@juulsgaard/ts-tools";
+import {AnonFormLayer} from "./anon-form-layer";
+import {computed, signal, Signal, untracked, WritableSignal} from "@angular/core";
 import {compareLists} from "../tools/helpers";
 import {
   FormValidationContext, FormValidator, prependValidationPath, processFormValidators, validationData
 } from "../tools/form-validation";
+import {FormNode} from "./form-node";
 import {FormList} from "./form-list";
-import {AnonFormLayer} from "./anon-form-layer";
-import {FormGroupControls, FormGroupValue} from "../types/controls";
+import {FormGroupControls, FormGroupValue} from "../types";
+
 
 export class FormLayer<TControls extends Record<string, FormUnit>, TValue extends SimpleObject|undefined> extends AnonFormLayer {
 
   override readonly value: Signal<TValue>;
   override readonly rawValue: Signal<DeepPartial<TValue> | undefined>;
+
+  override readonly resetValue: Signal<TValue>;
 
   override readonly debouncedValue: Signal<TValue>;
   override readonly debouncedRawValue: Signal<DeepPartial<TValue> | undefined>;
@@ -52,6 +55,8 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
 
     this.debouncedRawValue = computed(() => this.getRawValue(x => x.debouncedRawValue));
     this.debouncedValue = computed(() => this.getValue(x => x.debouncedValue));
+
+    this.resetValue = computed(() => this.processControls(x => x.resetValue()) as TValue);
 
     this.changed = computed(() => Object.values(this.controls()).some(x => x.changed()));
     this.touched = computed(() => Object.values(this.controls()).some(x => x.touched()));
@@ -273,7 +278,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
     this.processControls(x => x.rollback());
   }
 
-  isValid(): boolean {
+  private _isValid = computed(() => {
     const hasError = this.getErrors(this.value).next().done !== true;
     if (hasError) return false;
 
@@ -282,6 +287,10 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
     }
 
     return true;
+  });
+
+  isValid(): boolean {
+    return untracked(this._isValid);
   }
 
   getValidValue(): TValue {

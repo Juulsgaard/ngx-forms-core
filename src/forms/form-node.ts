@@ -1,9 +1,8 @@
-import {computed, signal, Signal, WritableSignal} from "@angular/core";
-import {FormValidationContext, FormValidator, processFormValidators} from "../tools";
+import {computed, signal, Signal, untracked, WritableSignal} from "@angular/core";
 import {AnonFormNode, FormNodeOptions, FormNodeType, InputTypes} from "./anon-form-node";
 import {compareLists, compareValues} from "../tools/helpers";
 import {asapScheduler, asyncScheduler, Subscription} from "rxjs";
-import {validationData} from "../tools/form-validation";
+import {FormValidationContext, FormValidator, processFormValidators, validationData} from "../tools/form-validation";
 
 export class FormNode<T> extends AnonFormNode {
 
@@ -24,7 +23,9 @@ export class FormNode<T> extends AnonFormNode {
   override readonly state: Signal<T|undefined>;
   override readonly rawValue: Signal<T|undefined>;
   override readonly value: Signal<T>;
-  protected readonly resetValue: WritableSignal<T>;
+
+  private readonly _resetValue: WritableSignal<T>;
+  override readonly resetValue: Signal<T>;
 
   private readonly _debouncedState: WritableSignal<T|undefined>;
   override readonly debouncedState: Signal<T|undefined>;
@@ -66,12 +67,14 @@ export class FormNode<T> extends AnonFormNode {
     this.state = this._state.asReadonly();
     this.rawValue = computed(() => this.getRawValue(this.state));
     this.value = computed(() => this.getValue(this.rawValue));
-    this.resetValue = signal(this.value());
 
     this._debouncedState = signal(initialValue);
     this.debouncedState = this._debouncedState.asReadonly();
     this.debouncedRawValue = computed(() => this.getRawValue(this.debouncedState));
     this.debouncedValue = computed(() => this.getValue(this.debouncedRawValue));
+
+    this._resetValue = signal(this.value());
+    this.resetValue = this._resetValue.asReadonly();
 
     this.changed = computed(() => compareValues(this.resetValue(), this.value()));
 
@@ -218,7 +221,7 @@ export class FormNode<T> extends AnonFormNode {
   override reset(value?: T) {
     this.updateState(value ?? this.initialValue, true);
     super.reset();
-    this.resetValue.set(this.value());
+    this._resetValue.set(this.value());
   }
 
   override clear() {
@@ -249,8 +252,9 @@ export class FormNode<T> extends AnonFormNode {
     this.updateState(this.resetValue(), true);
   }
 
+  private _isValid = computed(() => this.getErrors(this.rawValue).next().done === true);
   isValid(): boolean {
-    return this.getErrors(this.rawValue).next().done === true;
+    return untracked(this._isValid);
   }
 
   getValidValue(): T {

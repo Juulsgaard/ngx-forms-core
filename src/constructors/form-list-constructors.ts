@@ -1,8 +1,7 @@
-import {ControlFormList, FormList, ModelFormList} from "../forms/form-list";
-import {FormUnit} from "../forms/form-unit";
-import {FormValidator} from "../tools/form-validation";
+import {ControlFormList, FormList, FormUnit, ModelFormList} from "../forms";
+import {FormValidator} from "../tools";
 import {toList} from "../tools/helpers";
-import {FormGroupControls, FormGroupValue} from "../types/controls";
+import {FormGroupControls, FormGroupValue} from "../types";
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {formLayer, FormLayerOptions} from "./form-layer-constructors";
 
@@ -30,7 +29,7 @@ export class FormListConstructors {
     options?: FormListOptions<FormGroupValue<TControls>[], FormGroupValue<TControls>>
   ): ControlFormList<TControls> {
     return new FormList(
-      formLayer().controls(controls, options?.layer),
+      formLayer.controls(controls, options?.layer),
       false,
       options?.length,
       options?.disabledFallback,
@@ -51,7 +50,7 @@ export class FormListConstructors {
     options?: FormListOptions<TModel[], TModel>
   ): ModelFormList<TModel> {
     return new FormList(
-      formLayer().controls(controls, options?.layer),
+      formLayer.controls(controls, options?.layer),
       false,
       options?.length,
       options?.disabledFallback,
@@ -75,7 +74,7 @@ export class FormListNullableConstructors {
     options?: FormListOptions<FormGroupValue<TControls>[]|undefined, FormGroupValue<TControls>>
   ): ControlFormList<TControls, true> {
     return new FormList(
-      formLayer().controls(controls, options?.layer),
+      formLayer.controls(controls, options?.layer),
       true,
       options?.length,
       options?.disabledFallback,
@@ -96,7 +95,7 @@ export class FormListNullableConstructors {
     options?: FormListOptions<TModel[]|undefined, TModel>
   ): ModelFormList<TModel, true> {
     return new FormList(
-      formLayer().controls(controls, options?.layer),
+      formLayer.controls(controls, options?.layer),
       true,
       options?.length,
       options?.disabledFallback,
@@ -107,6 +106,4 @@ export class FormListNullableConstructors {
   }
 }
 
-export function formList(): FormListConstructors {
-  return new FormListConstructors();
-}
+export const formList: FormListConstructors = new FormListConstructors();

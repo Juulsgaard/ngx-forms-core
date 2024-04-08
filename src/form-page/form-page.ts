@@ -1,62 +1,53 @@
-import {DeepPartial, isObject, SimpleObject} from "@juulsgaard/ts-tools";
-import {BehaviorSubject, distinctUntilChanged, Observable, of, Subscribable, switchMap} from "rxjs";
-import {ILoadingState, latestValueFromOrDefault, Loading} from "@juulsgaard/rxjs-tools";
-import {computed, inject, Signal} from "@angular/core";
-import {formUpdated} from "../tools/form-population";
-import {ModelFormRoot} from "../forms/form-root";
+import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
+import {startWith, Subject, Subscribable, switchMap} from "rxjs";
+import {ILoadingState, Loading} from "@juulsgaard/rxjs-tools";
+import {assertInInjectionContext, computed, inject, Injector, isSignal, signal, Signal} from "@angular/core";
+import {willAlterForm} from "../tools";
+import {ModelFormRoot} from "../forms";
 import {FormConfirmService} from "./form-confirm.service";
 import {FormPageAction, FormPageOptions, WarningDialog} from "./form-page-config";
-import {FormRootConstructors} from "../constructors/form-root-constructors";
-import {FormGroupControls} from "../types/controls";
+import {formRoot} from "../constructors";
+import {FormGroupControls} from "../types";
+import {toSignal} from "@angular/core/rxjs-interop";
 
 export class FormPage<TVal extends SimpleObject> {
 
   readonly form: ModelFormRoot<TVal>;
-  get controls(): FormGroupControls<TVal> {return this.form.controls};
-  get value(): DeepPartial<TVal> {return this.form.value};
-  getRawValue(): TVal {return this.form.getRawValue()};
+  readonly controls: Signal<FormGroupControls<TVal>>;
+  readonly value: Signal<TVal>;
 
-  private _submitting$ = new BehaviorSubject<ILoadingState>(Loading.Empty());
-  readonly submitting$ = this._submitting$.pipe(switchMap(x => x.loading$), distinctUntilChanged());
+  private readonly _submitting$ = new Subject<ILoadingState>();
+  readonly submitting: Signal<boolean>;
+  readonly submitError: Signal<Error|undefined>;
 
-  get submitting() {
-    return this._submitting$.value.loading
-  }
-
-  submitError$ = this._submitting$.pipe(switchMap(x => x.error$), distinctUntilChanged());
-
-  private _deleting$ = new BehaviorSubject<ILoadingState>(Loading.Empty());
-  readonly deleting$ = this._deleting$.pipe(switchMap(x => x.loading$), distinctUntilChanged());
-
-  get deleting() {
-    return this._deleting$.value.loading
-  }
+  private readonly _deleting$ = new Subject<ILoadingState>();
+  readonly deleting: Signal<boolean>;
+  readonly deleteError: Signal<Error|undefined>;
 
   readonly hasSubmit: boolean;
-  readonly showSubmit$: Subscribable<boolean>;
-  readonly canSubmit$: Observable<boolean>;
-  readonly canSubmitSignal: Signal<boolean>;
-
-  get canSubmit() {
-    return this.canSubmitSignal()
-  }
+  readonly showSubmit: Signal<boolean>;
+  readonly canSubmit: Signal<boolean>;
 
   readonly hasDelete: boolean;
-  readonly showDelete$: Subscribable<boolean>;
+  readonly showDelete: Signal<boolean>;
 
   //<editor-fold desc="Options">
   private readonly onSubmit?: FormPageAction<TVal>;
   public readonly submitBtnText: string;
   private readonly submitWarning?: (value: TVal) => WarningDialog;
-  private readonly canEdit$?: Subscribable<boolean>;
 
   private readonly onDelete?: FormPageAction<TVal>;
   public readonly deleteBtnText: string;
   private readonly deleteWarning?: (value: TVal) => WarningDialog;
-  private readonly canDelete$?: Subscribable<boolean>;
 
   private readonly warningService?: FormConfirmService;
+  private readonly injector?: Injector;
 
+  private requireInjector(): Injector|undefined {
+    if (this.injector) return this.injector;
+    assertInInjectionContext(FormPage);
+    return undefined;
+  }
   //</editor-fold>
 
   constructor(
@@ -64,139 +55,124 @@ export class FormPage<TVal extends SimpleObject> {
     controls: FormGroupControls<TVal>,
     options: FormPageOptions<TVal>
   ) {
-    this.form = FormRootConstructors.Model<TVal>(
+
+    this.form = formRoot.model<TVal>(
       controls,
-      {generateError: options.getError, generateWarning: options.getWarning}
+      {
+        errors: options.errorValidators,
+        warnings: options.warningValidators
+      }
     );
 
-    this.hasSubmit = !!options.onSubmit;
-    this.hasDelete = !!options.onDelete;
+    this.controls = this.form.controls;
+    this.value = this.form.value;
 
-    this.canSubmit$ = !this.hasSubmit
-      ? of(false)
-      : type === 'update'
-        ? this.form.canSubmit$
-        : this.form.canCreate$;
-
-    this.showSubmit$ = !this.hasSubmit
-      ? of(false)
-      : options.canEdit$ ?? of(true);
-
-    this.canSubmitSignal = computed(() => {
-      if (!this.hasSubmit) return false;
-      return type === "update" ? this.form.canSubmitSignal() : this.form.canCreateSignal();
-    });
-
-    this.showDelete$ = !this.hasDelete
-      ? of(false)
-      : options.canDelete$ ?? of(true);
+    this.warningService = options.warningService;
 
     this.onSubmit = options.onSubmit;
     this.submitBtnText = options.submitBtnText;
     this.submitWarning = options.submitWarning;
-    this.canEdit$ = options.canEdit$;
+
     this.onDelete = options.onDelete;
     this.deleteBtnText = options.deleteBtnText;
     this.deleteWarning = options.deleteWarning;
-    this.canDelete$ = options.canDelete$;
+
+    this.hasSubmit = !!this.onSubmit;
+    this.canSubmit = computed(() => {
+      if (!this.hasSubmit) return false;
+      return type === 'update' ? this.form.canUpdate() : this.form.canCreate();
+    });
+    this.showSubmit = !this.hasSubmit ? signal(false) :
+      options.canSubmit == null ? signal(true) :
+        isSignal(options.canSubmit) ? options.canSubmit :
+          toSignal(options.canSubmit, {injector: this.requireInjector(), initialValue: false});
+
+    this.hasDelete = !!options.onDelete;
+    this.showDelete = !this.hasDelete ? signal(false) :
+      options.canDelete == null ? signal(true) :
+        isSignal(options.canDelete) ? options.canDelete :
+          toSignal(options.canDelete, {injector: this.requireInjector(), initialValue: false});
+
+    this.submitting = toSignal(
+      this._submitting$.pipe(switchMap(x => x.loading$)),
+      {initialValue: false, manualCleanup: true}
+    );
+    this.submitError = toSignal(
+      this._submitting$.pipe(switchMap(x => x.error$.pipe(startWith(undefined)))),
+      {initialValue: undefined, manualCleanup: true}
+    );
+
+    this.deleting = toSignal(
+      this._deleting$.pipe(switchMap(x => x.loading$)),
+      {initialValue: false, manualCleanup: true}
+    );
+    this.deleteError = toSignal(
+      this._deleting$.pipe(switchMap(x => x.error$.pipe(startWith(undefined)))),
+      {initialValue: undefined, manualCleanup: true}
+    );
 
     // If needed, get warning rendering service
     if (this.submitWarning || this.deleteWarning) {
-      this.warningService = options.warningService;
-
-      // If not provided, try to inject the service
       if (!this.warningService) {
-        try {
-          this.warningService = inject(FormConfirmService);
-        } catch (e: unknown) {
-          if (isObject(e) && 'name' in e) {
-
-            if (e.name === 'NullInjectorError') {
-              console.error('Form warning rendering could not be injected, and was not provided to config');
-              return;
-            }
-
-          }
-
-          console.error(
-            'Form Page warnings can only be setup in a constructor, initializer or by manually providing a confirmation renderer using `renderWarnings`'
-          );
-        }
+        this.warningService = this.requireInjector()?.get(FormConfirmService) ?? inject(FormConfirmService);
       }
     }
   }
 
   update(value: DeepPartial<TVal> | undefined) {
-    const changed = formUpdated(this.form, value);
+    const changed = willAlterForm(this.form, value);
     if (!changed) return;
     this.form.reset(value);
   }
 
-  async submit() {
-    if (!this.canSubmit) return;
-    if (this.submitting) return;
-    if (!this.onSubmit) return;
+  submit(): ILoadingState {
+    if (!this.showSubmit()) return Loading.Empty();
+    if (!this.canSubmit()) return Loading.Empty();
+    if (this.submitting()) return Loading.Empty();
 
-    if (this.canEdit$) {
-      const canEdit = latestValueFromOrDefault(this.canEdit$, undefined);
-      if (canEdit === false) return;
-    }
-
-    const value = this.form.getRawValue();
+    if (!this.form.isValid()) return Loading.Empty();
+    const value = this.form.getValidValue();
 
     if (this.submitWarning) {
       if (!this.warningService) {
         console.error('Could not render submission warning');
-        return;
+        return Loading.FromError(() => Error('Could not render submission warning'));
       }
 
       const warning = this.submitWarning(value)
-
-      const confirmed = this.warningService.confirmSubmit(
-        warning.title,
-        warning.text,
-        warning.btnText ?? this.submitBtnText
-      );
-      if (!confirmed) return;
+      const confirmed = this.warningService.confirmSubmit(warning);
+      if (!confirmed) return Loading.Empty();
     }
 
-    const submit = this.onSubmit;
+    const submit = this.onSubmit!;
     const state = execute(() => submit(value));
     this._submitting$.next(state);
-    await state;
+
+    return state;
   }
 
-  async delete() {
-    if (this.deleting) return;
-    if (!this.onDelete) return;
+  delete(): ILoadingState {
+    if (!this.showDelete()) return Loading.Empty();
+    if (!this.deleting()) return Loading.Empty();
 
-    if (this.canDelete$) {
-      const canDelete = latestValueFromOrDefault(this.canDelete$, undefined);
-      if (canDelete === false) return;
-    }
-
-    const value = this.form.getRawValue();
+    const value = this.form.value();
 
     if (this.deleteWarning) {
       if (!this.warningService) {
         console.error('Could not render deletion warning');
-        return;
+        return Loading.FromError(() => Error('Could not render deletion warning'));
       }
 
-      const warning = this.deleteWarning(value);
-
-      const confirmed = await this.warningService.confirmDelete(
-        warning.title,
-        warning.text,
-        warning.btnText ?? this.deleteBtnText
-      );
-      if (!confirmed) return;
+      const warning = this.deleteWarning(value)
+      const confirmed = this.warningService.confirmDelete(warning);
+      if (!confirmed) return Loading.Empty();
     }
 
-    const doDelete = this.onDelete;
+    const doDelete = this.onDelete!;
     const state = execute(() => doDelete(value));
     this._deleting$.next(state);
-    await state;
+
+    return state;
   }
 }
 

@@ -34,8 +34,6 @@ export abstract class FormSelectNodeConfig<TValue, TItem, TMultiple extends bool
    * Defaults to defaultValue.
    * @param nullable - Whether the input is nullable
    * @param disabledDefault - Define a distinct default raw value for when the input is disabled
-   * @param errorValidators - Error validators
-   * @param warningValidators - Warning validators
    */
   constructor(
     type: TMultiple extends true ? InputTypes.SelectMany : InputTypes.Select,
@@ -44,11 +42,9 @@ export abstract class FormSelectNodeConfig<TValue, TItem, TMultiple extends bool
     protected readonly items: TItem[] | Observable<TItem[]>,
     protected readonly bindValue: MapFunc<TItem, TValue>,
     initialValue?: TMultiple extends true ? TValue[] : TValue,
-    disabledDefault?: TMultiple extends true ? TValue[] : TValue,
-    errorValidators: FormValidator<TMultiple extends true ? TValue[] : TValue>[] = [],
-    warningValidators: FormValidator<TMultiple extends true ? TValue[] : TValue>[] = [],
+    disabledDefault?: TMultiple extends true ? TValue[] : TValue
   ) {
-    super(type, nullable, defaultValue, initialValue, disabledDefault, errorValidators, warningValidators);
+    super(type, nullable, defaultValue, initialValue, disabledDefault);
   }
 
   //<editor-fold desc="Configuration">

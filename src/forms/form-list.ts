@@ -1,6 +1,6 @@
 import {FormLayer} from "./form-layer";
 import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
-import {computed, signal, Signal, WritableSignal} from "@angular/core";
+import {computed, signal, Signal, untracked, WritableSignal} from "@angular/core";
 import {FormUnit} from "./form-unit";
 import {
   FormValidationContext, FormValidator, prependValidationPath, processFormValidators, validationData
@@ -8,12 +8,14 @@ import {
 import {AnonFormList} from "./anon-form-list";
 import {compareLists} from "../tools/helpers";
 import {AnonFormLayer} from "./anon-form-layer";
-import {FormGroupControls, FormGroupValue} from "../types/controls";
+import {FormGroupControls, FormGroupValue} from "../types";
 
 export class FormList<TControls extends Record<string, FormUnit>, TValue extends SimpleObject, TNullable extends boolean> extends AnonFormList {
 
   readonly rawValue: Signal<DeepPartial<TValue>[] | undefined>;
   readonly value: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>;
+
+  readonly resetValue: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>;
 
   readonly debouncedRawValue: Signal<DeepPartial<TValue>[] | undefined>;
   readonly debouncedValue: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>;
@@ -54,6 +56,8 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
 
     this.debouncedRawValue = computed(() => this.getRawValue(x => x.debouncedRawValue));
     this.debouncedValue = computed(() => this.getValue(x => x.debouncedValue));
+
+    this.resetValue = computed(() => this.controls().map(x => x.resetValue()));
 
     this.touched = computed(() => this.controls().some(x => x.touched()));
     this.changed = computed(() => this.controls().some(x => x.changed()));
@@ -211,12 +215,11 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
    * @param values - The values to add
    */
   appendElements(...values: TValue[]) {
-    const layers = this.addLayers(...values.map(x => {
+    return this.addLayers(...values.map(x => {
       const layer = this.template.clone();
       layer.reset(x);
       return layer;
     }));
-    return layers;
   }
 
   /**
@@ -359,7 +362,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
     this.controls().forEach(x => x.rollback());
   }
 
-  isValid(): boolean {
+  private _isValid = computed(() => {
     const hasError = this.getErrors(this.value).next().done !== true;
     if (hasError) return false;
 
@@ -368,6 +371,10 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
     }
 
     return true;
+  })
+
+  isValid(): boolean {
+    return untracked(this._isValid);
   }
 
   getValidValue(): TNullable extends true ? TValue[] | undefined : TValue[] {
