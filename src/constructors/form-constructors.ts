@@ -232,7 +232,7 @@ export class FormConstructors {
     return new FormListConfig(controls, false);
   }
 
-  root<T extends SimpleObject>(template: FormGroupTemplate<T>): FormLayerConfig<T> {
+  root<T extends SimpleObject>(template: FormGroupTemplate<T>): FormRootConfig<T> {
     const controls = formTemplateToControls(template);
     return new FormRootConfig(controls);
   }
