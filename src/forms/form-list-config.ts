@@ -1,18 +1,19 @@
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormValidator} from "../tools/form-validation";
-import {FormList} from "./form-list";
+import {FormList, ModelFormList} from "./form-list";
 import {FormGroupControls} from "../types/controls";
 import {FormLayerConfig} from "./form-layer-config";
-import {RootDisableConfig} from "../types/disable";
+import {inject, Injector, runInInjectionContext} from "@angular/core";
+import {FormListValue} from "../types";
 
 export class FormListConfig<TValue extends SimpleObject, TNullable extends boolean> {
 
   protected startLength?: number;
   protected disabledDefault?: TValue[];
   protected disabledByDefault?: boolean;
-  protected errorValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [];
-  protected warningValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [];
-  protected autoDisableSetup: ((config: RootDisableConfig<TNullable extends true ? TValue[] | undefined : TValue[]>) => void)[] = [];
+  protected errorValidators: FormValidator<FormListValue<TValue, TNullable>>[] = [];
+  protected warningValidators: FormValidator<FormListValue<TValue, TNullable>>[] = [];
+  protected postConfiguration: ((layer: ModelFormList<TValue, TNullable>) => void)[] = [];
 
   protected layerConfig: FormLayerConfig<TValue>;
 
@@ -36,7 +37,7 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
    * Add validators to the list
    * @param validators
    */
-  public withErrors(...validators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[]): this {
+  public withErrors(...validators: FormValidator<FormListValue<TValue, TNullable>>[]): this {
     this.errorValidators = [...this.errorValidators, ...validators];
     return this;
   }
@@ -45,7 +46,7 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
    * Add warning validators to the list
    * @param validators
    */
-  public withWarnings(...validators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[]): this {
+  public withWarnings(...validators: FormValidator<FormListValue<TValue, TNullable>>[]): this {
     this.warningValidators = [...this.warningValidators, ...validators];
     return this;
   }
@@ -74,9 +75,25 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
     return this;
   }
 
-  /** Pre-register auto disable configurations */
-  autoDisable(configure: (config: RootDisableConfig<TNullable extends true ? TValue[] | undefined : TValue[]>) => void): this {
-    this.autoDisableSetup.push(configure);
+  /**
+   * Update the List after creation.
+   * Can be used to configure autoDisable.
+   * @param configure - The configuration function
+   * @param injectionContext - The injection context to run the configuration in
+   * - `true` - Use the current injection context
+   * - `Injector` - Run in the context of the provided injector
+   */
+  configure(configure: (layer: ModelFormList<TValue, TNullable>) => void, injectionContext?: Injector|boolean): this {
+
+    const injector = !injectionContext ? undefined :
+      injectionContext instanceof Injector ? injectionContext :
+        inject(Injector);
+
+    if (injector) {
+      configure = list => runInInjectionContext(injector, () => configure(list));
+    }
+
+    this.postConfiguration.push(configure);
     return this;
   }
 
@@ -89,6 +106,7 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
       this.disabledByDefault,
       this.errorValidators,
       this.warningValidators,
+      this.postConfiguration
     )
   }
 

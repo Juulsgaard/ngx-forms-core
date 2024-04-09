@@ -3,8 +3,6 @@ import {AnonFormNode, FormNodeOptions, FormNodeType, InputTypes} from "./anon-fo
 import {compareLists, compareValues} from "../tools/helpers";
 import {asapScheduler, asyncScheduler, Subscription} from "rxjs";
 import {FormValidationContext, FormValidator, processFormValidators, validationData} from "../tools/form-validation";
-import {DisableConfigFunc, DisableConfigItemFunc} from "../types/disable";
-import {FormMemoValue} from "../types/values";
 
 export class FormNode<T> extends AnonFormNode {
 
@@ -33,9 +31,6 @@ export class FormNode<T> extends AnonFormNode {
   override readonly debouncedState: Signal<T|undefined>;
   override readonly debouncedRawValue: Signal<T|undefined>;
   override readonly debouncedValue: Signal<T>;
-
-  readonly autoDisable: DisableConfigItemFunc<T>;
-  readonly memoizedState: Signal<Signal<T>>;
 
   declare readonly nullable: undefined extends T ? boolean : false;
   declare readonly defaultValue: T;
@@ -88,14 +83,6 @@ export class FormNode<T> extends AnonFormNode {
 
     this.warnings = computed(() => Array.from(this.getWarnings(this.debouncedRawValue)), {equal: compareLists<string>});
     this.warningState = computed(() => this.warnings().map(x => validationData(x, this)));
-
-    this.memoizedState = signal(this.debouncedValue);
-    this.autoDisable = this.createAutoDisable(this.memoizedState as Signal<FormMemoValue<T>>)
-  }
-
-  /** @internal */
-  createAutoDisable<TState>(state: Signal<FormMemoValue<TState>>): DisableConfigFunc<TState> {
-
   }
 
   //<editor-fold desc="Actions">

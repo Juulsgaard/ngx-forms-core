@@ -1,12 +1,17 @@
 import {FormLayer, FormList, FormNode, FormUnit} from "../forms";
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {
-  DisableConfig, DisableConfigFunc, DisableConfigItemFunc, LayerDisableConfig, RootLayerDisableConfig,
-  RootListDisableConfig
+  DisableConfig, DisableConfigFunc, DisableConfigFuncOptions, DisableConfigItemFunc, LayerDisableConfig,
+  RootLayerDisableConfig, RootListDisableConfig
 } from "../types/disable";
 import {FormMemoValue} from "../types/values";
-import {effect, Injector, Signal} from "@angular/core";
+import {effect, Injector, runInInjectionContext, Signal} from "@angular/core";
 import {getMemoized} from "./memo-state";
+
+interface AutoDisableOptions {
+  injector?: Injector;
+  manualCleanup?: boolean;
+}
 
 const cache = new WeakMap<FormUnit, DisableConfig<unknown, unknown>>();
 
@@ -15,61 +20,148 @@ const cache = new WeakMap<FormUnit, DisableConfig<unknown, unknown>>();
 // This can be addressed by splitting Layers into `ModelFormLayer` and `ControlFormLayer` classes
 // with separate type definitions for properties like this
 
-/**
- *
- * @param layer
- */
-export function getAutoDisable<T extends SimpleObject | undefined>(layer: FormLayer<Record<string, FormUnit>, T>): RootLayerDisableConfig<T>;
-export function getAutoDisable<T extends SimpleObject | undefined, TNullable extends boolean>(list: FormList<Record<string, FormUnit>, T, TNullable>): RootListDisableConfig<T, TNullable>;
-export function getAutoDisable<T>(node: FormNode<T>): DisableConfigItemFunc<T>;
-export function getAutoDisable(unit: FormUnit): DisableConfig<unknown, unknown> {
+/** */
+export function autoDisable<T extends SimpleObject, TOut>(
+  form: {readonly form: FormLayer<any, T>},
+  config: (disable: RootLayerDisableConfig<T>) => TOut,
+  options?: AutoDisableOptions
+): TOut;
+export function autoDisable<T extends SimpleObject | undefined, TOut>(
+  layer: FormLayer<any, T>,
+  config: (disable: RootLayerDisableConfig<T>) => TOut,
+  options?: AutoDisableOptions
+): TOut;
+export function autoDisable<T extends SimpleObject | undefined, TNullable extends boolean, TOut>(
+  list: FormList<any, T, TNullable>,
+  config: (disable: RootListDisableConfig<T, TNullable>) => void,
+  options?: AutoDisableOptions
+): void;
+export function autoDisable<T, TOut>(
+  node: FormNode<T>,
+  config: (disable: DisableConfigItemFunc<T>) => TOut,
+  options?: AutoDisableOptions
+): TOut;
+export function autoDisable<TOut>(
+  unit: FormUnit | {form: FormUnit},
+  config: (disable: any) => TOut,
+  options?: AutoDisableOptions
+): TOut {
 
+  unit = unit instanceof FormUnit ? unit : unit.form;
+
+  const disable = fromCache(unit, options ?? {});
+
+  if (options?.injector) {
+    return runInInjectionContext(options.injector, () => config(disable));
+  }
+
+  return config(disable);
+}
+
+function fromCache(unit: FormUnit, options: AutoDisableOptions): DisableConfig<unknown, unknown> {
   const cached = cache.get(unit);
   if (cached) return cached;
 
+  if (unit instanceof FormList) {
+    const disable = fromList(unit, getMemoized(unit), options);
+    cache.set(unit, disable);
+    return disable;
+  }
+
   if (unit instanceof FormLayer) {
-    const disable = fromLayer(unit, getMemoized(unit));
+    const disable = fromLayer(unit, getMemoized(unit), options);
     cache.set(unit, disable);
     return disable;
   }
 
   if (unit instanceof FormNode) {
-    const disable = fromNode(unit, getMemoized(unit));
+    const disable = fromNode(unit, getMemoized(unit), options);
     cache.set(unit, disable);
     return disable;
   }
+
+  throw Error('Unsupported Form Unit');
 }
 
-function fromUnit<TState>(unit: FormUnit, state: Signal<FormMemoValue<TState>>): DisableConfig<unknown, TState> {
+function fromUnit<TState>(unit: FormUnit, state: Signal<FormMemoValue<TState>>, options: AutoDisableOptions): DisableConfig<unknown, TState> {
 
+  if (unit instanceof FormList) {
+    return fromList(unit, state, options);
+  }
+
+  if (unit instanceof FormLayer) {
+    return fromLayer(unit, state, options);
+  }
+
+  if (unit instanceof FormNode) {
+    return fromNode(unit, state, options);
+  }
+
+  throw Error('Unsupported Form Unit');
 }
 
-function fromLayer<T extends SimpleObject | undefined, TState>(layer: FormLayer<Record<string, FormUnit>, T>, state: Signal<FormMemoValue<TState>>): LayerDisableConfig<T, TState> {
-
-  const autoDisable = ((evaluate: (state: FormMemoValue<TState>) => boolean, injector?: Injector) => {
-    effect(() => {
+function fromList<T extends SimpleObject|undefined, TState>(
+  list: FormList<any, T, boolean>,
+  state: Signal<FormMemoValue<TState>>,
+  options: AutoDisableOptions
+): DisableConfigFunc<TState> {
+  return (evaluate: (state: FormMemoValue<TState>) => boolean, opt?: DisableConfigFuncOptions) => {
+    return effect(() => {
       const value = state();
       const disabled = evaluate(value);
-      layer.toggleDisabled(disabled);
-    }, {allowSignalWrites: true, injector});
-  }) as LayerDisableConfig<T, TState>;
+      list.toggleDisabled(disabled);
+    }, {
+      allowSignalWrites: true,
+      injector: opt?.injector,
+      manualCleanup: opt?.manualCleanup ?? options?.manualCleanup
+    });
+  }
+}
+
+function fromLayer<T extends SimpleObject | undefined, TState>(
+  layer: FormLayer<Record<string, FormUnit>, T>,
+  state: Signal<FormMemoValue<TState>>,
+  options: AutoDisableOptions
+): LayerDisableConfig<T, TState> {
+
+  const autoDisable = (
+    (evaluate: (state: FormMemoValue<TState>) => boolean, opt?: DisableConfigFuncOptions) => {
+      return effect(() => {
+        const value = state();
+        const disabled = evaluate(value);
+        layer.toggleDisabled(disabled);
+      }, {
+        allowSignalWrites: true,
+        injector: opt?.injector,
+        manualCleanup: opt?.manualCleanup ?? options.manualCleanup
+      });
+    }
+  ) as LayerDisableConfig<T, TState>;
 
   const controls = layer.controls();
   for (let key in controls) {
     const control = controls[key];
     if (!control) continue;
-    (autoDisable as Record<string, DisableConfig<unknown, TState>>)[key] = fromUnit(control, state);
+    (autoDisable as Record<string, DisableConfig<unknown, TState>>)[key] = fromUnit(control, state, options);
   }
 
   return autoDisable;
 }
 
-function fromNode<T, TState>(node: FormNode<T>, state: Signal<FormMemoValue<TState>>): DisableConfigFunc<TState> {
-  return (evaluate: (state: FormMemoValue<TState>) => boolean, injector?: Injector) => {
-    effect(() => {
+function fromNode<T, TState>(
+  node: FormNode<T>,
+  state: Signal<FormMemoValue<TState>>,
+  options: AutoDisableOptions
+): DisableConfigFunc<TState> {
+  return (evaluate: (state: FormMemoValue<TState>) => boolean, opt?: DisableConfigFuncOptions) => {
+    return effect(() => {
       const value = state();
       const disabled = evaluate(value);
       node.toggleDisabled(disabled);
-    }, {allowSignalWrites: true, injector});
+    }, {
+      allowSignalWrites: true,
+      injector: opt?.injector,
+      manualCleanup: opt?.manualCleanup ?? options.manualCleanup
+    });
   }
 }

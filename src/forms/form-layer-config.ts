@@ -1,8 +1,8 @@
-import {FormLayer} from "./form-layer";
+import {FormLayer, ModelFormLayer} from "./form-layer";
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormValidator} from "../tools/form-validation";
 import {FormGroupControls} from "../types/controls";
-import {RootLayerDisableConfig} from "../types/disable";
+import {inject, Injector, runInInjectionContext} from "@angular/core";
 
 export class FormLayerConfig<TValue extends SimpleObject|undefined> {
 
@@ -10,7 +10,7 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> {
   protected disabledByDefault?: boolean;
   protected errorValidators: FormValidator<TValue>[] = [];
   protected warningValidators: FormValidator<TValue>[] = [];
-  protected autoDisableSetup: ((config: RootLayerDisableConfig<TValue>) => void)[] = [];
+  protected postConfiguration: ((config: ModelFormLayer<TValue>) => void)[] = [];
 
   constructor(
     protected readonly controls: FormGroupControls<TValue>,
@@ -51,13 +51,29 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> {
     return this;
   }
 
-  /** Pre-register auto disable configurations */
-  autoDisable(configure: (config: RootLayerDisableConfig<TValue>) => void): this {
-    this.autoDisableSetup.push(configure);
+  /**
+   * Update the Layer after creation.
+   * Can be used to configure autoDisable.
+   * @param configure - The configuration function
+   * @param injectionContext - The injection context to run the configuration in
+   * - `true` - Use the current injection context
+   * - `Injector` - Run in the context of the provided injector
+   */
+  configure(configure: (layer: ModelFormLayer<TValue>) => void, injectionContext?: Injector|boolean): this {
+
+    const injector = !injectionContext ? undefined :
+      injectionContext instanceof Injector ? injectionContext :
+        inject(Injector);
+
+    if (injector) {
+      configure = layer => runInInjectionContext(injector, () => configure(layer));
+    }
+
+    this.postConfiguration.push(configure);
     return this;
   }
 
-  done(): FormLayer<FormGroupControls<TValue>, TValue> {
+  done(): ModelFormLayer<TValue> {
     return new FormLayer<FormGroupControls<TValue>, TValue>(
       this.controls,
       this.nullable,
@@ -65,7 +81,7 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> {
       this.disabledByDefault,
       this.errorValidators,
       this.warningValidators,
-      this.autoDisableSetup
+      this.postConfiguration
     );
   }
 

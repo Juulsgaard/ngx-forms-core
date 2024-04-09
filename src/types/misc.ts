@@ -1,4 +1,6 @@
 //<editor-fold desc="Config Values">
+import {SimpleObject} from "@juulsgaard/ts-tools";
+
 export type AutoComplete =
   'on'
   | 'off'
@@ -48,3 +50,5 @@ export type AutoComplete =
   | 'impp'
   | string;
 //</editor-fold>
+
+export type FormListValue<T extends SimpleObject | undefined, TNullable extends boolean> = TNullable extends true ? T[]|undefined : T[];

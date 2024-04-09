@@ -9,17 +9,12 @@ import {FormPageAction, FormPageOptions, WarningDialog} from "./form-page-config
 import {formRoot} from "../constructors";
 import {FormGroupControls} from "../types";
 import {toSignal} from "@angular/core/rxjs-interop";
-import {RootLayerDisableConfig} from "../types/disable";
-import {getAutoDisable} from "../tools/auto-disable";
 
 export class FormPage<TVal extends SimpleObject> {
 
   readonly form: ModelFormRoot<TVal>;
   readonly controls: Signal<FormGroupControls<TVal>>;
   readonly value: Signal<TVal>;
-
-  // TODO: Consider removing this from the FormPage class (complex type messes with TS indexing)
-  readonly autoDisable: RootLayerDisableConfig<TVal>;
 
   private readonly _submitting$ = new Subject<ILoadingState>();
   readonly submitting: Signal<boolean>;
@@ -72,7 +67,6 @@ export class FormPage<TVal extends SimpleObject> {
 
     this.controls = this.form.controls;
     this.value = this.form.value;
-    this.autoDisable = getAutoDisable(this.form);
 
     this.warningService = options.warningService;
 

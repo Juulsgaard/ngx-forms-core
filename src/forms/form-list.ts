@@ -8,19 +8,17 @@ import {
 import {AnonFormList} from "./anon-form-list";
 import {compareLists} from "../tools/helpers";
 import {AnonFormLayer} from "./anon-form-layer";
-import {FormGroupControls, FormGroupValue} from "../types";
-import {RootListDisableConfig} from "../types/disable";
-import {getAutoDisable} from "../tools/auto-disable";
+import {FormGroupControls, FormGroupValue, FormListValue} from "../types";
 
 export class FormList<TControls extends Record<string, FormUnit>, TValue extends SimpleObject|undefined, TNullable extends boolean> extends AnonFormList {
 
   readonly rawValue: Signal<DeepPartial<TValue>[] | undefined>;
-  readonly value: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>;
+  readonly value: Signal<FormListValue<TValue, TNullable>>;
 
-  readonly resetValue: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>;
+  readonly resetValue: Signal<FormListValue<TValue, TNullable>>;
 
   readonly debouncedRawValue: Signal<DeepPartial<TValue>[] | undefined>;
-  readonly debouncedValue: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>;
+  readonly debouncedValue: Signal<FormListValue<TValue, TNullable>>;
 
   readonly touched: Signal<boolean>;
   readonly changed: Signal<boolean>;
@@ -44,9 +42,9 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
     private startLength = 0,
     readonly disabledDefaultValue?: TValue[],
     protected readonly disabledByDefault = false,
-    protected readonly errorValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [],
-    protected readonly warningValidators: FormValidator<TNullable extends true ? TValue[] | undefined : TValue[]>[] = [],
-    autoDisabled: ((config: RootListDisableConfig<TValue, TNullable>) => void)[] = []
+    protected readonly errorValidators: FormValidator<FormListValue<TValue, TNullable>>[] = [],
+    protected readonly warningValidators: FormValidator<FormListValue<TValue, TNullable>>[] = [],
+    protected readonly postConfiguration: ((list: FormList<TControls, TValue, TNullable>) => void)[] = []
   ) {
     super(nullable, disabledByDefault);
 
@@ -89,10 +87,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
       return result;
     });
 
-    if (autoDisabled.length > 0) {
-      const autoDisable = getAutoDisable(this);
-      autoDisabled.forEach(f => f(autoDisable));
-    }
+    postConfiguration.forEach(f => f(this));
   }
 
   private getRawValue(getVal: (unit: FormUnit) => Signal<unknown>): DeepPartial<TValue>[]|undefined {
@@ -100,17 +95,17 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
     return this.controls().map(x => getVal(x)() as DeepPartial<TValue>);
   }
 
-  private getValue(getVal: (unit: FormUnit) => Signal<unknown>): TNullable extends true ? TValue[] | undefined : TValue[] {
+  private getValue(getVal: (unit: FormUnit) => Signal<unknown>): FormListValue<TValue, TNullable> {
     if (this.disabled()) return this.getDisabledValue();
     return this.controls().map(x => getVal(x)()) as TValue[];
   }
 
-  private *getErrors(value: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>): Generator<string> {
+  private *getErrors(value: Signal<FormListValue<TValue, TNullable>>): Generator<string> {
     if (this.disabled()) return [];
     yield* processFormValidators(this.errorValidators, value());
   }
 
-  private *getWarnings(value: Signal<TNullable extends true ? TValue[] | undefined : TValue[]>): Generator<string> {
+  private *getWarnings(value: Signal<FormListValue<TValue, TNullable>>): Generator<string> {
     if (this.disabled()) return [];
     yield* processFormValidators(this.warningValidators, value());
   }
@@ -348,13 +343,14 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
       this.disabledByDefault,
       this.errorValidators,
       this.warningValidators,
+      this.postConfiguration
     );
   }
 
-  override getDisabledValue(): TNullable extends true ? TValue[] | undefined : TValue[] {
+  override getDisabledValue(): FormListValue<TValue, TNullable> {
     const value = this.disabledDefaultValue;
     if (value != null) return value;
-    if (this.nullable) return value as TNullable extends true ? TValue[] | undefined : TValue[];
+    if (this.nullable) return value as FormListValue<TValue, TNullable>;
     return this.controls().map(x => x.getDisabledValue());
   }
 
@@ -385,12 +381,12 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
     return untracked(this._isValid);
   }
 
-  getValidValue(): TNullable extends true ? TValue[] | undefined : TValue[] {
+  getValidValue(): FormListValue<TValue, TNullable> {
     if (this.isValid()) throw Error('The value is invalid');
     return this.value();
   }
 
-  getValidValueOrDefault<TDefault>(defaultVal: TDefault): (TNullable extends true ? TValue[] | undefined : TValue[]) | TDefault;
+  getValidValueOrDefault<TDefault>(defaultVal: TDefault): (FormListValue<TValue, TNullable>) | TDefault;
   getValidValueOrDefault(): TValue[] | undefined;
   getValidValueOrDefault<TDefault>(defaultVal?: TDefault): TValue[] | TDefault | undefined {
     if (!this.isValid()) return defaultVal;

@@ -9,8 +9,6 @@ import {
 import {FormNode} from "./form-node";
 import {FormList} from "./form-list";
 import {FormGroupControls, FormGroupValue} from "../types";
-import {RootLayerDisableConfig} from "../types/disable";
-import {getAutoDisable} from "../tools/auto-disable";
 
 
 export class FormLayer<TControls extends Record<string, FormUnit>, TValue extends SimpleObject|undefined> extends AnonFormLayer {
@@ -46,7 +44,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
     protected readonly disabledByDefault = false,
     protected readonly errorValidators: FormValidator<TValue>[] = [],
     protected readonly warningValidators: FormValidator<TValue>[] = [],
-    protected readonly autoDisabled: ((config: RootLayerDisableConfig<TValue>) => void)[] = []
+    protected readonly postConfiguration: ((config: FormLayer<TControls, TValue>) => void)[] = []
   ) {
     super(nullable, disabledByDefault);
 
@@ -90,10 +88,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
       return result;
     });
 
-    if (autoDisabled.length > 0) {
-      const autoDisable = getAutoDisable(this);
-      autoDisabled.forEach(f => f(autoDisable));
-    }
+    postConfiguration.forEach(f => f(this));
   }
 
   override getDisabledValue(): TValue {
@@ -267,7 +262,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
       this.disabledByDefault,
       this.errorValidators,
       this.warningValidators,
-      this.autoDisabled
+      this.postConfiguration
     );
   }
 
