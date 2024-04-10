@@ -3,7 +3,7 @@ import {FormValidator} from "../tools/form-validation";
 import {FormList, ModelFormList} from "./form-list";
 import {FormGroupControls} from "../types/controls";
 import {FormLayerConfig} from "./form-layer-config";
-import {inject, Injector, runInInjectionContext} from "@angular/core";
+import {assertInInjectionContext, inject, Injector, runInInjectionContext} from "@angular/core";
 import {FormListValue} from "../types";
 
 export class FormListConfig<TValue extends SimpleObject, TNullable extends boolean> {
@@ -84,6 +84,8 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
    * - `Injector` - Run in the context of the provided injector
    */
   configure(configure: (layer: ModelFormList<TValue, TNullable>) => void, injectionContext?: Injector|boolean): this {
+
+    if (injectionContext) assertInInjectionContext(this.configure);
 
     const injector = !injectionContext ? undefined :
       injectionContext instanceof Injector ? injectionContext :

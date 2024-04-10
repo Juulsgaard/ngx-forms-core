@@ -1,6 +1,5 @@
 import {FormPage, formPage} from "../form-page";
 import {Form} from "../constructors";
-import {autoDisable} from "../tools/auto-disable";
 
 interface TestValue {
   value: string,
@@ -18,8 +17,4 @@ test('Form Page', () => {
     layer: {value: Form.text()},
     list: [{value: Form.text()}]
   }).done();
-
-  //TODO: mock injection context
-  autoDisable(page, x => x.layer.value(() => false), {manualCleanup: true});
-  autoDisable(page, x => x.bool(() => false), {manualCleanup: true});
 });

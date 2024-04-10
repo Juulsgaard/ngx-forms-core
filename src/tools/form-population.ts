@@ -8,7 +8,7 @@ import {ModelFormLayer} from "../forms";
  */
 export function willAlterForm<T extends SimpleObject>(
   form: ModelFormLayer<T>,
-  newData: DeepPartial<T>|undefined
+  newData: DeepPartial<T>|T|undefined
 ) {
   const oldData = form.resetValue();
   if (oldData == null) return newData != null;

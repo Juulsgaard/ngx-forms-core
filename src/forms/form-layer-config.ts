@@ -2,7 +2,7 @@ import {FormLayer, ModelFormLayer} from "./form-layer";
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormValidator} from "../tools/form-validation";
 import {FormGroupControls} from "../types/controls";
-import {inject, Injector, runInInjectionContext} from "@angular/core";
+import {assertInInjectionContext, inject, Injector, runInInjectionContext} from "@angular/core";
 
 export class FormLayerConfig<TValue extends SimpleObject|undefined> {
 
@@ -60,6 +60,7 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> {
    * - `Injector` - Run in the context of the provided injector
    */
   configure(configure: (layer: ModelFormLayer<TValue>) => void, injectionContext?: Injector|boolean): this {
+    if (injectionContext) assertInInjectionContext(this.configure);
 
     const injector = !injectionContext ? undefined :
       injectionContext instanceof Injector ? injectionContext :
