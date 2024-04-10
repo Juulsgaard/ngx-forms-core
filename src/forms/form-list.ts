@@ -65,26 +65,30 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
 
     this.errors = computed(() => Array.from(this.getErrors(this.debouncedValue)), {equal: compareLists<string>});
     this.errorState = computed(() => {
-      const result = this.controls()
-        .flatMap((control, i) => control.errorState()
-          .map(x => prependValidationPath(x, `[${i}]`))
-        );
 
-      result.push(...this.errors().map(msg => validationData(msg, this)));
+      const errors = this.errors().map(msg => validationData(msg, this));
 
-      return result;
+      this.controls().forEach((control, i) => {
+        for (let error of control.errorState()) {
+          errors.push(prependValidationPath(error, `[${i}]`))
+        }
+      });
+
+      return errors;
     });
 
     this.warnings = computed(() => Array.from(this.getWarnings(this.debouncedValue)), {equal: compareLists<string>});
     this.warningState = computed(() => {
-      const result = this.controls()
-        .flatMap((control, i) => control.warningState()
-          .map(x => prependValidationPath(x, `[${i}]`))
-        );
 
-      result.push(...this.warnings().map(msg => validationData(msg, this)));
+      const warnings = this.warnings().map(msg => validationData(msg, this));
 
-      return result;
+      this.controls().forEach((control, i) => {
+        for (let warning of control.warningState()) {
+          warnings.push(prependValidationPath(warning, `[${i}]`))
+        }
+      });
+
+      return warnings;
     });
 
     postConfiguration.forEach(f => f(this));

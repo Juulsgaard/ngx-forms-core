@@ -2,7 +2,7 @@ import {isString} from "@juulsgaard/ts-tools";
 import {FormUnit} from "../forms";
 
 export type FormValidationData = { message: string, unit: FormUnit };
-export type FormValidationContext = { path: string[], data: FormValidationData };
+export type FormValidationContext = { path: (string|number)[], data: FormValidationData };
 
 export function validationData(message: string, unit: FormUnit): FormValidationContext {
   return {
@@ -11,7 +11,7 @@ export function validationData(message: string, unit: FormUnit): FormValidationC
   };
 }
 
-export function prependValidationPath(data: FormValidationContext, prefix: string): FormValidationContext {
+export function prependValidationPath(data: FormValidationContext, prefix: string|number): FormValidationContext {
   return {
     data: data.data,
     path: [prefix, ...data.path]

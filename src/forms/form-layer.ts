@@ -1,5 +1,5 @@
 import {FormUnit} from "./form-unit";
-import {DeepPartial, mapObj, objToArr, SimpleObject} from "@juulsgaard/ts-tools";
+import {DeepPartial, mapObj, SimpleObject} from "@juulsgaard/ts-tools";
 import {AnonFormLayer} from "./anon-form-layer";
 import {computed, signal, Signal, untracked, WritableSignal} from "@angular/core";
 import {compareLists} from "../tools/helpers";
@@ -64,28 +64,30 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
 
     this.errors = computed(() => Array.from(this.getErrors(this.debouncedValue)), {equal: compareLists<string>});
     this.errorState = computed(() => {
-      const children = this.processControls(x => x.errorState());
-      const result = objToArr(
-        children,
-        (values, key) => values.map(x => prependValidationPath(x, key))
-      ).flatMap(x => x);
 
-      result.push(...this.errors().map(msg => validationData(msg, this)));
+      const errors = this.errors().map(msg => validationData(msg, this));
 
-      return result;
+      this.iterateControls((control, key) => {
+        for (let error of control.errorState()) {
+          errors.push(prependValidationPath(error, key))
+        }
+      });
+
+      return errors;
     });
 
     this.warnings = computed(() => Array.from(this.getWarnings(this.debouncedValue)), {equal: compareLists<string>});
     this.warningState = computed(() => {
-      const children = this.processControls(x => x.warningState());
-      const result = objToArr(
-        children,
-        (values, key) => values.map(x => prependValidationPath(x, key))
-      ).flatMap(x => x);
 
-      result.push(...this.warnings().map(msg => validationData(msg, this)));
+      const warnings = this.warnings().map(msg => validationData(msg, this));
 
-      return result;
+      this.iterateControls((control, key) => {
+        for (let warning of control.warningState()) {
+          warnings.push(prependValidationPath(warning, key))
+        }
+      });
+
+      return warnings;
     });
 
     postConfiguration.forEach(f => f(this));

@@ -6,7 +6,7 @@ import {FormDialogOptions} from "./form-dialog-config";
 import {signal, Signal} from "@angular/core";
 import {formRoot} from "../constructors";
 import {FormGroupControls} from "../types";
-import {FormValidator} from "../tools";
+import {FormValidationContext, FormValidator} from "../tools";
 
 export class FormDialog<TValue extends SimpleObject> {
 
@@ -41,6 +41,12 @@ export class FormDialog<TValue extends SimpleObject> {
 
   readonly valid: Signal<boolean>;
   readonly canSubmit: Signal<boolean>;
+
+  readonly errors: Signal<string[]>;
+  readonly errorState: Signal<FormValidationContext[]>;
+
+  readonly warnings: Signal<string[]>;
+  readonly warningState: Signal<FormValidationContext[]>;
 
 
   /**
@@ -79,6 +85,13 @@ export class FormDialog<TValue extends SimpleObject> {
     this.controls = this.form.controls;
     this.value = this.form.value;
     this.valid = this.form.valid;
+
+    this.errors = this.form.errors;
+    this.errorState = this.form.errorState;
+
+    this.warnings = this.form.warnings;
+    this.warningState = this.form.warningState;
+
     this.canSubmit = this.createForm ? this.form.canCreate : this.form.canUpdate;
   }
 
