@@ -394,5 +394,5 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
   }
 }
 
-export type ModelFormList<TModel extends SimpleObject, TNullable extends boolean = false> = FormList<FormGroupControls<TModel>, TModel, TNullable>;
+export type ModelFormList<TModel extends SimpleObject|undefined, TNullable extends boolean = false> = FormList<FormGroupControls<TModel>, TModel, TNullable>;
 export type ControlFormList<TControls extends Record<string, FormUnit>, TNullable extends boolean = false> = FormList<TControls, FormGroupValue<TControls>, TNullable>;
