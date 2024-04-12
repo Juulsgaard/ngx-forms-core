@@ -6,7 +6,11 @@ import {FormLayerConfig} from "./form-layer-config";
 import {assertInInjectionContext, inject, Injector, runInInjectionContext} from "@angular/core";
 import {FormListValue} from "../types";
 
-export class FormListConfig<TValue extends SimpleObject, TNullable extends boolean> {
+export abstract class BaseFormListConfig<TValue extends SimpleObject|undefined, TNullable extends boolean> {
+  abstract done(): FormList<FormGroupControls<TValue>, TValue, TNullable>;
+}
+
+export class FormListConfig<TValue extends SimpleObject|undefined, TNullable extends boolean> extends BaseFormListConfig<TValue, TNullable> {
 
   protected startLength?: number;
   protected disabledDefault?: TValue[];
@@ -21,6 +25,7 @@ export class FormListConfig<TValue extends SimpleObject, TNullable extends boole
     protected readonly controls: FormGroupControls<TValue>,
     protected readonly nullable: TNullable
   ) {
+    super();
     this.layerConfig = new FormLayerConfig<TValue>(controls, false);
   }
 

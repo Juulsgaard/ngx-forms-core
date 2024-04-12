@@ -52,3 +52,5 @@ export type AutoComplete =
 //</editor-fold>
 
 export type FormListValue<T extends SimpleObject | undefined, TNullable extends boolean> = TNullable extends true ? T[]|undefined : T[];
+
+export type FormObjectTypes = Date | File;

@@ -4,7 +4,10 @@ import {formList} from "../constructors/form-list-constructors";
 import {formLayer} from "../constructors/form-layer-constructors";
 import {FormControls, FormGroupControls} from "../types/controls";
 import {FormGroupTemplate, FormGroupTemplateValue, TemplateLayerPrimitive, TemplateUnion} from "../types/templates";
-import {FormLayerConfig, FormListConfig, FormNodeConfig, FormUnit} from "../forms";
+import {FormUnit} from "../forms";
+import {BaseFormLayerConfig} from "../forms/form-layer-config";
+import {BaseFormNodeConfig} from "../forms/form-node-config";
+import {BaseFormListConfig} from "../forms/form-list-config";
 
 export function formTemplateToControls<TValue extends SimpleObject>(
   template: FormGroupTemplate<TValue>
@@ -40,13 +43,13 @@ function templateLayerToControls<T extends SimpleObject>(template: TemplateLayer
 
 function templateToControl<TValue>(template: TemplateUnion): FormControls<TValue>|undefined {
 
-  if (template instanceof FormNodeConfig) return template.done() as FormControls<TValue>;
+  if (template instanceof BaseFormNodeConfig) return template.done() as FormControls<TValue>;
   if (isFormNode(template)) return template as FormControls<TValue>;
 
-  if (template instanceof FormLayerConfig) return template.done() as FormControls<TValue>;
+  if (template instanceof BaseFormLayerConfig) return template.done() as unknown as FormControls<TValue>;
   if (isFormLayer(template)) return template as FormControls<TValue>;
 
-  if (template instanceof FormListConfig) return template.done() as FormControls<TValue>;
+  if (template instanceof BaseFormListConfig) return template.done() as FormControls<TValue>;
   if (isFormList(template)) return template as FormControls<TValue>;
 
   if (Array.isArray(template)) {
@@ -56,7 +59,7 @@ function templateToControl<TValue>(template: TemplateUnion): FormControls<TValue
   }
 
   if (isObject(template)) {
-    return formLayer.model(templateLayerToControls(template)) as FormControls<TValue>;
+    return formLayer.model(templateLayerToControls(template)) as unknown as FormControls<TValue>;
   }
 
   return undefined;

@@ -1,54 +1,64 @@
 import {
-  AnonFormLayer, AnonFormList, AnonFormNode, FormLayer, FormLayerConfig, FormList, FormListConfig, FormNode,
-  FormNodeConfig, ModelFormLayer, ModelFormList
+  AnonFormLayer, AnonFormList, AnonFormNode, FormLayer, FormList, FormNode, ModelFormLayer, ModelFormList
 } from "../forms";
 import {SimpleObject} from "@juulsgaard/ts-tools";
+import {BaseFormNodeConfig} from "../forms/form-node-config";
+import {BaseFormLayerConfig} from "../forms/form-layer-config";
+import {BaseFormListConfig} from "../forms/form-list-config";
+import {FormObjectTypes} from "./misc";
 
 export type TemplateListPrimitive<T extends TemplateLayerPrimitive> = [T];
-export type TemplateNullableListUnion<T extends SimpleObject> = FormList<any, T, true> | FormListConfig<T, true>;
-export type TemplateNonNullListUnion<T extends SimpleObject> = FormList<any, T, false> | FormListConfig<T, false>;
+export type TemplateNullableListUnion<T extends SimpleObject> = FormList<any, T, true> | BaseFormListConfig<T, true>;
+export type TemplateNonNullListUnion<T extends SimpleObject> = FormList<any, T, false> | BaseFormListConfig<T, false>;
 
 export type TemplateLayerPrimitive = Record<string, TemplateUnion>;
-export type TemplateLayerUnion<T extends SimpleObject> = FormLayer<any, T> | FormLayerConfig<T>;
+export type TemplateLayerUnion<T extends SimpleObject> = FormLayer<any, T> | BaseFormLayerConfig<T>;
 
-export type TemplateUnion = AnonFormNode | FormNodeConfig<any>
-  | SimpleObject | AnonFormLayer | FormLayerConfig<any>
-  | [SimpleObject] | AnonFormList | FormListConfig<any, boolean>;
+export type TemplateUnion = AnonFormNode | BaseFormNodeConfig<any>
+  | SimpleObject | AnonFormLayer | BaseFormLayerConfig<any>
+  | [SimpleObject] | AnonFormList | BaseFormListConfig<any, boolean>;
 
 //<editor-fold desc="Value to Template">
-type NullableFormListTemplate<A> =
-  NonNullable<A> extends string ? FormNode<A[] | undefined> | FormNodeConfig<A[] | undefined>
-    : NonNullable<A> extends number ? FormNode<A[] | undefined> | FormNodeConfig<A[] | undefined>
-      : NonNullable<A> extends SimpleObject ?
-        [FormGroupTemplate<NonNullable<A>>]
-        | ModelFormList<NonNullable<A>, true>
-        | FormListConfig<NonNullable<A>, true>
-        : FormNode<A[] | undefined> | FormNodeConfig<A[] | undefined>;
 
-type NonNullFormListTemplate<A> =
-  NonNullable<A> extends string ? FormNode<A[]> | FormNodeConfig<A[]>
-    : NonNullable<A> extends number ? FormNode<A[]> | FormNodeConfig<A[]>
-      : NonNullable<A> extends SimpleObject ?
-        [FormGroupTemplate<NonNullable<A>>]
-        | ModelFormList<NonNullable<A>>
-        | FormListConfig<NonNullable<A>, false>
-        : FormNode<A[]> | FormNodeConfig<A[]>;
+type NullableFormListTemplate<T extends SimpleObject|undefined> =
+  | [FormGroupTemplate<NonNullable<T>>]
+  | ModelFormList<T, true>
+  | BaseFormListConfig<T, true>;
 
-type NullableFormTemplate<T> = T extends undefined | null ? never
-  : T extends string ? FormNode<string | undefined> | FormNodeConfig<string | undefined>
-    : T extends boolean ? FormNode<boolean | undefined> | FormNodeConfig<boolean | undefined>
-      : T extends File | Date ? FormNode<T | undefined> | FormNodeConfig<T | undefined>
-        : T extends (infer A)[] ? NullableFormListTemplate<A>
-          : T extends SimpleObject ? FormGroupTemplate<T> | ModelFormLayer<T | undefined> | FormLayerConfig<T | undefined>
-            : FormNode<T | undefined> | FormNodeConfig<T | undefined>;
+type NonNullFormListTemplate<T extends SimpleObject|undefined> =
+  | [FormGroupTemplate<NonNullable<T>>]
+  | ModelFormList<T>
+  | BaseFormListConfig<T, false>;
 
-type NonNullFormTemplate<T> = T extends undefined | null ? never
-  : T extends string ? FormNode<string> | FormNodeConfig<string>
-    : T extends boolean ? FormNode<boolean> | FormNodeConfig<boolean>
-      : T extends File | Date ? FormNode<T> | FormNodeConfig<T>
-        : T extends (infer A)[] ? NonNullFormListTemplate<A>
-          : T extends SimpleObject ? FormGroupTemplate<T> | ModelFormLayer<T> | FormLayerConfig<T>
-            : FormNode<T> | FormNodeConfig<T>;
+type NullableFormLayerTemplate<T extends SimpleObject> =
+  | FormGroupTemplate<T>
+  | ModelFormLayer<T|undefined>
+  | BaseFormLayerConfig<T|undefined>;
+
+type NonNullFormLayerTemplate<T extends SimpleObject> =
+  | FormGroupTemplate<T>
+  | ModelFormLayer<T>
+  | BaseFormLayerConfig<T>;
+
+type NullableFormNodeTemplate<T> =
+  | FormNode<T|undefined>
+  | BaseFormNodeConfig<T|undefined>;
+
+type NonNullFormNodeTemplate<T> =
+  | FormNode<T>
+  | BaseFormNodeConfig<T>;
+
+type NullableFormTemplate<T> =
+  NonNullable<T> extends FormObjectTypes ? NullableFormNodeTemplate<NonNullable<T>>
+    : NonNullable<T> extends (infer A extends SimpleObject|undefined)[] ? NullableFormListTemplate<A>
+      : NonNullable<T> extends SimpleObject ? NullableFormLayerTemplate<NonNullable<T>>
+        : NullableFormNodeTemplate<NonNullable<T>>;
+
+type NonNullFormTemplate<T> =
+  NonNullable<T> extends FormObjectTypes ? NonNullFormNodeTemplate<NonNullable<T>>
+    : NonNullable<T> extends (infer A extends SimpleObject|undefined)[] ? NonNullFormListTemplate<A>
+      : NonNullable<T> extends SimpleObject ? NonNullFormLayerTemplate<NonNullable<T>>
+        : NonNullFormNodeTemplate<NonNullable<T>>;
 
 export type FormTemplate<T> = undefined extends T ? NullableFormTemplate<T> : NonNullFormTemplate<T>;
 export type FormGroupTemplate<T extends SimpleObject> = { [K in keyof T]-?: FormTemplate<T[K]> };
@@ -66,7 +76,7 @@ export type FormTemplateValue<T extends TemplateUnion> =
 
         // Nodes
         T extends FormNode<infer X> ? X :
-          T extends FormNodeConfig<infer X> ? X :
+          T extends BaseFormNodeConfig<infer X> ? X :
 
             // Template primitives
             T extends TemplateListPrimitive<infer X> ? FormGroupTemplateValue<X>[] :
@@ -75,4 +85,5 @@ export type FormTemplateValue<T extends TemplateUnion> =
                 never;
 
 export type FormGroupTemplateValue<T extends TemplateLayerPrimitive> = { [K in keyof T]: FormTemplateValue<T[K]> };
+
 //</editor-fold>

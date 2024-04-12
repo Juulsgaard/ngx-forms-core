@@ -3,7 +3,11 @@ import {FormNode} from "./form-node";
 import {FormValidator} from "../tools/form-validation";
 import {AutoComplete} from "../types";
 
-export class FormNodeConfig<T> {
+export abstract class BaseFormNodeConfig<T> {
+  abstract done(): FormNode<T>;
+}
+
+export class FormNodeConfig<T> extends BaseFormNodeConfig<T> {
 
   protected label?: string;
   protected autocomplete?: string;
@@ -36,7 +40,7 @@ export class FormNodeConfig<T> {
     protected readonly initialValue?: T,
     protected disabledDefault?: T
   ) {
-
+    super();
   }
 
   /**

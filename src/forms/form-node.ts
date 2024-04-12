@@ -76,7 +76,7 @@ export class FormNode<T> extends AnonFormNode {
     this._resetValue = signal(this.value());
     this.resetValue = this._resetValue.asReadonly();
 
-    this.changed = computed(() => compareValues(this.resetValue(), this.value()));
+    this.changed = computed(() => !compareValues(this.resetValue(), this.value()));
 
     this.errors = computed(() => Array.from(this.getErrors(this.debouncedRawValue)), {equal: compareLists<string>});
     this.errorState = computed(() => this.errors().map(x => validationData(x, this)));
@@ -143,7 +143,7 @@ export class FormNode<T> extends AnonFormNode {
     // If no value is present, don't process validators
     if (value == null && !this.nullable) return;
 
-    yield* processFormValidators(this.errorValidators, value as T);
+    yield* processFormValidators(this.warningValidators, value as T);
   }
   //</editor-fold>
 

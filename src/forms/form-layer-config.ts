@@ -4,7 +4,11 @@ import {FormValidator} from "../tools/form-validation";
 import {FormGroupControls} from "../types/controls";
 import {assertInInjectionContext, inject, Injector, runInInjectionContext} from "@angular/core";
 
-export class FormLayerConfig<TValue extends SimpleObject|undefined> {
+export abstract class BaseFormLayerConfig<TValue extends SimpleObject|undefined> {
+  abstract done(): ModelFormLayer<TValue>;
+}
+
+export class FormLayerConfig<TValue extends SimpleObject|undefined> extends BaseFormLayerConfig<TValue> {
 
   protected disabledDefault?: TValue;
   protected disabledByDefault?: boolean;
@@ -16,6 +20,7 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> {
     protected readonly controls: FormGroupControls<TValue>,
     protected readonly nullable: undefined extends TValue ? boolean : false
   ) {
+    super();
   }
 
   /**
@@ -74,7 +79,7 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> {
     return this;
   }
 
-  done(): ModelFormLayer<TValue> {
+  override done(): ModelFormLayer<TValue> {
     return new FormLayer<FormGroupControls<TValue>, TValue>(
       this.controls,
       this.nullable,

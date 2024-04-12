@@ -1,5 +1,6 @@
 import {Form, formLayer, formList} from "../constructors";
 import {FormLayer, FormList, FormNode, FormSelectNode} from "../forms";
+import {FormConstants} from "../tools";
 
 interface Item {
   id: string;
@@ -12,16 +13,20 @@ interface FormData {
   value: string;
   nullable?: string;
   select?: string;
+  date: Date;
+  file?: File;
+  bool: boolean;
   layer?: SubFormData;
   list: SubFormData[];
 }
 
 interface SubFormData {
   value: string;
+  nullable?: string;
 }
 
-const defaultData: FormData = {value: '', select: undefined, nullable: undefined, layer: {value: ''}, list: []};
-const testData: FormData = {value: 'Value str', select: 'id', nullable: 'Nullable value', layer: {value: 'Nested Value'}, list: [{value: 'List value'}]};
+const defaultData: FormData = {value: '', date: FormConstants.NULL_DATE, bool: false, layer: {value: ''}, list: []};
+const testData: FormData = {value: 'Value str', select: 'id', nullable: 'Nullable value', date: new Date(), bool: true, layer: {value: 'Nested Value'}, list: [{value: 'List value'}]};
 
 test('Model Based', () => {
 
@@ -29,11 +34,16 @@ test('Model Based', () => {
     value: Form.text().done(),
     nullable: Form.nullable.text().done(),
     select: Form.select(items).single(x => x.id).nullable().done(),
-    layer: formLayer.nullable.model({
-      value: Form.text().done()
+    bool: Form.bool().done(),
+    date: Form.date().done(),
+    file: Form.nullable.file().done(),
+    layer: formLayer.nullable.model<SubFormData>({
+      value: Form.text().done(),
+      nullable: Form.nullable.text().done(),
     }),
-    list: formList.model({
-      value: Form.text().done()
+    list: formList.model<SubFormData>({
+      value: Form.text().done(),
+      nullable: Form.nullable.text().done(),
     })
   });
 
@@ -63,11 +73,16 @@ test('Control Based', () => {
     value: Form.text().done(),
     nullable: Form.nullable.text().done(),
     select: Form.select(items).single(x => x.id).nullable().done(),
-    layer: formLayer.controls({
-      value: Form.text().done()
+    bool: Form.bool().done(),
+    date: Form.date().done(),
+    file: Form.nullable.file().done(),
+    layer: formLayer.nullable.model({
+      value: Form.text().done(),
+      nullable: Form.nullable.text().done(),
     }),
-    list: formList.controls({
-      value: Form.text().done()
+    list: formList.model({
+      value: Form.text().done(),
+      nullable: Form.nullable.text().done(),
     })
   });
 
@@ -88,10 +103,17 @@ test('Template Based', () => {
     value: Form.text(),
     nullable: Form.nullable.text(),
     select: Form.select(items).single(x => x.id).nullable(),
-    layer: Form.nullable.layer({
-      value: Form.text()
+    bool: Form.bool(),
+    date: Form.date(),
+    file: Form.nullable.file(),
+    layer: Form.nullable.layer<SubFormData>({
+      value: Form.text(),
+      nullable: Form.nullable.text()
     }),
-    list: [{value: Form.text()}]
+    list: Form.list<SubFormData>({
+      value: Form.text(),
+      nullable: Form.nullable.text()
+    })
   }).done();
 
   expect(layer.controls().value).toBeInstanceOf(FormNode);

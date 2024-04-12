@@ -62,7 +62,7 @@ export class FormConstructors {
   url(initialValue?: string, options: FormNodeCtorOptions<string> = {}): FormNodeConfig<string> {
     const {fallback, disabled} = parseOptions(initialValue, options, '');
     return new FormNodeConfig<string>(InputTypes.Url, false, fallback, initialValue, disabled)
-      .withErrors(Validators.url);
+      .withErrors(Validators.url());
   }
 
   /**
@@ -295,7 +295,7 @@ export class FormNullableConstructors {
   url(initialValue?: string, options: FormNodeCtorOptions<string> = {}): FormNodeConfig<string|undefined> {
     const {fallback, disabled} = parseOptions(initialValue, options);
     return new FormNodeConfig<string|undefined>(InputTypes.Url, true, fallback, initialValue, disabled)
-      .withErrors(Validators.url);
+      .withErrors(Validators.url());
   }
 
   /**

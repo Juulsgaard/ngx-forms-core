@@ -96,12 +96,12 @@ export abstract class FormUnit {
 
     if (this.disabled()) {
       if (disable === true) return false;
-      this.markAsUntouched();
+      this.enable();
       return true;
     }
 
     if (disable === false) return false;
-    this.markAsTouched();
+    this.disable();
     return true;
   }
   //</editor-fold>

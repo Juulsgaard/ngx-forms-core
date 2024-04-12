@@ -1,6 +1,6 @@
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormLayerConfig} from "./form-layer-config";
-import {FormRoot} from "./form-root";
+import {FormRoot, ModelFormRoot} from "./form-root";
 import {FormGroupControls} from "../types/controls";
 
 export class FormRootConfig<TValue extends SimpleObject> extends FormLayerConfig<TValue> {
@@ -9,7 +9,7 @@ export class FormRootConfig<TValue extends SimpleObject> extends FormLayerConfig
     super(controls, false);
   }
 
-  override done(): FormRoot<FormGroupControls<TValue>, TValue> {
+  override done(): ModelFormRoot<TValue> {
     return new FormRoot(
       this.controls,
       this.disabledDefault,

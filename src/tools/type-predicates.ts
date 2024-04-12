@@ -1,25 +1,14 @@
-import {FormNode} from "../forms/form-node";
-import {FormMultiSelectNode, FormSelectNode, FormSingleSelectNode} from "../forms/form-select-node";
-import {ControlFormLayer, FormLayer, ModelFormLayer} from "../forms/form-layer";
-import {FormList} from "../forms/form-list";
-import {ControlFormRoot, FormRoot, ModelFormRoot} from "../forms/form-root";
+import {
+  AnonFormLayer, AnonFormList, AnonFormNode, AnonFormRoot, ControlFormLayer, ControlFormRoot, FormLayer, FormList,
+  FormMultiSelectNode, FormNode, FormRoot, FormSelectNode, FormSingleSelectNode, FormUnit, InputTypes, ModelFormLayer,
+  ModelFormRoot
+} from "../forms";
 import {SimpleObject} from "@juulsgaard/ts-tools";
-import {AnonFormNode, InputTypes} from "../forms/anon-form-node";
-import {FormNodeConfig} from "../forms/form-node-config";
-import {FormSelectNodeConfig} from "../forms/form-select-node-config";
-import {AnonFormLayer, AnonFormList, AnonFormRoot} from "../forms";
-import {FormUnit} from "../forms/form-unit";
 
 export function isFormNode<T>(data: FormNode<T>): data is FormNode<T>;
 export function isFormNode(data: unknown): data is AnonFormNode;
 export function isFormNode(data: unknown): boolean {
   return data instanceof FormNode;
-}
-
-export function isFormNodeConfig<T>(data: FormNodeConfig<T>): data is FormNodeConfig<T>;
-export function isFormNodeConfig(data: unknown): data is FormNodeConfig<unknown>;
-export function isFormNodeConfig(data: unknown): boolean {
-  return data instanceof FormNodeConfig;
 }
 
 export function isFormSelectNode<TVal, TItem, TMultiple extends boolean>(node: FormSelectNode<TVal, TItem, TMultiple>): node is FormSelectNode<TVal, TItem, TMultiple>;
@@ -42,14 +31,6 @@ export function isFormMultiSelectNode<TVal>(node: FormNode<TVal[]>): node is For
 export function isFormMultiSelectNode(data: unknown): data is FormMultiSelectNode<unknown, unknown>;
 export function isFormMultiSelectNode(data: unknown): boolean {
   return data instanceof FormMultiSelectNode;
-}
-
-export function isFormSelectNodeConfig<TVal, TItem, TMultiple extends boolean>(
-  node: FormSelectNodeConfig<TVal, TItem, TMultiple>
-): node is FormSelectNodeConfig<TVal, TItem, TMultiple>;
-export function isFormSelectNodeConfig(data: unknown): data is FormSelectNodeConfig<unknown, unknown, boolean>;
-export function isFormSelectNodeConfig(data: unknown): boolean {
-  return data instanceof FormSelectNodeConfig;
 }
 
 export function isFormLayer<

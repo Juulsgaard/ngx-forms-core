@@ -8,7 +8,7 @@ export function compareLists<T>(prev: (T|undefined)[] | undefined, next: (T|unde
 
   comparison ??= (a, b) => a === b;
   for (let i = 0; i < prev.length; i++) {
-    if (comparison(prev[i], next[i])) return false;
+    if (!comparison(prev[i], next[i])) return false;
   }
 
   return true;

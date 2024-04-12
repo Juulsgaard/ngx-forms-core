@@ -21,27 +21,29 @@ export class FormValidators {
     return this.patternValidator(/^#[\da-f]{6}([\da-f]{2})?$/i, error ?? 'Invalid hex format');
   }
 
-  url(value: string|undefined): string|null {
-    if (!value) return null;
+  url(allowHttp = false, error?: string): FormValidator<string|undefined> {
+    return (value: string|undefined): string|null => {
+      if (!value) return null;
 
-    const match = value.match(/^([a-z][-.+a-z\d]*):\/\//i);
+      const match = value.match(/^([a-z][-.+a-z\d]*):\/\//i);
 
-    if (!match || match[1] === 'https') {
+      if (!match || match[1] === 'https') {
 
-      const valid = value.match(/^(https:\/\/)?[-a-z0-9@:%._+~#=]{2,256}\.[a-z]{2,4}\b([-a-z0-9@:%_+.~#?&/=]*)?$/i);
-      if (!valid) return  'Invalid Website URL';
+        const valid = value.match(/^(https:\/\/)?[-a-z0-9@:%._+~#=]{2,256}\.[a-z]{2,4}\b([-a-z0-9@:%_+.~#?&/=]*)?$/i);
+        if (!valid) return error ?? 'Invalid Website URL';
+
+        return null;
+      }
+
+      if (!allowHttp && match[1] === 'http') {
+        return error ?? 'http URLs are not supported';
+      }
+
+      const valid = value.match(/^([a-z][-.+a-z\d]*):\/\/[-a-z0-9@:%_+.~#?&/=]*$/i);
+      if (!valid) return error ?? 'Invalid URL';
 
       return null;
-    }
-
-    if (match[1] === 'http') {
-      return 'http URLs are not supported';
-    }
-
-    const valid = value.match(/^([a-z][-.+a-z\d]*):\/\/[-a-z0-9@:%_+.~#?&/=]*$/i);
-    if (!valid) return 'Invalid URL';
-
-    return null;
+    };
   }
 
   guid(error?: string): FormValidator<string|undefined> {
@@ -58,43 +60,43 @@ export class FormValidators {
     );
   }
 
-  min(min: number): FormValidator<number|undefined> {
+  min(min: number, error?: string): FormValidator<number|undefined> {
     return (value: number|undefined) => {
       if (value == null) return null;
       value = Number(value);
       if (Number.isNaN(value)) return null;
       if (value >= min) return null;
-      return `The minimum value is ${min}`;
+      return error ?? `The minimum value is ${min}`;
     }
   }
 
-  max(max: number): FormValidator<number|undefined> {
+  max(max: number, error?: string): FormValidator<number|undefined> {
     return (value: number|undefined) => {
       if (value == null) return null;
       value = Number(value);
       if (Number.isNaN(value)) return null;
       if (value <= max) return null;
-      return `The maximum value is ${max}`;
+      return error ?? `The maximum value is ${max}`;
     }
   }
 
-  minLength(minLength: number): FormValidator<unknown|undefined> {
+  minLength(minLength: number, error?: string): FormValidator<unknown|undefined> {
     return (value: unknown|undefined) => {
       if (value == null) return null;
       const length = value.toString().length;
 
       if (length >= minLength) return null;
-      return `A minimum length of ${minLength} is required [${length}/${minLength}]`;
+      return error ?? `A minimum length of ${minLength} is required [${length}/${minLength}]`;
     }
   }
 
-  maxLength(maxLength: number): FormValidator<unknown|undefined> {
+  maxLength(maxLength: number, error?: string): FormValidator<unknown|undefined> {
     return (value: unknown|undefined) => {
       if (value == null) return null;
       const length = value.toString().length;
 
       if (length <= maxLength) return null;
-      return `Maximum length of ${maxLength} ${length}/${maxLength}]`;
+      return error ?? `Maximum length of ${maxLength} ${length}/${maxLength}]`;
     }
   }
 }

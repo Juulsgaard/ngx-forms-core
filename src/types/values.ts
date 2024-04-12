@@ -1,5 +1,6 @@
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {Signal} from "@angular/core";
+import {FormObjectTypes} from "./misc";
 
 export type FormMemoLayer<T> =
   { readonly [K in keyof T]-?: FormMemoValue<T[K]> } &
@@ -12,7 +13,7 @@ export type FormMemoList<T, TItem> =
   Signal<T>;
 
 export type FormMemoValue<T> =
-  NonNullable<T> extends Date ? Signal<T> :
+  NonNullable<T> extends FormObjectTypes ? Signal<T> :
     NonNullable<T> extends (infer A extends SimpleObject)[] ? FormMemoList<T, A> :
       NonNullable<T> extends SimpleObject ? FormMemoLayer<T> :
         Signal<T>;

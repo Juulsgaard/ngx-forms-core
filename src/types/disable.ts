@@ -1,7 +1,7 @@
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormMemoValue} from "./values";
 import {EffectRef, Injector, Signal} from "@angular/core";
-import {FormListValue} from "./misc";
+import {FormListValue, FormObjectTypes} from "./misc";
 
 export type LayerDisableConfig<T, TState> =
   { readonly [K in keyof T]-?: DisableConfig<T[K], TState> }
@@ -26,7 +26,7 @@ export type DisableConfigItemFunc<T> = (
 ) => EffectRef;
 
 export type DisableConfig<T, TState> =
-  NonNullable<T> extends Date ? DisableConfigFunc<TState> :
+  NonNullable<T> extends FormObjectTypes ? DisableConfigFunc<TState> :
     NonNullable<T> extends SimpleObject[] ? DisableConfigFunc<TState> :
       NonNullable<T> extends SimpleObject ? LayerDisableConfig<T, TState> :
         DisableConfigFunc<TState>;
