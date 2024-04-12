@@ -7,7 +7,7 @@ import {assertInInjectionContext, inject, Injector, runInInjectionContext} from 
 import {FormListValue} from "../types";
 
 export abstract class BaseFormListConfig<TValue extends SimpleObject|undefined, TNullable extends boolean> {
-  abstract done(): FormList<FormGroupControls<TValue>, TValue, TNullable>;
+  abstract done(): ModelFormList<TValue, TNullable>;
 }
 
 export class FormListConfig<TValue extends SimpleObject|undefined, TNullable extends boolean> extends BaseFormListConfig<TValue, TNullable> {
@@ -22,7 +22,7 @@ export class FormListConfig<TValue extends SimpleObject|undefined, TNullable ext
   protected layerConfig: FormLayerConfig<TValue>;
 
   constructor(
-    protected readonly controls: FormGroupControls<TValue>,
+    protected readonly controls: FormGroupControls<NonNullable<TValue>>,
     protected readonly nullable: TNullable
   ) {
     super();
@@ -104,7 +104,7 @@ export class FormListConfig<TValue extends SimpleObject|undefined, TNullable ext
     return this;
   }
 
-  done(): FormList<FormGroupControls<TValue>, TValue, TNullable> {
+  done(): ModelFormList<TValue, TNullable> {
     return new FormList(
       this.layerConfig.done(),
       this.nullable,

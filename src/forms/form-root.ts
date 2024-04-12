@@ -27,5 +27,5 @@ export class FormRoot<TControls extends Record<string, FormUnit>, TValue extends
   }
 }
 
-export type ModelFormRoot<TModel extends Record<string, any>> = FormRoot<FormGroupControls<TModel>, TModel>;
+export type ModelFormRoot<TModel extends SimpleObject> = FormRoot<FormGroupControls<TModel>, TModel>;
 export type ControlFormRoot<TControls extends Record<string, FormUnit>> = FormRoot<TControls, FormGroupValue<TControls>>;

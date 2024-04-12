@@ -106,7 +106,7 @@ test('Template Based', () => {
     bool: Form.bool(),
     date: Form.date(),
     file: Form.nullable.file(),
-    layer: Form.nullable.layer<SubFormData>({
+    layer: Form.nullable.layer({
       value: Form.text(),
       nullable: Form.nullable.text()
     }),

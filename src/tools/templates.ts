@@ -46,7 +46,7 @@ function templateToControl<TValue>(template: TemplateUnion): FormControls<TValue
   if (template instanceof BaseFormNodeConfig) return template.done() as FormControls<TValue>;
   if (isFormNode(template)) return template as FormControls<TValue>;
 
-  if (template instanceof BaseFormLayerConfig) return template.done() as unknown as FormControls<TValue>;
+  if (template instanceof BaseFormLayerConfig) return template.done() as FormControls<TValue>;
   if (isFormLayer(template)) return template as FormControls<TValue>;
 
   if (template instanceof BaseFormListConfig) return template.done() as FormControls<TValue>;

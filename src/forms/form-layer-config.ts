@@ -17,7 +17,7 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> extends Base
   protected postConfiguration: ((config: ModelFormLayer<TValue>) => void)[] = [];
 
   constructor(
-    protected readonly controls: FormGroupControls<TValue>,
+    protected readonly controls: FormGroupControls<NonNullable<TValue>>,
     protected readonly nullable: undefined extends TValue ? boolean : false
   ) {
     super();
@@ -80,7 +80,7 @@ export class FormLayerConfig<TValue extends SimpleObject|undefined> extends Base
   }
 
   override done(): ModelFormLayer<TValue> {
-    return new FormLayer<FormGroupControls<TValue>, TValue>(
+    return new FormLayer<FormGroupControls<NonNullable<TValue>>, TValue>(
       this.controls,
       this.nullable,
       this.disabledDefault,

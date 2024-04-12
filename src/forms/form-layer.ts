@@ -312,7 +312,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
   }
 }
 
-export type ModelFormLayer<TModel extends SimpleObject|undefined> = FormLayer<FormGroupControls<TModel>, TModel>;
+export type ModelFormLayer<TModel extends SimpleObject|undefined> = FormLayer<FormGroupControls<NonNullable<TModel>>, TModel>;
 export type ControlFormLayer<TControl extends Record<string, FormUnit>> = FormLayer<TControl, FormGroupValue<TControl>>;
 export type NullableControlFormLayer<TControl extends Record<string, FormUnit>> = FormLayer<TControl, FormGroupValue<TControl>|undefined>;
 

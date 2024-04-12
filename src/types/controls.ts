@@ -18,10 +18,7 @@ type NonNullFormControls<T> =
 
 export type FormControls<T> = undefined extends T ? NullableFormControls<T> : NonNullFormControls<T>;
 
-export type FormGroupControls<T extends SimpleObject | undefined> =
-  T extends undefined ? never :
-    T extends null ? never :
-      { [K in keyof T]-?: FormControls<T[K]> };
+export type FormGroupControls<T extends SimpleObject> = { [K in keyof T]-?: FormControls<T[K]> };
 //</editor-fold>
 
 
@@ -35,5 +32,3 @@ export type FormValue<T extends FormUnit> =
 
 export type FormGroupValue<T extends Record<string, FormUnit>> = { [K in keyof T]: FormValue<T[K]> };
 //</editor-fold>
-
-type test = FormGroupControls<any>;
