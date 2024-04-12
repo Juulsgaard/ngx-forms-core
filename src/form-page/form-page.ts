@@ -130,16 +130,16 @@ export class FormPage<TVal extends SimpleObject> {
 
   /** Update the form from a signal */
   updateFrom(
-    values: Signal<DeepPartial<TVal>> | Signal<TVal>,
+    values: Signal<DeepPartial<TVal>|undefined> | Signal<TVal|undefined>,
     options?: FormPageUpdateOptions
   ): EffectRef;
   /** Update the form from a subscribable */
   updateFrom(
-    values: Subscribable<DeepPartial<TVal>> | Subscribable<TVal>,
+    values: Subscribable<DeepPartial<TVal>|undefined> | Subscribable<TVal|undefined>,
     options?: FormPageUpdateOptions
   ): Unsubscribable;
   updateFrom(
-    values: Signal<DeepPartial<TVal>> | Signal<TVal> | Subscribable<DeepPartial<TVal>> | Subscribable<TVal>,
+    values: Signal<DeepPartial<TVal>|undefined> | Signal<TVal|undefined> | Subscribable<DeepPartial<TVal>|undefined> | Subscribable<TVal|undefined>,
     options?: FormPageUpdateOptions
   ): EffectRef | Unsubscribable {
 
