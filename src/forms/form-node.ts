@@ -24,6 +24,9 @@ export class FormNode<T> extends AnonFormNode {
   override readonly rawValue: Signal<T|undefined>;
   override readonly value: Signal<T>;
 
+  private readonly _resetState: WritableSignal<T|undefined>;
+  override readonly resetState: Signal<T|undefined>;
+
   private readonly _resetValue: WritableSignal<T>;
   override readonly resetValue: Signal<T>;
 
@@ -72,6 +75,9 @@ export class FormNode<T> extends AnonFormNode {
     this.debouncedState = this._debouncedState.asReadonly();
     this.debouncedRawValue = computed(() => this.getRawValue(this.debouncedState));
     this.debouncedValue = computed(() => this.getValue(this.debouncedRawValue));
+
+    this._resetState = signal(this.state());
+    this.resetState = this._resetState.asReadonly();
 
     this._resetValue = signal(this.value());
     this.resetValue = this._resetValue.asReadonly();
@@ -221,6 +227,7 @@ export class FormNode<T> extends AnonFormNode {
   override reset(value?: T) {
     this.updateState(value ?? this.initialValue, true);
     super.reset();
+    this._resetState.set(this.state());
     this._resetValue.set(this.value());
   }
 
@@ -249,7 +256,7 @@ export class FormNode<T> extends AnonFormNode {
   }
 
   override rollback() {
-    this.updateState(this.resetValue(), true);
+    this.updateState(this.resetState(), true);
   }
 
   private _isValid = computed(() => this.getErrors(this.rawValue).next().done === true);
@@ -258,14 +265,14 @@ export class FormNode<T> extends AnonFormNode {
   }
 
   getValidValue(): T {
-    if (this.isValid()) throw Error('The value is invalid');
+    if (!this.isValid()) throw Error('The value is invalid');
     return this.value();
   }
 
   getValidValueOrDefault<TDefault>(defaultVal: TDefault): T | TDefault;
   getValidValueOrDefault(): T | undefined;
   getValidValueOrDefault<TDefault>(defaultVal?: TDefault): T | TDefault | undefined {
-    if (this.isValid()) return defaultVal;
+    if (!this.isValid()) return defaultVal;
     return this.value();
   }
 }

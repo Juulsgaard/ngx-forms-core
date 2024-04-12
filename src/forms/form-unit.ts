@@ -32,7 +32,7 @@ export abstract class FormUnit {
   abstract readonly errorState: Signal<FormValidationContext[]>;
 
   /** A boolean indicating if the unit has an error (async) */
-  readonly hasError: Signal<boolean> = computed(() => this.errors().length <= 0);
+  readonly hasError: Signal<boolean> = computed(() => this.errors().length > 0);
   /** A single error for the unit. undefined if no errors are present (async) */
   readonly error: Signal<string | undefined> = computed(() => this.errors().at(0));
   /** Indicates that the unit is valid (async) */

@@ -300,14 +300,14 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
   }
 
   getValidValue(): TValue {
-    if (this.isValid()) throw Error('The value is invalid');
+    if (!this.isValid()) throw Error('The value is invalid');
     return this.value();
   }
 
   getValidValueOrDefault<TDefault>(defaultVal: TDefault): TValue | TDefault;
   getValidValueOrDefault(): TValue | undefined;
   getValidValueOrDefault<TDefault>(defaultVal?: TDefault): TValue | TDefault | undefined {
-    if (this.isValid()) return defaultVal;
+    if (!this.isValid()) return defaultVal;
     return this.value();
   }
 }

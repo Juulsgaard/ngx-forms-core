@@ -386,7 +386,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
   }
 
   getValidValue(): FormListValue<TValue, TNullable> {
-    if (this.isValid()) throw Error('The value is invalid');
+    if (!this.isValid()) throw Error('The value is invalid');
     return this.value();
   }
 

@@ -58,8 +58,9 @@ export abstract class AnonFormNode extends FormUnit {
   /** An observable emitting input actions */
   readonly actions$: Observable<FormNodeEvent> = this._actions$.asObservable();
 
-  readonly abstract state: Signal<unknown|undefined>;
-  readonly abstract debouncedState: Signal<unknown|undefined>;
+  abstract readonly state: Signal<unknown|undefined>;
+  abstract readonly debouncedState: Signal<unknown|undefined>;
+  abstract readonly resetState: Signal<unknown>;
 
   readonly empty: Signal<boolean> = computed(() => this.state() == null);
 
@@ -85,12 +86,13 @@ export abstract class AnonFormNode extends FormUnit {
 
   /**
    * Focus the input
-   * @param selectValue - If true the contents of the input will be selected
+   * @param options - Additional options
    */
-  focus(selectValue?: true) {
+  focus(options?: FormNodeFocusOptions) {
     setTimeout(() => {
       this._actions$.next(InputEvents.Focus);
-      if (selectValue) this._actions$.next(InputEvents.Select);
+      if (options?.selectValue) this._actions$.next(InputEvents.Select);
+      if (options?.scroll) this._actions$.next(InputEvents.ScrollTo);
     }, 0);
   }
 
@@ -100,4 +102,10 @@ export abstract class AnonFormNode extends FormUnit {
 
   /** Toggle the input value if boolean */
   abstract toggle(): void;
+}
+
+interface FormNodeFocusOptions {
+  /** If true the contents of the input will be selected */
+  selectValue?: boolean;
+  scroll?: boolean;
 }
