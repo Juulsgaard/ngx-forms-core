@@ -4,7 +4,7 @@ import {formList} from "../constructors/form-list-constructors";
 import {formLayer} from "../constructors/form-layer-constructors";
 import {FormControls, FormGroupControls} from "../types/controls";
 import {FormGroupTemplate, FormGroupTemplateValue, TemplateLayerPrimitive, TemplateUnion} from "../types/templates";
-import {FormUnit} from "../forms";
+import {FormLayer, FormUnit} from "../forms";
 import {BaseFormLayerConfig} from "../forms/form-layer-config";
 import {BaseFormNodeConfig} from "../forms/form-node-config";
 import {BaseFormListConfig} from "../forms/form-list-config";
@@ -46,7 +46,7 @@ function templateToControl<TValue>(template: TemplateUnion): FormControls<TValue
   if (template instanceof BaseFormNodeConfig) return template.done() as FormControls<TValue>;
   if (isFormNode(template)) return template as FormControls<TValue>;
 
-  if (template instanceof BaseFormLayerConfig) return template.done() as unknown as FormControls<TValue>;
+  if (template instanceof BaseFormLayerConfig) return template.done() as FormLayer<any, any> as FormControls<TValue>;
   if (isFormLayer(template)) return template as FormControls<TValue>;
 
   if (template instanceof BaseFormListConfig) return template.done() as FormControls<TValue>;
@@ -59,7 +59,7 @@ function templateToControl<TValue>(template: TemplateUnion): FormControls<TValue
   }
 
   if (isObject(template)) {
-    return formLayer.model(templateLayerToControls(template)) as unknown as FormControls<TValue>;
+    return formLayer.model(templateLayerToControls(template)) as FormLayer<any, any> as FormControls<TValue>;
   }
 
   return undefined;

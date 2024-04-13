@@ -89,16 +89,3 @@ export type FormTemplateValue<T extends TemplateUnion> =
 export type FormGroupTemplateValue<T extends TemplateLayerPrimitive> = { [K in keyof T]: FormTemplateValue<T[K]> };
 
 //</editor-fold>
-
-type test = FormTemplate<string[]>;
-type huh = {}[] extends (infer A)[] & (SimpleObject | undefined)[] ? A : false;
-
-type TheFuck<T> = NonNullable<T> extends (infer A extends SimpleObject | undefined)[] ? A : false;
-type result = TheFuck<string[]>;
-
-interface Test {
-  values: string[];
-}
-
-type fuck = FormGroupTemplate<Test>;
-type values = fuck['values'];
