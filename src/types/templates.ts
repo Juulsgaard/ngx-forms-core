@@ -5,7 +5,7 @@ import {SimpleObject} from "@juulsgaard/ts-tools";
 import {BaseFormNodeConfig} from "../forms/form-node-config";
 import {BaseFormLayerConfig} from "../forms/form-layer-config";
 import {BaseFormListConfig} from "../forms/form-list-config";
-import {FormObjectTypes} from "./misc";
+import {FormObjectTypes, ObjArr} from "./misc";
 
 export type TemplateListPrimitive<T extends TemplateLayerPrimitive> = [T];
 export type TemplateNullableListUnion<T extends SimpleObject> = FormList<any, T, true> | BaseFormListConfig<T, true>;
@@ -20,20 +20,20 @@ export type TemplateUnion = AnonFormNode | BaseFormNodeConfig<any>
 
 //<editor-fold desc="Value to Template">
 
-type NullableFormListTemplate<T extends SimpleObject|undefined> =
+type NullableFormListTemplate<T extends SimpleObject | undefined> =
   | [FormGroupTemplate<NonNullable<T>>]
   | ModelFormList<T, true>
   | BaseFormListConfig<T, true>;
 
-type NonNullFormListTemplate<T extends SimpleObject|undefined> =
+type NonNullFormListTemplate<T extends SimpleObject | undefined> =
   | [FormGroupTemplate<NonNullable<T>>]
   | ModelFormList<T>
   | BaseFormListConfig<T, false>;
 
 type NullableFormLayerTemplate<T extends SimpleObject> =
   | FormGroupTemplate<T>
-  | ModelFormLayer<T|undefined>
-  | BaseFormLayerConfig<T|undefined>;
+  | ModelFormLayer<T | undefined>
+  | BaseFormLayerConfig<T | undefined>;
 
 type NonNullFormLayerTemplate<T extends SimpleObject> =
   | FormGroupTemplate<T>
@@ -41,8 +41,8 @@ type NonNullFormLayerTemplate<T extends SimpleObject> =
   | BaseFormLayerConfig<T>;
 
 type NullableFormNodeTemplate<T> =
-  | FormNode<T|undefined>
-  | BaseFormNodeConfig<T|undefined>;
+  | FormNode<T | undefined>
+  | BaseFormNodeConfig<T | undefined>;
 
 type NonNullFormNodeTemplate<T> =
   | FormNode<T>
@@ -50,15 +50,17 @@ type NonNullFormNodeTemplate<T> =
 
 type NullableFormTemplate<T> =
   NonNullable<T> extends FormObjectTypes ? NullableFormNodeTemplate<NonNullable<T>>
-    : NonNullable<T> extends (infer A extends SimpleObject|undefined)[] ? NullableFormListTemplate<A>
-      : NonNullable<T> extends SimpleObject ? NullableFormLayerTemplate<NonNullable<T>>
-        : NullableFormNodeTemplate<NonNullable<T>>;
+    : NonNullable<T> extends ObjArr<infer A> ? NullableFormListTemplate<A>
+      : NonNullable<T> extends any[] ? NullableFormNodeTemplate<NonNullable<T>>
+        : NonNullable<T> extends SimpleObject ? NullableFormLayerTemplate<NonNullable<T>>
+          : NullableFormNodeTemplate<NonNullable<T>>;
 
 type NonNullFormTemplate<T> =
   NonNullable<T> extends FormObjectTypes ? NonNullFormNodeTemplate<NonNullable<T>>
-    : NonNullable<T> extends (infer A extends SimpleObject|undefined)[] ? NonNullFormListTemplate<A>
-      : NonNullable<T> extends SimpleObject ? NonNullFormLayerTemplate<NonNullable<T>>
-        : NonNullFormNodeTemplate<NonNullable<T>>;
+    : NonNullable<T> extends ObjArr<infer A> ? NonNullFormListTemplate<A>
+      : NonNullable<T> extends any[] ? NonNullFormNodeTemplate<NonNullable<T>>
+        : NonNullable<T> extends SimpleObject ? NonNullFormLayerTemplate<NonNullable<T>>
+          : NonNullFormNodeTemplate<NonNullable<T>>;
 
 export type FormTemplate<T> = undefined extends T ? NullableFormTemplate<T> : NonNullFormTemplate<T>;
 export type FormGroupTemplate<T extends SimpleObject> = { [K in keyof T]-?: FormTemplate<T[K]> };
@@ -87,3 +89,16 @@ export type FormTemplateValue<T extends TemplateUnion> =
 export type FormGroupTemplateValue<T extends TemplateLayerPrimitive> = { [K in keyof T]: FormTemplateValue<T[K]> };
 
 //</editor-fold>
+
+type test = FormTemplate<string[]>;
+type huh = {}[] extends (infer A)[] & (SimpleObject | undefined)[] ? A : false;
+
+type TheFuck<T> = NonNullable<T> extends (infer A extends SimpleObject | undefined)[] ? A : false;
+type result = TheFuck<string[]>;
+
+interface Test {
+  values: string[];
+}
+
+type fuck = FormGroupTemplate<Test>;
+type values = fuck['values'];

@@ -54,3 +54,4 @@ export type AutoComplete =
 export type FormListValue<T extends SimpleObject | undefined, TNullable extends boolean> = TNullable extends true ? T[]|undefined : T[];
 
 export type FormObjectTypes = Date | File;
+export type ObjArr<T extends SimpleObject | undefined> = T[] & (SimpleObject | undefined)[];

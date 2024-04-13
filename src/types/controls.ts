@@ -1,20 +1,22 @@
 import {FormLayer, FormList, FormNode, FormUnit, ModelFormLayer, ModelFormList} from "../forms";
 import {SimpleObject} from "@juulsgaard/ts-tools";
-import {FormObjectTypes} from "./misc";
+import {FormObjectTypes, ObjArr} from "./misc";
 
 //<editor-fold desc="Value to Controls">
 
 type NullableFormControls<T> =
   NonNullable<T> extends FormObjectTypes ? FormNode<NonNullable<T> | undefined>
-    : NonNullable<T> extends (infer A extends SimpleObject | undefined)[] ? ModelFormList<NonNullable<A>, true>
-      : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T> | undefined>
-        : FormNode<NonNullable<T> | undefined>;
+    : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<NonNullable<A>, true>
+      : NonNullable<T> extends any[] ? FormNode<NonNullable<T> | undefined>
+        : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T> | undefined>
+          : FormNode<NonNullable<T> | undefined>;
 
 type NonNullFormControls<T> =
   NonNullable<T> extends FormObjectTypes ? FormNode<NonNullable<T>>
-    : NonNullable<T> extends (infer A extends SimpleObject | undefined)[] ? ModelFormList<NonNullable<A>>
-      : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T>>
-        : FormNode<NonNullable<T>>;
+    : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<NonNullable<A>>
+      : NonNullable<T> extends any[] ? FormNode<NonNullable<T>>
+        : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T>>
+          : FormNode<NonNullable<T>>;
 
 export type FormControls<T> = undefined extends T ? NullableFormControls<T> : NonNullFormControls<T>;
 

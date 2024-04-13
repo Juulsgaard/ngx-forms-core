@@ -9,7 +9,7 @@ export type LayerDisableConfig<T, TState> =
 
 export type RootLayerDisableConfig<T> = LayerDisableConfig<T, T>;
 
-export type RootListDisableConfig<T extends SimpleObject|undefined, TNullable extends boolean> = DisableConfigFunc<FormListValue<T, TNullable>>;
+export type RootListDisableConfig<T extends SimpleObject | undefined, TNullable extends boolean> = DisableConfigFunc<FormListValue<T, TNullable>>;
 
 export interface DisableConfigFuncOptions {
   injector?: Injector;
@@ -27,8 +27,7 @@ export type DisableConfigItemFunc<T> = (
 
 export type DisableConfig<T, TState> =
   NonNullable<T> extends FormObjectTypes ? DisableConfigFunc<TState> :
-    NonNullable<T> extends SimpleObject[] ? DisableConfigFunc<TState> :
-      NonNullable<T> extends SimpleObject ? LayerDisableConfig<T, TState> :
-        DisableConfigFunc<TState>;
-
-export type RootDisableConfig<T> = DisableConfig<T, T>;
+    NonNullable<T> extends (SimpleObject | undefined)[] ? DisableConfigFunc<TState> :
+      NonNullable<T> extends any[] ? DisableConfigFunc<TState> :
+        NonNullable<T> extends SimpleObject ? LayerDisableConfig<T, TState> :
+          DisableConfigFunc<TState>;
