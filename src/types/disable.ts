@@ -27,7 +27,6 @@ export type DisableConfigItemFunc<T> = (
 
 export type DisableConfig<T, TState> =
   NonNullable<T> extends FormObjectTypes ? DisableConfigFunc<TState> :
-    NonNullable<T> extends (SimpleObject | undefined)[] ? DisableConfigFunc<TState> :
-      NonNullable<T> extends any[] ? DisableConfigFunc<TState> :
-        NonNullable<T> extends SimpleObject ? LayerDisableConfig<T, TState> :
-          DisableConfigFunc<TState>;
+    NonNullable<T> extends any[] ? DisableConfigFunc<TState> :
+      NonNullable<T> extends SimpleObject ? LayerDisableConfig<T, TState> :
+        DisableConfigFunc<TState>;

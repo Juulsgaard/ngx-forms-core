@@ -6,17 +6,19 @@ import {FormObjectTypes, ObjArr} from "./misc";
 
 type NullableFormControls<T> =
   NonNullable<T> extends FormObjectTypes ? FormNode<NonNullable<T> | undefined>
-    : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<NonNullable<A>, true>
-      : NonNullable<T> extends any[] ? FormNode<NonNullable<T> | undefined>
-        : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T> | undefined>
-          : FormNode<NonNullable<T> | undefined>;
+    : NonNullable<T> extends FormObjectTypes[] ? FormNode<NonNullable<T> | undefined>
+      : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<NonNullable<A>, true>
+        : NonNullable<T> extends any[] ? FormNode<NonNullable<T> | undefined>
+          : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T> | undefined>
+            : FormNode<NonNullable<T> | undefined>;
 
 type NonNullFormControls<T> =
   NonNullable<T> extends FormObjectTypes ? FormNode<NonNullable<T>>
-    : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<NonNullable<A>>
-      : NonNullable<T> extends any[] ? FormNode<NonNullable<T>>
-        : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T>>
-          : FormNode<NonNullable<T>>;
+    : NonNullable<T> extends FormObjectTypes[] ? FormNode<NonNullable<T>>
+      : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<NonNullable<A>>
+        : NonNullable<T> extends any[] ? FormNode<NonNullable<T>>
+          : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T>>
+            : FormNode<NonNullable<T>>;
 
 export type FormControls<T> = undefined extends T ? NullableFormControls<T> : NonNullFormControls<T>;
 
@@ -33,4 +35,5 @@ export type FormValue<T extends FormUnit> =
           : never;
 
 export type FormGroupValue<T extends Record<string, FormUnit>> = { [K in keyof T]: FormValue<T[K]> };
+
 //</editor-fold>

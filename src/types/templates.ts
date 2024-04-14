@@ -50,17 +50,19 @@ type NonNullFormNodeTemplate<T> =
 
 type NullableFormTemplate<T> =
   NonNullable<T> extends FormObjectTypes ? NullableFormNodeTemplate<NonNullable<T>>
-    : NonNullable<T> extends ObjArr<infer A> ? NullableFormListTemplate<A>
-      : NonNullable<T> extends any[] ? NullableFormNodeTemplate<NonNullable<T>>
-        : NonNullable<T> extends SimpleObject ? NullableFormLayerTemplate<NonNullable<T>>
-          : NullableFormNodeTemplate<NonNullable<T>>;
+    : NonNullable<T> extends FormObjectTypes[] ? NullableFormNodeTemplate<NonNullable<T>>
+      : NonNullable<T> extends ObjArr<infer A> ? NullableFormListTemplate<A>
+        : NonNullable<T> extends any[] ? NullableFormNodeTemplate<NonNullable<T>>
+          : NonNullable<T> extends SimpleObject ? NullableFormLayerTemplate<NonNullable<T>>
+            : NullableFormNodeTemplate<NonNullable<T>>;
 
 type NonNullFormTemplate<T> =
   NonNullable<T> extends FormObjectTypes ? NonNullFormNodeTemplate<NonNullable<T>>
-    : NonNullable<T> extends ObjArr<infer A> ? NonNullFormListTemplate<A>
-      : NonNullable<T> extends any[] ? NonNullFormNodeTemplate<NonNullable<T>>
-        : NonNullable<T> extends SimpleObject ? NonNullFormLayerTemplate<NonNullable<T>>
-          : NonNullFormNodeTemplate<NonNullable<T>>;
+    : NonNullable<T> extends FormObjectTypes[] ? NonNullFormNodeTemplate<NonNullable<T>>
+      : NonNullable<T> extends ObjArr<infer A> ? NonNullFormListTemplate<A>
+        : NonNullable<T> extends any[] ? NonNullFormNodeTemplate<NonNullable<T>>
+          : NonNullable<T> extends SimpleObject ? NonNullFormLayerTemplate<NonNullable<T>>
+            : NonNullFormNodeTemplate<NonNullable<T>>;
 
 export type FormTemplate<T> = undefined extends T ? NullableFormTemplate<T> : NonNullFormTemplate<T>;
 export type FormGroupTemplate<T extends SimpleObject> = { [K in keyof T]-?: FormTemplate<T[K]> };
