@@ -106,7 +106,7 @@ export class FormNode<T> extends AnonFormNode {
       return;
     }
 
-    this.setValue(!this.value as any);
+    this.setValue(!untracked(this.value) as any);
   }
   //</editor-fold>
 
@@ -266,13 +266,13 @@ export class FormNode<T> extends AnonFormNode {
 
   getValidValue(): T {
     if (!this.isValid()) throw Error('The value is invalid');
-    return this.value();
+    return untracked(this.value);
   }
 
   getValidValueOrDefault<TDefault>(defaultVal: TDefault): T | TDefault;
   getValidValueOrDefault(): T | undefined;
   getValidValueOrDefault<TDefault>(defaultVal?: TDefault): T | TDefault | undefined {
     if (!this.isValid()) return defaultVal;
-    return this.value();
+    return untracked(this.value);
   }
 }

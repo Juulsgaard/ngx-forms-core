@@ -118,7 +118,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
 
   private scaleToSize(size: number): boolean {
     size = Math.max(0, size);
-    const controls = this.controls();
+    const controls = untracked(this.controls);
 
     if (controls.length === size) return false;
 
@@ -146,7 +146,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
   //</editor-fold>
 
   override clear() {
-    if (this.controls().length <= 0) return false;
+    if (untracked(this.controls).length <= 0) return false;
     this._controls.set([]);
     return true;
   }
@@ -159,7 +159,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
     }
 
     this.scaleToSize(values.length);
-    const controls = this.controls();
+    const controls = untracked(this.controls);
 
     for (let i = 0; i < controls.length && i < values.length; i++) {
       controls[i]?.reset(values[i]);
@@ -172,7 +172,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
     if (values == null) return;
 
     this.scaleToSize(values.length);
-    const controls = this.controls();
+    const controls = untracked(this.controls);
 
     for (let i = 0; i < controls.length && i < values.length; i++) {
       controls[i]?.patchValue(values[i]);
@@ -181,7 +181,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
 
   setValue(values: TValue[]) {
     this.scaleToSize(values.length);
-    const controls = this.controls();
+    const controls = untracked(this.controls);
 
     for (let i = 0; i < controls.length && i < values.length; i++) {
       controls[i]?.patchValue(values[i]);
@@ -236,7 +236,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
    * @param value - The value to update with
    */
   setElement(filter: (x: TValue) => boolean, value: TValue) {
-    const control = this.controls().find(x => filter(x.value()));
+    const control = untracked(this.controls).find(x => filter(untracked(x.value)));
     if (!control) return this.addElement(value);
     control.patchValue(value);
     return control;
@@ -248,7 +248,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
    * @param value - The value to update with
    */
   updateElement(filter: (x: TValue) => boolean, value: TValue) {
-    const control = this.controls().find(x => filter(x.value()));
+    const control = untracked(this.controls).find(x => filter(untracked(x.value)));
     if (!control) return null;
     control.patchValue(value);
     return control;
@@ -272,7 +272,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
    * @param filter - The match predicate
    */
   removeElement(filter: (x: TValue) => boolean): FormLayer<TControls, TValue>|undefined {
-    const index = this.controls().findIndex(x => filter(x.value()));
+    const index = untracked(this.controls).findIndex(x => filter(untracked(x.value)));
     return this.removeAt(index);
   }
 
@@ -281,7 +281,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
    * @param layer - The layer to remove
    */
   remove(layer: AnonFormLayer): FormLayer<TControls, TValue> | undefined {
-    const index = this.controls().findIndex(x => x === layer);
+    const index = untracked(this.controls).findIndex(x => x === layer);
     return this.removeAt(index);
   }
 
@@ -291,7 +291,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
    */
   removeAt(index: number): FormLayer<TControls, TValue> | undefined {
     if (index < 0) return undefined;
-    let controls = this.controls();
+    let controls = untracked(this.controls);
     if (index >= controls.length) return undefined;
 
     controls = [...controls];
@@ -320,7 +320,7 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
   moveElement(oldIndex: number, newIndex: number) {
     if (newIndex < 0) return false;
 
-    const controls = [...this.controls()];
+    const controls = [...untracked(this.controls)];
     if (newIndex >= controls.length) return false;
 
     const removed = controls.splice(oldIndex, 1);
@@ -359,15 +359,15 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
   }
 
   override markAsTouched(): void {
-    this.controls().forEach(x => x.markAsTouched());
+    untracked(this.controls).forEach(x => x.markAsTouched());
   }
 
   override markAsUntouched(): void {
-    this.controls().forEach(x => x.markAsUntouched());
+    untracked(this.controls).forEach(x => x.markAsUntouched());
   }
 
   override rollback() {
-    this.controls().forEach(x => x.rollback());
+    untracked(this.controls).forEach(x => x.rollback());
   }
 
   private _isValid = computed(() => {
@@ -387,14 +387,14 @@ export class FormList<TControls extends Record<string, FormUnit>, TValue extends
 
   getValidValue(): FormListValue<TValue, TNullable> {
     if (!this.isValid()) throw Error('The value is invalid');
-    return this.value();
+    return untracked(this.value);
   }
 
   getValidValueOrDefault<TDefault>(defaultVal: TDefault): (FormListValue<TValue, TNullable>) | TDefault;
   getValidValueOrDefault(): TValue[] | undefined;
   getValidValueOrDefault<TDefault>(defaultVal?: TDefault): TValue[] | TDefault | undefined {
     if (!this.isValid()) return defaultVal;
-    return this.value();
+    return untracked(this.value);
   }
 }
 

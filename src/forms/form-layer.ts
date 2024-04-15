@@ -181,73 +181,79 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
   //<editor-fold desc="Value update">
 
   setValue(value: NonNullable<TValue>) {
-    this.iterateControls((control, prop) => {
-      const val = (value as SimpleObject)[prop];
+    untracked(() => {
+      this.iterateControls((control, prop) => {
+        const val = (value as SimpleObject)[prop];
 
-      if (control instanceof FormNode) {
-        control.setValue(val);
-        return;
-      }
+        if (control instanceof FormNode) {
+          control.setValue(val);
+          return;
+        }
 
-      if (control instanceof FormLayer) {
-        control.setValue(val);
-        return;
-      }
+        if (control instanceof FormLayer) {
+          control.setValue(val);
+          return;
+        }
 
-      if (control instanceof FormList) {
-        if (!Array.isArray(val)) return;
-        control.setValue(val);
-        return;
-      }
+        if (control instanceof FormList) {
+          if (!Array.isArray(val)) return;
+          control.setValue(val);
+          return;
+        }
+      });
     });
   }
 
   patchValue(value: DeepPartial<TValue>|TValue|undefined) {
     if (value == null) return;
 
-    this.iterateControls((control, prop) => {
-      if (!value.hasOwnProperty(prop)) return;
-      const val = (value as SimpleObject)[prop];
+    untracked(() => {
+      this.iterateControls((control, prop) => {
+        if (!value.hasOwnProperty(prop)) return;
+        const val = (value as SimpleObject)[prop];
 
-      if (control instanceof FormNode) {
-        control.setValue(val);
-        return;
-      }
+        if (control instanceof FormNode) {
+          control.setValue(val);
+          return;
+        }
 
-      if (control instanceof FormLayer) {
-        control.patchValue(val);
-        return;
-      }
+        if (control instanceof FormLayer) {
+          control.patchValue(val);
+          return;
+        }
 
-      if (control instanceof FormList) {
-        if (!Array.isArray(val)) return;
-        control.patchValue(val);
-        return;
-      }
+        if (control instanceof FormList) {
+          if (!Array.isArray(val)) return;
+          control.patchValue(val);
+          return;
+        }
+      });
     });
   }
 
   override reset(value?: DeepPartial<TValue>|TValue) {
     const obj: SimpleObject = value ?? {};
 
-    this.iterateControls((control, prop) => {
-      const val = obj[prop];
+    untracked(() => {
+      this.iterateControls((control, prop) => {
+        const val = obj[prop];
 
-      if (control instanceof FormNode) {
-        control.reset(val);
-        return;
-      }
+        if (control instanceof FormNode) {
+          control.reset(val);
+          return;
+        }
 
-      if (control instanceof FormLayer) {
-        control.reset(val);
-        return;
-      }
+        if (control instanceof FormLayer) {
+          control.reset(val);
+          return;
+        }
 
-      if (control instanceof FormList) {
-        if (val !== undefined && !Array.isArray(val)) return;
-        control.reset(val);
-        return;
-      }
+        if (control instanceof FormList) {
+          if (val !== undefined && !Array.isArray(val)) return;
+          control.reset(val);
+          return;
+        }
+      });
     });
 
     super.reset();
@@ -261,7 +267,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
    */
   clone(): FormLayer<TControls, TValue> {
     return new FormLayer<TControls, TValue>(
-      mapObj(this.controls(), x => x.clone()) as TControls,
+      mapObj(untracked(this.controls), x => x.clone()) as TControls,
       this.nullable,
       this.disabledDefaultValue,
       this.disabledByDefault,
@@ -272,19 +278,19 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
   }
 
   override clear(): void {
-    this.processControls(x => x.clear());
+    untracked(() => this.processControls(x => x.clear()));
   }
 
   override markAsTouched(): void {
-    this.processControls(x => x.markAsTouched());
+    untracked(() => this.processControls(x => x.markAsTouched()));
   }
 
   override markAsUntouched(): void {
-    this.processControls(x => x.markAsUntouched());
+    untracked(() => this.processControls(x => x.markAsUntouched()));
   }
 
   override rollback() {
-    this.processControls(x => x.rollback());
+    untracked(() => this.processControls(x => x.rollback()));
   }
 
   private _isValid = computed(() => {
@@ -304,14 +310,14 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
 
   getValidValue(): TValue {
     if (!this.isValid()) throw Error('The value is invalid');
-    return this.value();
+    return untracked(this.value);
   }
 
   getValidValueOrDefault<TDefault>(defaultVal: TDefault): TValue | TDefault;
   getValidValueOrDefault(): TValue | undefined;
   getValidValueOrDefault<TDefault>(defaultVal?: TDefault): TValue | TDefault | undefined {
     if (!this.isValid()) return defaultVal;
-    return this.value();
+    return untracked(this.value);
   }
 }
 
