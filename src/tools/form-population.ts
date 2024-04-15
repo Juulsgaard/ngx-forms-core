@@ -1,5 +1,5 @@
 import {deepEquals, DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
-import {ModelFormLayer} from "../forms";
+import {FormLayer} from "../forms";
 
 /**
  * Detects a new set of data would affect the form
@@ -7,7 +7,7 @@ import {ModelFormLayer} from "../forms";
  * @param newData
  */
 export function willAlterForm<T extends SimpleObject>(
-  form: ModelFormLayer<T>,
+  form: FormLayer<any, T>,
   newData: DeepPartial<T>|T|undefined
 ) {
   const oldData = form.resetValue();

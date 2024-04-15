@@ -5,18 +5,18 @@ import {
   assertInInjectionContext, computed, DestroyRef, effect, EffectRef, inject, Injector, isSignal, signal, Signal
 } from "@angular/core";
 import {willAlterForm} from "../tools";
-import {ModelFormRoot} from "../forms";
+import {FormRoot, FormUnit, ModelFormRoot} from "../forms";
 import {FormConfirmService} from "./form-confirm.service";
 import {FormPageAction, FormPageOptions, WarningDialog} from "./form-page-config";
 import {formRoot} from "../constructors";
 import {FormGroupControls} from "../types";
 import {toSignal} from "@angular/core/rxjs-interop";
 
-export class FormPage<TVal extends SimpleObject> {
+export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, TVal extends SimpleObject> {
 
-  readonly form: ModelFormRoot<TVal>;
-  readonly controls: Signal<FormGroupControls<TVal>>;
-  readonly value: Signal<TVal>;
+  abstract readonly form: FormRoot<TControls, TVal>;
+  abstract readonly controls: Signal<TControls>;
+  abstract readonly value: Signal<TVal>;
 
   private readonly _submitting$ = new Subject<ILoadingState>();
   readonly submitting: Signal<boolean>;
@@ -47,28 +47,16 @@ export class FormPage<TVal extends SimpleObject> {
 
   private requireInjector(): Injector | undefined {
     if (this.injector) return this.injector;
-    assertInInjectionContext(FormPage);
+    assertInInjectionContext(BaseFormPage);
     return undefined;
   }
 
   //</editor-fold>
 
-  constructor(
+  protected constructor(
     type: 'create' | 'update',
-    controls: FormGroupControls<TVal>,
     options: FormPageOptions<TVal>
   ) {
-
-    this.form = formRoot.model<TVal>(
-      controls,
-      {
-        errors: options.errorValidators,
-        warnings: options.warningValidators
-      }
-    );
-
-    this.controls = this.form.controls;
-    this.value = this.form.value;
 
     this.warningService = options.warningService;
 
@@ -212,6 +200,29 @@ export class FormPage<TVal extends SimpleObject> {
     this._deleting$.next(state);
 
     return state;
+  }
+}
+
+export class FormPage<TVal extends SimpleObject> extends BaseFormPage<FormGroupControls<TVal>, TVal> {
+
+  readonly controls: Signal<FormGroupControls<TVal>>;
+  readonly form: ModelFormRoot<TVal>;
+  readonly value: Signal<TVal>;
+
+
+  constructor(type: "create" | "update", controls: FormGroupControls<TVal>, options: FormPageOptions<TVal>) {
+    super(type, options);
+
+    this.form = formRoot.model<TVal>(
+      controls,
+      {
+        errors: options.errorValidators,
+        warnings: options.warningValidators
+      }
+    );
+
+    this.controls = this.form.controls;
+    this.value = this.form.value;
   }
 }
 

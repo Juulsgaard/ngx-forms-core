@@ -65,6 +65,14 @@ export class FormDialogConfig<TValue extends Record<string, any>> {
    * @param settings
    */
   configure(settings: FormDialogOptions<TValue>): FormDialog<TValue> {
-    return new FormDialog<TValue>(this.controls, this.type, settings)
+    return new FormDialog<TValue>(
+      this.controls,
+      this.type,
+      settings,
+      this.shouldSubmitOnEnter,
+      this.buttonText,
+      this.errorValidators,
+      this.warningValidators
+    );
   }
 }
