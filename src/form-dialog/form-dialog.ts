@@ -37,7 +37,7 @@ export abstract class BaseFormDialog<TControls extends Record<string, FormUnit>,
   /** The text for the submit button */
   readonly buttonText: string;
   /** Whether the form should submit when enter is hit */
-  readonly submitOnEnter: boolean;
+  abstract readonly submitOnEnter: boolean;
 
   abstract readonly valid: Signal<boolean>;
   abstract readonly canSubmit: Signal<boolean>;
@@ -51,7 +51,6 @@ export abstract class BaseFormDialog<TControls extends Record<string, FormUnit>,
   protected constructor(
     type: 'create'|'update',
     options: FormDialogOptions<TValue>,
-    submitOnEnter?: boolean,
     buttonText?: string
   ) {
     this.createForm = type === 'create';
@@ -59,17 +58,6 @@ export abstract class BaseFormDialog<TControls extends Record<string, FormUnit>,
     this.title = options.title;
     this.description = options.description;
     this.buttonText = buttonText ?? (this.createForm ? 'Create' : 'Save');
-    this.submitOnEnter = submitOnEnter ?? this.shouldSubmitOnEnter();
-  }
-
-  private shouldSubmitOnEnter() {
-    const count = this.form.nodes().length;
-    if (count <= 0) return true;
-    if (count > 1) return false;
-
-    const type = this.form.nodes().at(0)!.type;
-    if (type == InputTypes.LongText || type == InputTypes.HTML) return false;
-    return true;
   }
 
   /**
@@ -132,6 +120,7 @@ export class FormDialog<TValue extends SimpleObject> extends BaseFormDialog<Form
   readonly value: Signal<TValue>;
   readonly warningState: Signal<FormValidationContext[]>;
   readonly warnings: Signal<string[]>;
+  readonly submitOnEnter: boolean;
 
   /**
    * Manually create a Form Dialog.
@@ -153,7 +142,7 @@ export class FormDialog<TValue extends SimpleObject> extends BaseFormDialog<Form
     errorValidators: FormValidator<TValue>[] = [],
     warningValidators: FormValidator<TValue>[] = []
   ) {
-    super(type, options, submitOnEnter, buttonText);
+    super(type, options, buttonText);
 
     this.form = formRoot.model<TValue>(controls, {
       errors: errorValidators,
@@ -171,5 +160,17 @@ export class FormDialog<TValue extends SimpleObject> extends BaseFormDialog<Form
     this.warningState = this.form.warningState;
 
     this.canSubmit = this.createForm ? this.form.canCreate : this.form.canUpdate;
+
+    this.submitOnEnter = submitOnEnter ?? this.shouldSubmitOnEnter();
+  }
+
+  private shouldSubmitOnEnter() {
+    const count = this.form.nodes().length;
+    if (count <= 0) return true;
+    if (count > 1) return false;
+
+    const type = this.form.nodes().at(0)!.type;
+    if (type == InputTypes.LongText || type == InputTypes.HTML) return false;
+    return true;
   }
 }

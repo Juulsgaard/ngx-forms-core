@@ -101,7 +101,7 @@ function fromUnit<TState>(unit: FormUnit, state: Signal<FormMemoValue<TState>>, 
 }
 
 function fromList<T extends SimpleObject|undefined, TState>(
-  list: FormList<any, T, boolean>,
+  list: FormList<any, T, any>,
   state: Signal<FormMemoValue<TState>>,
   options: AutoDisableOptions
 ): DisableConfigFunc<TState> {
