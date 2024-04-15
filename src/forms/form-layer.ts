@@ -204,6 +204,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
 
   patchValue(value: DeepPartial<TValue>|TValue|undefined) {
     if (value == null) return;
+
     this.iterateControls((control, prop) => {
       if (!value.hasOwnProperty(prop)) return;
       const val = (value as SimpleObject)[prop];
@@ -227,8 +228,10 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
   }
 
   override reset(value?: DeepPartial<TValue>|TValue) {
+    const obj: SimpleObject = value ?? {};
+
     this.iterateControls((control, prop) => {
-      const val = (value as SimpleObject)[prop];
+      const val = obj[prop];
 
       if (control instanceof FormNode) {
         control.reset(val);
