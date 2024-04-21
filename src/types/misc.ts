@@ -56,3 +56,6 @@ export type FormListValue<T extends SimpleObject | undefined, TNullable extends 
 // string and number are here to handle Enums
 export type FormObjectTypes = Date | File | string | number;
 export type ObjArr<T extends SimpleObject | undefined> = T[] & (SimpleObject | undefined)[];
+
+export type ReservedFuncProps = 'name'|'length'|'caller'|'arguments'|'prototype';
+export type NewFuncProp<T> = T extends ReservedFuncProps ? `$${T}` : T;

@@ -1,15 +1,15 @@
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {Signal} from "@angular/core";
-import {FormObjectTypes, ObjArr} from "./misc";
+import {FormObjectTypes, NewFuncProp, ObjArr} from "./misc";
 
 export type FormMemoLayer<T> =
-  { readonly [K in keyof T]-?: FormMemoValue<T[K]> } &
+  { readonly [K in keyof T as NewFuncProp<K>]-?: FormMemoValue<T[K]> } &
   Signal<T>;
 
 export type FormMemoList<T, TItem> =
   { at: (index: number) => FormMemoLayer<TItem> | undefined } &
   IterableIterator<FormMemoLayer<TItem>> &
-  { length: Signal<number> } &
+  { count: number } &
   Signal<T>;
 
 export type FormMemoValue<T> =

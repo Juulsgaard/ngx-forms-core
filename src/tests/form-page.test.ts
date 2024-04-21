@@ -2,7 +2,8 @@ import {FormPage, formPage} from "../form-page";
 import {Form} from "../constructors";
 
 interface TestValue {
-  value: string,
+  name: string,
+  length: number,
   date: Date,
   bool: boolean,
   layer: {value: string},
@@ -11,7 +12,8 @@ interface TestValue {
 
 test('Form Page', () => {
   const page: FormPage<TestValue> = formPage.edit<TestValue>().withForm({
-    value: Form.text(),
+    name: Form.text(),
+    length: Form.number(),
     date: Form.date(),
     bool: Form.bool(),
     layer: {value: Form.text()},

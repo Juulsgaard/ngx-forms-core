@@ -1,10 +1,10 @@
 import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormMemoValue} from "./values";
 import {EffectRef, Injector, Signal} from "@angular/core";
-import {FormListValue, FormObjectTypes} from "./misc";
+import {FormListValue, FormObjectTypes, NewFuncProp} from "./misc";
 
 export type LayerDisableConfig<T, TState> =
-  { readonly [K in keyof T]-?: DisableConfig<T[K], TState> }
+  { readonly [K in keyof T as NewFuncProp<K>]-?: DisableConfig<T[K], TState> }
   & DisableConfigFunc<TState>;
 
 export type RootLayerDisableConfig<T> = LayerDisableConfig<T, T>;

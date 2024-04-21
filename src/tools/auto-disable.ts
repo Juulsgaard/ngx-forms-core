@@ -7,6 +7,7 @@ import {
 import {FormMemoValue} from "../types/values";
 import {effect, Injector, runInInjectionContext, Signal} from "@angular/core";
 import {getMemoized} from "./memo-state";
+import {formatFuncProp} from "./helpers";
 
 interface AutoDisableOptions {
   injector?: Injector;
@@ -142,7 +143,7 @@ function fromLayer<T extends SimpleObject | undefined, TState>(
   for (let key in controls) {
     const control = controls[key];
     if (!control) continue;
-    (autoDisable as Record<string, DisableConfig<unknown, TState>>)[key] = fromUnit(control, state, options);
+    (autoDisable as Record<string, DisableConfig<unknown, TState>>)[formatFuncProp(key)] = fromUnit(control, state, options);
   }
 
   return autoDisable;

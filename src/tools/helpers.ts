@@ -1,3 +1,6 @@
+import {NewFuncProp, ReservedFuncProps} from "../types";
+import {isString} from "@juulsgaard/ts-tools";
+
 export function compareLists<T>(prev: (T|undefined)[] | undefined, next: (T|undefined)[] | undefined, comparison?: (a: T|undefined, b: T|undefined) => boolean): boolean {
   if (prev === next) return true;
 
@@ -37,4 +40,12 @@ export function toList<T>(data: T|T[]|undefined): T[] {
   if (data == null) return [];
   if (Array.isArray(data)) return data;
   return [data];
+}
+
+const reservedFunProps: Set<string> = new Set<ReservedFuncProps>(['name', 'length', 'caller', 'arguments', 'prototype'])
+
+export function formatFuncProp<T>(key: T): NewFuncProp<T> {
+  if (!isString(key)) return key as NewFuncProp<T>;
+  if (!reservedFunProps.has(key)) return key as NewFuncProp<T>;
+  return `$${key}` as NewFuncProp<T>;
 }

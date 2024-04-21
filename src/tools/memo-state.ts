@@ -3,6 +3,7 @@ import {SimpleObject} from "@juulsgaard/ts-tools";
 import {FormMemoLayer, FormMemoList, FormMemoValue} from "../types/values";
 import {computed, Signal} from "@angular/core";
 import {FormListValue} from "../types";
+import {formatFuncProp} from "./helpers";
 
 const cache = new WeakMap<FormUnit, Signal<FormMemoValue<unknown>>>();
 
@@ -50,6 +51,7 @@ function fromList<T extends SimpleObject | undefined, TNullable extends boolean>
 
   state[Symbol.iterator] = values[Symbol.iterator];
   state.at = (index: number) => values[index];
+  state.count = values.length;
 
   return state;
 }
@@ -63,9 +65,7 @@ function fromLayer<T extends SimpleObject | undefined>(layer: FormLayer<any, T>)
     const control = controls[key];
     if (!control) continue;
     const memo = getMemoized(control);
-    (
-      state as Record<string, FormMemoValue<unknown>>
-    )[key] = memo();
+    (state as Record<string, FormMemoValue<unknown>>)[formatFuncProp(key)] = memo();
   }
 
   return state;
