@@ -67,6 +67,7 @@ export abstract class BaseFormDialog<TControls extends Record<string, FormUnit>,
    */
   start(reset?: DeepPartial<TValue>) {
     this.form.reset(reset);
+    this.form.markAsUntouched();
     this._show.set(true);
   }
 
