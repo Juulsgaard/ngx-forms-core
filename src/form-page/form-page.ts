@@ -1,8 +1,9 @@
-import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
+import {DeepPartial, isFunction, SimpleObject} from "@juulsgaard/ts-tools";
 import {startWith, Subject, Subscribable, switchMap, Unsubscribable} from "rxjs";
 import {ILoadingState, Loading} from "@juulsgaard/rxjs-tools";
 import {
-  assertInInjectionContext, computed, DestroyRef, effect, EffectRef, inject, Injector, isSignal, signal, Signal
+  assertInInjectionContext, computed, DestroyRef, effect, EffectRef, inject, Injector, isSignal, signal, Signal,
+  untracked
 } from "@angular/core";
 import {willAlterForm} from "../tools";
 import {FormRoot, FormUnit, ModelFormRoot} from "../forms";
@@ -121,17 +122,22 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
     values: Signal<DeepPartial<TVal>|undefined> | Signal<TVal|undefined>,
     options?: FormPageUpdateOptions
   ): EffectRef;
+  /** Update the form from a computation (tracked) */
+  updateFrom(
+    values: (() => DeepPartial<TVal>|undefined) | (() => TVal|undefined),
+    options?: FormPageUpdateOptions
+  ): EffectRef;
   /** Update the form from a subscribable */
   updateFrom(
     values: Subscribable<DeepPartial<TVal>|undefined> | Subscribable<TVal|undefined>,
     options?: FormPageUpdateOptions
   ): Unsubscribable;
   updateFrom(
-    values: Signal<DeepPartial<TVal>|undefined> | Signal<TVal|undefined> | Subscribable<DeepPartial<TVal>|undefined> | Subscribable<TVal|undefined>,
+    values: (() => DeepPartial<TVal>|undefined) | (() => TVal|undefined) | Subscribable<DeepPartial<TVal>|undefined> | Subscribable<TVal|undefined>,
     options?: FormPageUpdateOptions
   ): EffectRef | Unsubscribable {
 
-    if (isSignal(values)) {
+    if (isFunction(values)) {
       if (!options?.injector) assertInInjectionContext(this.updateFrom);
 
       return effect(
@@ -152,55 +158,77 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
     return sub;
   }
 
+  //<editor-fold desc="Submit">
   submit(): ILoadingState {
     if (!this.showSubmit()) return Loading.Empty();
     if (!this.canSubmit()) return Loading.Empty();
     if (this.submitting()) return Loading.Empty();
 
     if (!this.form.isValid()) return Loading.Empty();
+
+    return Loading.Async(this.submitAsync());
+  }
+
+  private async submitAsync() {
+
     const value = this.form.getValidValue();
 
-    if (this.submitWarning) {
-      if (!this.warningService) {
-        console.error('Could not render submission warning');
-        return Loading.FromError(() => Error('Could not render submission warning'));
-      }
-
-      const warning = this.submitWarning(value)
-      const confirmed = this.warningService.confirmSubmit(warning);
-      if (!confirmed) return Loading.Empty();
-    }
+    const shouldSubmit = await this.shouldSubmit(value);
+    if (!shouldSubmit) return;
 
     const submit = this.onSubmit!;
     const state = execute(() => submit(value));
     this._submitting$.next(state);
 
-    return state;
+    await state;
   }
 
+  private async shouldSubmit(value: TVal) {
+    if (!this.submitWarning) return true;
+
+    if (!this.warningService) {
+      console.error('Could not render submission warning');
+      throw Error('Could not render submission warning');
+    }
+
+    const warning = this.submitWarning(value)
+    return await this.warningService.confirmSubmit(warning);
+  }
+  //</editor-fold>
+
+  //<editor-fold desc="Delete">
   delete(): ILoadingState {
     if (!this.showDelete()) return Loading.Empty();
     if (this.deleting()) return Loading.Empty();
 
-    const value = this.form.value();
+    return Loading.Async(this.deleteAsync());
+  }
 
-    if (this.deleteWarning) {
-      if (!this.warningService) {
-        console.error('Could not render deletion warning');
-        return Loading.FromError(() => Error('Could not render deletion warning'));
-      }
+  private async deleteAsync() {
+    const value = untracked(this.form.value);
 
-      const warning = this.deleteWarning(value)
-      const confirmed = this.warningService.confirmDelete(warning);
-      if (!confirmed) return Loading.Empty();
-    }
+    const shouldDelete = await this.shouldDelete(value);
+    if (!shouldDelete) return;
 
     const doDelete = this.onDelete!;
     const state = execute(() => doDelete(value));
     this._deleting$.next(state);
 
-    return state;
+    await state;
   }
+
+  private async shouldDelete(value: TVal) {
+    if (!this.deleteWarning) return true;
+
+    if (!this.warningService) {
+      console.error('Could not render deletion warning');
+      throw Error('Could not render deletion warning');
+    }
+
+    const warning = this.deleteWarning(value);
+    return await this.warningService.confirmDelete(warning);
+  }
+  //</editor-fold>
 }
 
 export class FormPage<TVal extends SimpleObject> extends BaseFormPage<FormGroupControls<TVal>, TVal> {
