@@ -165,12 +165,23 @@ export class FormDialog<TValue extends SimpleObject> extends BaseFormDialog<Form
   }
 
   private shouldSubmitOnEnter() {
-    const count = this.form.nodes().length;
+    const nodes = this.form.nodes().filter(x => !x.readonly);
+    const count = nodes.length;
     if (count <= 0) return true;
     if (count > 1) return false;
 
-    const type = this.form.nodes().at(0)!.type;
-    if (type == InputTypes.LongText || type == InputTypes.HTML) return false;
-    return true;
+    const type = nodes.at(0)!.type;
+
+    switch (type) {
+      case InputTypes.LongText:
+      case InputTypes.HTML:
+      case InputTypes.Select:
+      case InputTypes.SelectMany:
+      case InputTypes.Generic:
+      case InputTypes.Search:
+        return false;
+      default:
+        return true;
+    }
   }
 }
