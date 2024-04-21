@@ -180,7 +180,7 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
 
   delete(): ILoadingState {
     if (!this.showDelete()) return Loading.Empty();
-    if (!this.deleting()) return Loading.Empty();
+    if (this.deleting()) return Loading.Empty();
 
     const value = this.form.value();
 
