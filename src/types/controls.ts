@@ -7,7 +7,7 @@ import {FormObjectTypes, ObjArr} from "./misc";
 type NullableFormControls<T> =
   NonNullable<T> extends FormObjectTypes ? FormNode<NonNullable<T> | undefined>
     : NonNullable<T> extends FormObjectTypes[] ? FormNode<NonNullable<T> | undefined>
-      : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<NonNullable<A>, true>
+      : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<A, true>
         : NonNullable<T> extends any[] ? FormNode<NonNullable<T> | undefined>
           : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T> | undefined>
             : FormNode<NonNullable<T> | undefined>;
@@ -15,7 +15,7 @@ type NullableFormControls<T> =
 type NonNullFormControls<T> =
   NonNullable<T> extends FormObjectTypes ? FormNode<NonNullable<T>>
     : NonNullable<T> extends FormObjectTypes[] ? FormNode<NonNullable<T>>
-      : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<NonNullable<A>>
+      : NonNullable<T> extends ObjArr<infer A> ? ModelFormList<A>
         : NonNullable<T> extends any[] ? FormNode<NonNullable<T>>
           : NonNullable<T> extends SimpleObject ? ModelFormLayer<NonNullable<T>>
             : FormNode<NonNullable<T>>;
