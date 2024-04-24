@@ -76,10 +76,10 @@ export class FormNode<T> extends AnonFormNode {
     this.debouncedRawValue = computed(() => this.getRawValue(this.debouncedState));
     this.debouncedValue = computed(() => this.getValue(this.debouncedRawValue));
 
-    this._resetState = signal(this.state());
+    this._resetState = signal(untracked(this.state));
     this.resetState = this._resetState.asReadonly();
 
-    this._resetValue = signal(this.value());
+    this._resetValue = signal(untracked(this.value));
     this.resetValue = this._resetValue.asReadonly();
 
     this.changed = computed(() => !compareValues(this.resetValue(), this.value()));

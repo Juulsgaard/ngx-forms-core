@@ -90,7 +90,7 @@ export class FormLayer<TControls extends Record<string, FormUnit>, TValue extend
       return warnings;
     });
 
-    postConfiguration.forEach(f => f(this));
+    untracked(() => postConfiguration.forEach(f => f(this)));
   }
 
   override getDisabledValue(): TValue {
