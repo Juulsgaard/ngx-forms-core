@@ -227,8 +227,8 @@ export class FormNode<T> extends AnonFormNode {
   override reset(value?: T) {
     this.updateState(value ?? this.initialValue, true);
     super.reset();
-    this._resetState.set(this.state());
-    this._resetValue.set(this.value());
+    this._resetState.set(untracked(this.state));
+    this._resetValue.set(untracked(this.value));
   }
 
   override clear() {
@@ -256,7 +256,7 @@ export class FormNode<T> extends AnonFormNode {
   }
 
   override rollback() {
-    this.updateState(this.resetState(), true);
+    this.updateState(untracked(this.resetState), true);
   }
 
   private _isValid = computed(() => this.getErrors(this.rawValue).next().done === true);
