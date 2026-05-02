@@ -1,7 +1,7 @@
 import {dts} from "rollup-plugin-dts";
 import esbuild from "rollup-plugin-esbuild";
 
-const external = ['@juulsgaard/ts-tools', 'rxjs', 'rxjs/operators', '@juulsgaard/rxjs-tools', '@angular/core', '@angular/forms', '@angular/core/rxjs-interop'];
+const external = ['@juulsgaard/ts-tools', 'rxjs', 'rxjs/operators', '@juulsgaard/rxjs-tools', '@angular/core', '@angular/core/rxjs-interop'];
 
 export default [
 	{

@@ -25,8 +25,27 @@ interface SubFormData {
   nullable?: string;
 }
 
-const defaultData: FormData = {value: '', date: FormConstants.NULL_DATE, bool: false, layer: {value: ''}, list: []};
-const testData: FormData = {value: 'Value str', select: 'id', nullable: 'Nullable value', date: new Date(), bool: true, layer: {value: 'Nested Value'}, list: [{value: 'List value'}]};
+const defaultData: FormData = {
+  value: '',
+  nullable: undefined,
+  select: undefined,
+  date: FormConstants.NULL_DATE,
+  file: undefined,
+  bool: false,
+  layer: {value: '', nullable: undefined},
+  list: []
+};
+
+const testData: FormData = {
+  value: 'Value str',
+  nullable: 'Nullable value',
+  select: 'id',
+  bool: true,
+  date: new Date(),
+  file: undefined,
+  layer: {value: 'Nested value', nullable: 'Layer nullable value'},
+  list: [{value: 'List value', nullable: 'List nullable value'}],
+};
 
 test('Model Based', () => {
 
