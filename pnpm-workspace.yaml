@@ -6,7 +6,7 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - '@angular/core@22.2.1'
   - '@juulsgaard/rxjs-tools@1.10.0'
-  - '@juulsgaard/ts-tools@1.9.0'
+  - '@juulsgaard/ts-tools@1.9.0 || 1.9.1'
   - '@rollup/rollup-android-arm-eabi@4.63.6'
   - '@rollup/rollup-android-arm64@4.63.6'
   - '@rollup/rollup-darwin-arm64@4.63.6'
