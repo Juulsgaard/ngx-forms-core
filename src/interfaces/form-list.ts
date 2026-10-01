@@ -1,5 +1,4 @@
 import {IFormNode, IReadonlyFormNode} from "./form-node";
-import {IReadonlyFormInput} from "./form-input";
 import {AnonFormLayer} from "../forms";
 import {Signal} from "@angular/core";
 import {IFormLayer, IReadonlyFormLayer} from "./form-layer";
@@ -16,7 +15,7 @@ export interface IReadonlyFormList<T> extends IReadonlyFormNode<T[]> {
   readonly empty: Signal<boolean>;
 }
 
-export interface IFormList<T> extends IFormNode<T[]>, IReadonlyFormInput<T[]> {
+export interface IFormList<T> extends IReadonlyFormList<T>, IFormNode<T[]> {
 
   /** A list of all the Form Layers making up the list */
   readonly controls: Signal<ReadonlyArray<IFormLayer<T>>>;

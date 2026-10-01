@@ -8,7 +8,7 @@ export interface IReadonlyFormLayer<T> extends IReadonlyFormNode<T> {
   readonly inputs: Signal<IReadonlyFormUnit[]>;
 }
 
-export interface IFormLayer<T> extends IFormNode<T>, IReadonlyFormLayer<T> {
+export interface IFormLayer<T> extends IReadonlyFormLayer<T>, IFormNode<T> {
   readonly controls: Signal<FormLayerControls<T>>;
   readonly inputs: Signal<IFormUnit[]>;
 

@@ -26,7 +26,7 @@ export interface IReadonlyFormInput<T> extends IReadonlyFormNode<T> {
   scrollTo(): void;
 }
 
-export interface IFormInput<T> extends IFormNode<T>, IReadonlyFormInput<T> {
+export interface IFormInput<T> extends IReadonlyFormInput<T>, IFormNode<T> {
 
   /** Toggle the input value if boolean */
   toggle(): void

@@ -19,7 +19,7 @@ export interface IReadonlyFormNode<T> extends IReadonlyFormUnit {
   getValidValueOrDefault(): T|undefined;
 }
 
-export interface IFormNode<T> extends IFormUnit, IReadonlyFormNode<T> {
+export interface IFormNode<T> extends IReadonlyFormNode<T>, IFormUnit {
 
   setValue(value: T): void;
   patchValue(value: DeepPartial<T>|T): void;
