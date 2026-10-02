@@ -1,5 +1,6 @@
 import {Provider, Type} from "@angular/core";
-import {WarningDialog} from "./form-page-config";
+
+import {WarningDialog} from "./form-page.types";
 
 export abstract class FormConfirmService {
 

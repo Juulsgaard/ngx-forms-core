@@ -1,23 +1,34 @@
-import {DeepPartial, isFunction, SimpleObject} from "@juulsgaard/ts-tools";
-import {startWith, Subject, Subscribable, switchMap, Unsubscribable} from "rxjs";
-import {ILoadingState, Loading} from "@juulsgaard/rxjs-tools";
 import {
-  assertInInjectionContext, computed, DestroyRef, effect, EffectRef, inject, Injector, isSignal, signal, Signal,
+  assertInInjectionContext,
+  computed,
+  DestroyRef,
+  effect,
+  EffectRef,
+  inject,
+  Injector,
+  isSignal,
+  signal,
+  Signal,
   untracked
 } from "@angular/core";
-import {willAlterForm} from "../tools";
-import {FormRoot, FormUnit, ModelFormRoot} from "../forms";
+import {IFormPage} from "./form-page.interface";
+import {FormLayerControls} from "../units/controls";
+import {IFormRoot} from "../units/root/form-root.interface";
+import {startWith, Subject, Subscribable, switchMap, Unsubscribable} from "rxjs";
+import {ILoadingState, Loading} from "@juulsgaard/rxjs-tools";
+import {FormPageAction, FormPageOptions, FormPageUpdateOptions, WarningDialog} from "./form-page.types";
 import {FormConfirmService} from "./form-confirm.service";
-import {FormPageAction, FormPageOptions, WarningDialog} from "./form-page-config";
-import {formRoot} from "../constructors";
-import {FormGroupControls} from "../types";
+import {formRoot} from "../units/root/form-root.ctor";
 import {toSignal} from "@angular/core/rxjs-interop";
+import {DeepPartial, isFunction} from "@juulsgaard/ts-tools";
+import {willAlterForm} from "../tools/form-population";
 
-export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, TVal extends SimpleObject> {
 
-  abstract readonly form: FormRoot<TControls, TVal>;
-  abstract readonly controls: Signal<TControls>;
-  abstract readonly value: Signal<TVal>;
+export class FormPage<T> implements IFormPage<T> {
+
+  readonly controls: Signal<FormLayerControls<T>>;
+  readonly form: IFormRoot<T>;
+  readonly value: Signal<T>;
 
   private readonly _submitting$ = new Subject<ILoadingState>();
   readonly submitting: Signal<boolean>;
@@ -35,29 +46,39 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
   readonly showDelete: Signal<boolean>;
 
   //<editor-fold desc="Options">
-  private readonly onSubmit?: FormPageAction<TVal>;
+  private readonly onSubmit?: FormPageAction<T>;
   public readonly submitBtnText: string;
-  private readonly submitWarning?: (value: TVal) => WarningDialog;
+  private readonly submitWarning?: (value: T) => WarningDialog;
 
-  private readonly onDelete?: FormPageAction<TVal>;
+  private readonly onDelete?: FormPageAction<T>;
   public readonly deleteBtnText: string;
-  private readonly deleteWarning?: (value: TVal) => WarningDialog;
+  private readonly deleteWarning?: (value: T) => WarningDialog;
 
   private readonly warningService?: FormConfirmService;
   private readonly injector?: Injector;
 
   private requireInjector(): Injector | undefined {
     if (this.injector) return this.injector;
-    assertInInjectionContext(BaseFormPage);
+    assertInInjectionContext(FormPage);
     return undefined;
   }
 
   //</editor-fold>
 
-  protected constructor(
-    type: 'create' | 'update',
-    options: FormPageOptions<TVal>
+  constructor(
+    type: "create" | "update",
+    controls: FormLayerControls<T>,
+    options: FormPageOptions<T>
   ) {
+
+    this.form = formRoot
+      .build(controls)
+      .withErrors(...options.errorValidators)
+      .withWarnings(...options.warningValidators)
+      .done();
+
+    this.controls = this.form.controls;
+    this.value = this.form.value;
 
     this.warningService = options.warningService;
 
@@ -111,7 +132,8 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
     }
   }
 
-  update(value: DeepPartial<TVal> | TVal | undefined) {
+  //<editor-fold desc="Update">
+  update(value: DeepPartial<T> | T | undefined) {
     const changed = willAlterForm(this.form, value);
     if (!changed) return;
     this.form.reset(value);
@@ -119,21 +141,21 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
 
   /** Update the form from a signal */
   updateFrom(
-    values: Signal<DeepPartial<TVal>|undefined> | Signal<TVal|undefined>,
+    values: Signal<DeepPartial<T>|undefined> | Signal<T|undefined>,
     options?: FormPageUpdateOptions
   ): EffectRef;
   /** Update the form from a computation (tracked) */
   updateFrom(
-    values: (() => DeepPartial<TVal>|undefined) | (() => TVal|undefined),
+    values: (() => DeepPartial<T>|undefined) | (() => T|undefined),
     options?: FormPageUpdateOptions
   ): EffectRef;
   /** Update the form from a subscribable */
   updateFrom(
-    values: Subscribable<DeepPartial<TVal>|undefined> | Subscribable<TVal|undefined>,
+    values: Subscribable<DeepPartial<T>|undefined> | Subscribable<T|undefined>,
     options?: FormPageUpdateOptions
   ): Unsubscribable;
   updateFrom(
-    values: (() => DeepPartial<TVal>|undefined) | (() => TVal|undefined) | Subscribable<DeepPartial<TVal>|undefined> | Subscribable<TVal|undefined>,
+    values: (() => DeepPartial<T>|undefined) | (() => T|undefined) | Subscribable<DeepPartial<T>|undefined> | Subscribable<T|undefined>,
     options?: FormPageUpdateOptions
   ): EffectRef | Unsubscribable {
 
@@ -157,6 +179,7 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
 
     return sub;
   }
+  //</editor-fold>
 
   //<editor-fold desc="Submit">
   submit(): ILoadingState {
@@ -183,7 +206,7 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
     await state;
   }
 
-  private async shouldSubmit(value: TVal) {
+  private async shouldSubmit(value: T) {
     if (!this.submitWarning) return true;
 
     if (!this.warningService) {
@@ -217,7 +240,7 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
     await state;
   }
 
-  private async shouldDelete(value: TVal) {
+  private async shouldDelete(value: T) {
     if (!this.deleteWarning) return true;
 
     if (!this.warningService) {
@@ -231,29 +254,6 @@ export abstract class BaseFormPage<TControls extends Record<string, FormUnit>, T
   //</editor-fold>
 }
 
-export class FormPage<TVal extends SimpleObject> extends BaseFormPage<FormGroupControls<TVal>, TVal> {
-
-  readonly controls: Signal<FormGroupControls<TVal>>;
-  readonly form: ModelFormRoot<TVal>;
-  readonly value: Signal<TVal>;
-
-
-  constructor(type: "create" | "update", controls: FormGroupControls<TVal>, options: FormPageOptions<TVal>) {
-    super(type, options);
-
-    this.form = formRoot.model<TVal>(
-      controls,
-      {
-        errors: options.errorValidators,
-        warnings: options.warningValidators
-      }
-    );
-
-    this.controls = this.form.controls;
-    this.value = this.form.value;
-  }
-}
-
 function execute(action: () => Promise<any> | Subscribable<any> | ILoadingState | void): ILoadingState {
   try {
     const result = action();
@@ -264,9 +264,4 @@ function execute(action: () => Promise<any> | Subscribable<any> | ILoadingState 
     const error = e instanceof Error ? e : Error(e?.toString());
     return Loading.FromError(() => error);
   }
-}
-
-interface FormPageUpdateOptions {
-  manualCleanup?: boolean;
-  injector?: Injector;
 }

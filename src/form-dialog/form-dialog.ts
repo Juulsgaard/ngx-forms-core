@@ -1,23 +1,26 @@
-import {lastValueFrom, Observable} from "rxjs";
-import {DeepPartial, SimpleObject} from "@juulsgaard/ts-tools";
-import {ILoadingState} from "@juulsgaard/rxjs-tools";
-import {FormRoot, FormUnit, InputTypes, ModelFormRoot} from "../forms";
-import {FormDialogOptions} from "./form-dialog-config";
+import {IFormDialog} from "./form-dialog.interface";
+import {IFormRoot} from "../units/root/form-root.interface";
 import {signal, Signal} from "@angular/core";
-import {formRoot} from "../constructors";
-import {FormGroupControls} from "../types";
-import {FormValidationContext, FormValidator} from "../tools";
+import {FormLayerControls} from "../units/controls";
+import {lastValueFrom, Observable} from "rxjs";
+import {ILoadingState} from "@juulsgaard/rxjs-tools";
+import {FormValidationContext, FormValidator} from "../tools/form-validation";
+import {FormDialogOptions} from "./form-dialog.types";
+import {formRoot} from "../units/root/form-root.ctor";
+import {InputTypes} from "../units/input/form-input.types";
+import {DeepPartial} from "@juulsgaard/ts-tools";
 
-export abstract class BaseFormDialog<TControls extends Record<string, FormUnit>, TValue extends SimpleObject> {
+
+export class FormDialog<T> implements IFormDialog<T> {
 
   /** The form of the dialog */
-  abstract readonly form: FormRoot<TControls, TValue>;
+  readonly form: IFormRoot<T>;
 
   /** The value of the dialog form */
-  abstract readonly value: Signal<TValue>;
+  readonly value: Signal<T>;
 
   /** The dialog form controls */
-  abstract readonly controls: Signal<TControls>;
+  readonly controls: Signal<FormLayerControls<T>>;
 
   private readonly _show = signal(false);
   /** Whether the dialog should be shown */
@@ -27,8 +30,8 @@ export abstract class BaseFormDialog<TControls extends Record<string, FormUnit>,
   /** Whether the submission is currently in progress */
   readonly working: Signal<boolean> = this._working.asReadonly();
 
-  private readonly onSubmit: (data: TValue) => Promise<any>|Observable<any>|ILoadingState|void;
-  protected readonly createForm: boolean;
+  private readonly onSubmit: (data: T) => Promise<any>|Observable<any>|ILoadingState|void;
+  private readonly createForm: boolean;
 
   /** The title of the Dialog */
   readonly title: string;
@@ -37,27 +40,82 @@ export abstract class BaseFormDialog<TControls extends Record<string, FormUnit>,
   /** The text for the submit button */
   readonly buttonText: string;
   /** Whether the form should submit when enter is hit */
-  abstract readonly submitOnEnter: boolean;
+  readonly submitOnEnter: boolean;
 
-  abstract readonly valid: Signal<boolean>;
-  abstract readonly canSubmit: Signal<boolean>;
+  readonly valid: Signal<boolean>;
+  readonly canSubmit: Signal<boolean>;
 
-  abstract readonly errors: Signal<string[]>;
-  abstract readonly errorState: Signal<FormValidationContext[]>;
+  readonly errors: Signal<string[]>;
+  readonly errorState: Signal<FormValidationContext[]>;
 
-  abstract readonly warnings: Signal<string[]>;
-  abstract readonly warningState: Signal<FormValidationContext[]>;
+  readonly warnings: Signal<string[]>;
+  readonly warningState: Signal<FormValidationContext[]>;
 
-  protected constructor(
-    type: 'create'|'update',
-    options: FormDialogOptions<TValue>,
-    buttonText?: string
+  /**
+   * Manually create a Form Dialog.
+   * It is recommended to the `formDialog.create<T>()` or `formDialog.update<T>()` when creating a Form Dialog.
+   * @param controls - The Form Template
+   * @param type - The type of dialog
+   * @param options - Settings
+   * @param submitOnEnter
+   * @param buttonText
+   * @param errorValidators
+   * @param warningValidators
+   */
+  constructor(
+    controls: FormLayerControls<T>,
+    type: "create" | "update",
+    options: FormDialogOptions<T>,
+    submitOnEnter?: boolean,
+    buttonText?: string,
+    errorValidators: FormValidator<T>[] = [],
+    warningValidators: FormValidator<T>[] = []
   ) {
+    this.form = formRoot.build(controls)
+      .withErrors(...errorValidators)
+      .withWarnings(...warningValidators)
+      .done();
+
     this.createForm = type === 'create';
     this.onSubmit = options.onSubmit;
     this.title = options.title;
     this.description = options.description;
     this.buttonText = buttonText ?? (this.createForm ? 'Create' : 'Save');
+
+    this.controls = this.form.controls;
+    this.value = this.form.value;
+    this.valid = this.form.valid;
+
+    this.errors = this.form.errors;
+    this.errorState = this.form.errorState;
+
+    this.warnings = this.form.warnings;
+    this.warningState = this.form.warningState;
+
+    this.canSubmit = this.createForm ? this.form.canCreate : this.form.canUpdate;
+
+    this.submitOnEnter = submitOnEnter ?? this.shouldSubmitOnEnter();
+  }
+
+  private shouldSubmitOnEnter() {
+    const nodes = this.form.inputs().filter(x => !x.readonly);
+    const count = nodes.length;
+    if (count <= 0) return true;
+    if (count > 1) return false;
+
+    const type = nodes.at(0)!.type;
+
+    switch (type) {
+      case InputTypes.LongText:
+      case InputTypes.HTML:
+      case InputTypes.Select:
+      case InputTypes.SelectMany:
+      case InputTypes.Generic:
+      case InputTypes.Search:
+        return false;
+      default:
+        return true;
+    }
   }
 
   /**
@@ -65,7 +123,7 @@ export abstract class BaseFormDialog<TControls extends Record<string, FormUnit>,
    * This will reset and show the dialog.
    * @param reset - Optional reset data
    */
-  start(reset?: DeepPartial<TValue>) {
+  start(reset?: DeepPartial<T>) {
     this.form.reset(reset);
     this.form.markAsUntouched();
     this._show.set(true);
@@ -105,84 +163,5 @@ export abstract class BaseFormDialog<TControls extends Record<string, FormUnit>,
       this._working.set(false);
     }
 
-  }
-
-}
-
-export class FormDialog<TValue extends SimpleObject> extends BaseFormDialog<FormGroupControls<TValue>, TValue> {
-
-  readonly form: ModelFormRoot<TValue>;
-
-  readonly canSubmit: Signal<boolean>;
-  readonly controls: Signal<FormGroupControls<TValue>>;
-  readonly errorState: Signal<FormValidationContext[]>;
-  readonly errors: Signal<string[]>;
-  readonly valid: Signal<boolean>;
-  readonly value: Signal<TValue>;
-  readonly warningState: Signal<FormValidationContext[]>;
-  readonly warnings: Signal<string[]>;
-  readonly submitOnEnter: boolean;
-
-  /**
-   * Manually create a Form Dialog.
-   * It is recommended to the `formDialog.create<T>()` or `formDialog.update<T>()` when creating a Form Dialog.
-   * @param controls - The Form Template
-   * @param type - The type of dialog
-   * @param options - Settings
-   * @param submitOnEnter
-   * @param buttonText
-   * @param errorValidators
-   * @param warningValidators
-   */
-  constructor(
-    controls: FormGroupControls<TValue>,
-    type: "create" | "update",
-    options: FormDialogOptions<TValue>,
-    submitOnEnter?: boolean,
-    buttonText?: string,
-    errorValidators: FormValidator<TValue>[] = [],
-    warningValidators: FormValidator<TValue>[] = []
-  ) {
-    super(type, options, buttonText);
-
-    this.form = formRoot.model<TValue>(controls, {
-      errors: errorValidators,
-      warnings: warningValidators,
-    });
-
-    this.controls = this.form.controls;
-    this.value = this.form.value;
-    this.valid = this.form.valid;
-
-    this.errors = this.form.errors;
-    this.errorState = this.form.errorState;
-
-    this.warnings = this.form.warnings;
-    this.warningState = this.form.warningState;
-
-    this.canSubmit = this.createForm ? this.form.canCreate : this.form.canUpdate;
-
-    this.submitOnEnter = submitOnEnter ?? this.shouldSubmitOnEnter();
-  }
-
-  private shouldSubmitOnEnter() {
-    const nodes = this.form.nodes().filter(x => !x.readonly);
-    const count = nodes.length;
-    if (count <= 0) return true;
-    if (count > 1) return false;
-
-    const type = nodes.at(0)!.type;
-
-    switch (type) {
-      case InputTypes.LongText:
-      case InputTypes.HTML:
-      case InputTypes.Select:
-      case InputTypes.SelectMany:
-      case InputTypes.Generic:
-      case InputTypes.Search:
-        return false;
-      default:
-        return true;
-    }
   }
 }

@@ -1,5 +1,5 @@
 import {isString} from "@juulsgaard/ts-tools";
-import {FormUnit} from "../forms";
+import {FormUnit} from "../units";
 
 export type FormValidationData = { message: string, unit: FormUnit };
 export type FormValidationContext = { path: (string|number)[], data: FormValidationData };

@@ -42,10 +42,10 @@ export function toList<T>(data: T|T[]|undefined): T[] {
   return [data];
 }
 
-const reservedFunProps: Set<string> = new Set<ReservedFuncProps>(['name', 'length', 'caller', 'arguments', 'prototype'])
+const reservedFuncProps: Set<string> = new Set<ReservedFuncProps>(['name', 'length', 'caller', 'arguments', 'prototype'])
 
-export function formatFuncProp<T>(key: T): NewFuncProp<T> {
+export function nonFuncProp<T>(key: T): NewFuncProp<T> {
   if (!isString(key)) return key as NewFuncProp<T>;
-  if (!reservedFunProps.has(key)) return key as NewFuncProp<T>;
+  if (!reservedFuncProps.has(key)) return key as NewFuncProp<T>;
   return `$${key}` as NewFuncProp<T>;
 }
