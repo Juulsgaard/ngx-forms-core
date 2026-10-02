@@ -9,14 +9,15 @@
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
+    "rootDir": "./src",
     "outDir": "./out",
-    "downlevelIteration": true,
     "moduleResolution": "bundler",
     "importHelpers": true,
     "stripInternal": true,
     "useDefineForClassFields": false,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "types": ["*"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", "src/tests"]
+  "exclude": ["node_modules", "src/tests/**/*.ts"]
 }
