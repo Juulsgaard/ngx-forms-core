@@ -5,11 +5,12 @@ import {DeepPartial} from "@juulsgaard/ts-tools";
 export interface IReadonlyFormNode<T> extends IReadonlyFormUnit {
 
   readonly rawValue: Signal<DeepPartial<T> | T | undefined>;
+  readonly debouncedRawValue: Signal<DeepPartial<T> | T | undefined>;
   readonly value: Signal<T>;
+  readonly debouncedValue: Signal<T>;
+
   readonly resetValue: Signal<T>;
 
-  readonly debouncedRawValue: Signal<DeepPartial<T> | T | undefined>;
-  readonly debouncedValue: Signal<T>;
 
   /** Get the value of the unit if it's valid. Otherwise throw an error */
   getValidValue(): T;

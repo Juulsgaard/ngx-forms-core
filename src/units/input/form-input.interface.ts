@@ -20,8 +20,8 @@ export interface IReadonlyFormInput<T> extends IReadonlyFormNode<T> {
 
   readonly state: Signal<T|undefined>;
   readonly debouncedState: Signal<T|undefined>;
+
   readonly resetState: Signal<T|undefined>;
-  readonly resetValue: Signal<T>;
 
   readonly empty: Signal<boolean>;
 
