@@ -23,5 +23,5 @@ export abstract class FormNode<T> extends FormUnit implements IFormNode<T> {
   /** Get the value of the unit if it's valid. Otherwise return undefined */
   abstract getValidValueOrDefault(): T | undefined;
 
-  abstract setValue(value: T): void;
+  abstract setValue(value: T | undefined): void;
 }

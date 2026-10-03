@@ -25,7 +25,7 @@ export interface IReadonlyFormNode<T> extends IReadonlyFormUnit {
 
 export interface IFormNode<T> extends IReadonlyFormNode<T>, IFormUnit {
 
-  setValue(value: T): void;
+  setValue(value: T|undefined): void;
 
   reset(value?: DeepPartial<T> | T): void;
 

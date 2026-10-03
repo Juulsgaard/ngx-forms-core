@@ -48,8 +48,6 @@ export class FormLayer<T> extends FormNode<T> implements IFormLayer<T> {
     () => Object.values(this.controls()).filter(isFormInput)
   );
 
-  declare readonly nullable: undefined extends T ? boolean : false;
-
   constructor(
     controls: FormLayerControls<T>,
     nullable: boolean,
@@ -203,7 +201,7 @@ export class FormLayer<T> extends FormNode<T> implements IFormLayer<T> {
 
   //<editor-fold desc="Value update">
 
-  setValue(value: T) {
+  setValue(value: T | undefined) {
     untracked(() => {
       for (let [control, key] of this.iterateControls()) {
         if (!isFormNode(control)) continue;
@@ -247,7 +245,7 @@ export class FormLayer<T> extends FormNode<T> implements IFormLayer<T> {
         const val = (
           value as T | undefined
         )?.[key];
-        control.setValue(val);
+        control.reset(val);
       }
     });
 

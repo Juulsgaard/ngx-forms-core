@@ -3,11 +3,11 @@ import {FormNode} from "../node/form-node";
 import {IFormList} from "./form-list.interface";
 import {computed, signal, Signal, untracked, WritableSignal} from "@angular/core";
 import {
-    FormValidationContext,
-    FormValidator,
-    prependValidationPath,
-    processFormValidators,
-    validationData
+  FormValidationContext,
+  FormValidator,
+  prependValidationPath,
+  processFormValidators,
+  validationData
 } from "../../tools/form-validation";
 import {IFormLayer} from "../layer/form-layer.interface";
 import {compareLists} from "../../tools/helpers";
@@ -187,7 +187,8 @@ export class FormList<T> extends FormNode<T[]> implements IFormList<T> {
     }
   }
 
-  setValue(values: T[]) {
+  setValue(values: T[] | undefined) {
+    values ??= [];
     if (!isArray(values)) return;
     this.scaleToSize(values.length);
     const controls = untracked(this.controls);
