@@ -2,8 +2,8 @@ import {IFormDialog} from "./form-dialog.interface";
 import {IFormRoot} from "../units/root/form-root.interface";
 import {signal, Signal} from "@angular/core";
 import {FormLayerControls} from "../units/controls";
-import {lastValueFrom, Observable} from "rxjs";
-import {ILoadingState} from "@juulsgaard/rxjs-tools";
+import {lastValueFrom, Observable, Subscribable} from "rxjs";
+import {ILoadingState, isSubscribable} from "@juulsgaard/rxjs-tools";
 import {FormValidationContext, FormValidator} from "../tools/form-validation";
 import {FormDialogOptions} from "./form-dialog.types";
 import {formRoot} from "../units/root/form-root.ctor";
@@ -30,7 +30,7 @@ export class FormDialog<T> implements IFormDialog<T> {
   /** Whether the submission is currently in progress */
   readonly working: Signal<boolean> = this._working.asReadonly();
 
-  private readonly onSubmit: (data: T) => Promise<any>|Observable<any>|ILoadingState|void;
+  private readonly onSubmit: (data: T) => Promise<any>|Subscribable<any>|void;
   private readonly createForm: boolean;
 
   /** The title of the Dialog */
@@ -149,12 +149,13 @@ export class FormDialog<T> implements IFormDialog<T> {
       const value = this.form.getValidValue();
       let result = this.onSubmit(value);
 
-      if (result instanceof ILoadingState) {
+      if (result instanceof Promise) {
         await result;
-      } else if (result instanceof Observable) {
-        await lastValueFrom(result);
-      } else if (result instanceof Promise) {
-        await result;
+      } else if (isSubscribable(result)) {
+        await new Promise((resolve, reject) => result.subscribe({
+          complete: () => resolve(undefined),
+          error: reject
+        }));
       }
 
       this._show.set(false);

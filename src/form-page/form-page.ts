@@ -254,7 +254,7 @@ export class FormPage<T> implements IFormPage<T> {
   //</editor-fold>
 }
 
-function execute(action: () => Promise<any> | Subscribable<any> | ILoadingState | void): ILoadingState {
+function execute(action: () => Promise<any> | Subscribable<any> | void): ILoadingState {
   try {
     const result = action();
     if (result instanceof ILoadingState) return result;

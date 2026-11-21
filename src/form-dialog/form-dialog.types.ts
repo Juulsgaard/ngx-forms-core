@@ -1,5 +1,4 @@
-import {Observable} from "rxjs";
-import {ILoadingState} from "@juulsgaard/rxjs-tools";
+import {Subscribable} from "rxjs";
 
 export interface FormDialogOptions<T> {
   /** The title of the dialog */
@@ -7,5 +6,5 @@ export interface FormDialogOptions<T> {
   /** The description for the dialog */
   description?: string;
   /** The action to perform when submitting the form */
-  onSubmit: (data: T) => Promise<any> | Observable<any> | ILoadingState | void;
+  onSubmit: (data: T) => Promise<any> | Subscribable<any> | void;
 }

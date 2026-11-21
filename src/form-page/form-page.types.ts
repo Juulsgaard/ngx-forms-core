@@ -15,7 +15,7 @@ export interface WarningDialog {
   btnText?: string;
 }
 
-export type FormPageAction<T> = (data: T) => Promise<any> | Subscribable<any> | ILoadingState | void;
+export type FormPageAction<T> = (data: T) => Promise<any> | Subscribable<any> | void;
 
 export interface FormPageOptions<T> {
   onSubmit?: FormPageAction<T>;
