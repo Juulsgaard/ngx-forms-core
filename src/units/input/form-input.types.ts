@@ -22,7 +22,8 @@ export enum InputTypes {
   Select = 'select',
   SelectMany = 'multipleSelect',
   Search = 'search',
-  File = 'file'
+  File = 'file',
+  List = 'list'
 }
 
 export type FormInputEvent = InputEvents | string;

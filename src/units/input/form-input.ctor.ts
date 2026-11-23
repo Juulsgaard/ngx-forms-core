@@ -177,6 +177,13 @@ interface CtorTypes {
    * @param options - Additional configuration
    */
   time: Date;
+
+  /**
+   * Create a list input
+   * @param initialValue - The starting value
+   * @param options - Additional configuration
+   */
+  list: string[];
 }
 
 type StrictCtor = { [K in keyof CtorTypes]: CtorFunc<CtorTypes[K]> };
@@ -211,6 +218,7 @@ export const formInput: Constructor = {
   date: getCtor<Date>(InputTypes.Date, null, FormConstants.NULL_DATE),
   datetime: getCtor<Date>(InputTypes.DateTime, null, FormConstants.NULL_DATE),
   time: getCtor<Date>(InputTypes.Time, null, FormConstants.NULL_DATE),
+  list: getCtor<string[]>(InputTypes.List, null, []),
 
   nullable: {
     id: getCtor<string>(InputTypes.Text, b => b.withLabel('Id').asReadonly()),
@@ -233,6 +241,7 @@ export const formInput: Constructor = {
     date: getCtor<Date>(InputTypes.Date),
     datetime: getCtor<Date>(InputTypes.DateTime),
     time: getCtor<Date>(InputTypes.Time),
+    list: getCtor<string[]>(InputTypes.List),
   }
 };
 //</editor-fold>
